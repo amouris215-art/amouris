@@ -18,6 +18,11 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
   const name = language === 'ar' ? product.nameAR : product.nameFR;
   const isPerfume = product.type === 'perfume';
   
+  // Calculate total stock availability
+  const isOutOfStock = isPerfume 
+    ? (product.stockInGrams || 0) <= 0
+    : (product.variants || []).every(v => (v.stock || 0) <= 0);
+
   const priceDisplay = isPerfume 
     ? `${product.pricePerGram} ${t('common.currency')} / ${t('product.grams')}`
     : `${product.variants[0]?.price} ${t('common.currency')}`;
@@ -30,16 +35,21 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
   return (
     <motion.div variants={itemVariants}>
       <Link href={`/product/${product.id}`} className="group block h-full">
-        <div className="bg-card rounded-xl border border-transparent hover:border-primary/20 hover:shadow-luxury transition-all duration-300 overflow-hidden h-full flex flex-col relative">
+        <div className={`bg-card rounded-xl border border-transparent hover:border-primary/20 hover:shadow-luxury transition-all duration-300 overflow-hidden h-full flex flex-col relative ${isOutOfStock ? 'opacity-75 grayscale-[0.5]' : ''}`}>
           
           {/* Best Seller or Status Badge */}
-          {product.tagIds?.includes('bestseller') && (
-            <div className="absolute top-3 left-3 z-10 rtl:left-auto rtl:right-3">
+          <div className="absolute top-3 left-3 z-10 flex flex-col gap-2 rtl:left-auto rtl:right-3">
+            {product.tagIds?.includes('bestseller') && (
               <Badge className="bg-primary/90 backdrop-blur-sm shadow-sm hover:bg-primary">
                 {language === 'ar' ? 'الأكثر مبيعاً' : 'Meilleure vente'}
               </Badge>
-            </div>
-          )}
+            )}
+            {isOutOfStock && (
+              <Badge variant="destructive" className="bg-rose-600/90 backdrop-blur-sm shadow-sm">
+                {language === 'ar' ? 'نفذت الكمية' : 'En rupture de stock'}
+              </Badge>
+            )}
+          </div>
 
           {/* Image Container with scale hover */}
           <div className="relative aspect-square w-full overflow-hidden bg-muted">
@@ -66,7 +76,7 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
                 {priceDisplay}
               </span>
               <span className="text-sm font-medium text-muted-foreground opacity-0 -translate-x-2 rtl:translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300">
-                {t('product.view_details')} &rarr;
+                {isOutOfStock ? '' : `${t('product.view_details')} \u2192`}
               </span>
             </div>
           </div>

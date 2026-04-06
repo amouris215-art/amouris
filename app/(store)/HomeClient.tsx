@@ -10,13 +10,18 @@ import { Button } from '@/components/ui/button';
 import { Product, Category, Brand } from '@/lib/types';
 
 interface HomeClientProps {
-  products: Product[];
   categories: Category[];
   brands: Brand[];
   announcements: any[];
+  tagSections: {
+    id: string;
+    nameAR: string;
+    nameFR: string;
+    products: Product[];
+  }[];
 }
 
-export default function HomeClient({ products, categories, brands, announcements }: HomeClientProps) {
+export default function HomeClient({ categories, brands, announcements, tagSections }: HomeClientProps) {
   const { t, language } = useI18n();
   const heroRef = useRef(null);
   const { scrollYProgress } = useScroll({
@@ -91,7 +96,7 @@ export default function HomeClient({ products, categories, brands, announcements
         </div>
       )}
 
-      {/* Brands Ribbon */}
+      {/* Brands Ribbon (using spans for simplicity as in original) */}
       <section className="border-y border-border bg-background py-8 overflow-hidden relative">
         <div className="absolute inset-0 pointer-events-none bg-gradient-to-r from-background via-transparent to-background z-10" />
         <div className="container mx-auto px-4 z-0">
@@ -110,41 +115,43 @@ export default function HomeClient({ products, categories, brands, announcements
         </div>
       </section>
 
-      {/* Products Section */}
-      <section className="py-24 bg-secondary/10">
-        <div className="container mx-auto px-4">
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: 0.6 }}
-            className="flex flex-col items-center justify-center text-center mb-16"
-          >
-            <h2 className="text-3xl md:text-4xl font-heading font-bold mb-4 tracking-wide">{t('home.best_sellers')}</h2>
-            <div className="w-24 h-1 bg-accent rounded-full mb-6" />
-          </motion.div>
+      {/* Dynamic Tag Sections */}
+      {tagSections.map((section, sIndex) => (
+        <section key={section.id} className={`py-24 ${sIndex % 2 === 0 ? 'bg-secondary/10' : 'bg-background'}`}>
+          <div className="container mx-auto px-4">
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-100px" }}
+              transition={{ duration: 0.6 }}
+              className="flex flex-col items-center justify-center text-center mb-16"
+            >
+              <h2 className="text-3xl md:text-4xl font-heading font-bold mb-4 tracking-wide">
+                {language === 'ar' ? section.nameAR : section.nameFR}
+              </h2>
+              <div className="w-24 h-1 bg-accent rounded-full mb-6" />
+            </motion.div>
 
-          <motion.div 
-            variants={containerVariants}
-            initial="hidden"
-            whileInView="show"
-            viewport={{ once: true, margin: "-50px" }}
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8"
-          >
-            {products.map((product, index) => (
-              <ProductCard key={product.id} product={product} index={index} />
-            ))}
-          </motion.div>
-          
-          <div className="mt-16 text-center">
-            <Link href="/shop">
-              <Button variant="outline" size="lg" className="rounded-full px-8 h-12 hover:shadow-luxury transition-shadow duration-300">
-                {t('home.view_all')}
-              </Button>
-            </Link>
+            <motion.div 
+              variants={containerVariants}
+              initial="hidden"
+              whileInView="show"
+              viewport={{ once: true, margin: "-50px" }}
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8"
+            >
+              {section.products.map((product, index) => (
+                <ProductCard key={product.id} product={product} index={index} />
+              ))}
+            </motion.div>
+
+            {section.products.length === 0 && (
+              <div className="text-center py-10 text-muted-foreground italic">
+                {t('common.no_products_found')}
+              </div>
+            )}
           </div>
-        </div>
-      </section>
+        </section>
+      ))}
 
       {/* Categories Banner */}
       <section className="py-24">

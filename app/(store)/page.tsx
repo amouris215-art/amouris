@@ -2,22 +2,31 @@ import { getProducts } from '@/lib/actions/products';
 import { getCategories } from '@/lib/actions/categories';
 import { getBrands } from '@/lib/actions/brands';
 import { getActiveAnnouncements } from '@/lib/actions/announcements';
+import { getHomepageTags, getProductsByTag } from '@/lib/actions/tags';
 import HomeClient from './HomeClient';
 
 export default async function HomePage() {
-  const [products, categories, brands, announcements] = await Promise.all([
-    getProducts({ limit: 8 } as any),
+  const [categories, brands, announcements, homeTags] = await Promise.all([
     getCategories(),
     getBrands(),
-    getActiveAnnouncements()
+    getActiveAnnouncements(),
+    getHomepageTags()
   ]);
+
+  // Fetch products for each homepage tag
+  const tagSections = await Promise.all(
+    homeTags.map(async (tag: any) => ({
+      ...tag,
+      products: await getProductsByTag(tag.id, 4)
+    }))
+  );
 
   return (
     <HomeClient 
-      products={products} 
       categories={categories} 
       brands={brands} 
       announcements={announcements} 
+      tagSections={tagSections}
     />
   );
 }

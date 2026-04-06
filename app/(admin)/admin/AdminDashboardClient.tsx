@@ -7,20 +7,55 @@ import { ShoppingCart, Users, DollarSign, AlertTriangle } from 'lucide-react';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
+import { useEffect, useState } from 'react';
+import { createClient } from '@/lib/supabase/client';
 
 interface AdminDashboardClientProps {
   orders: Order[];
   customers: Customer[];
 }
 
-export default function AdminDashboardClient({ orders, customers }: AdminDashboardClientProps) {
+export default function AdminDashboardClient({ orders: initialOrders, customers }: AdminDashboardClientProps) {
   const { t, language } = useI18n();
+  const [orders, setOrders] = useState<Order[]>(initialOrders);
+  const supabase = createClient();
+
+  useEffect(() => {
+    const channel = supabase
+      .channel('admin-dashboard')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'orders'
+        },
+        (payload: any) => {
+          if (payload.eventType === 'INSERT') {
+            // New order - refresh list (simplified)
+            window.location.reload(); 
+          } else if (payload.eventType === 'UPDATE') {
+            setOrders(prev => prev.map(o => o.id === payload.new.id ? { 
+              ...o, 
+              status: payload.new.order_status,
+              paymentStatus: payload.new.payment_status,
+              amountPaid: Number(payload.new.amount_paid),
+            } : o));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [supabase]);
 
   // KPIs
   const totalRevenue = orders.reduce((sum, order) => sum + order.total, 0);
   const pendingOrders = orders.filter(o => o.status === 'pending').length;
   
-  // Mock Chart Data (In a real app, this would be aggregated on the server)
+  // Charts logic (omitted for brevity)
   const chartData = [
     { name: 'Jan', revenue: 4000 },
     { name: 'Feb', revenue: 3000 },
@@ -40,40 +75,37 @@ export default function AdminDashboardClient({ orders, customers }: AdminDashboa
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card className="border-none shadow-sm bg-white dark:bg-card">
+        <Card className="border-none shadow-sm bg-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">{language === 'ar' ? 'إجمالي الإيرادات' : 'Revenu Total'}</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-primary">{totalRevenue.toLocaleString()} {t('common.currency')}</div>
-            <p className="text-xs text-muted-foreground mt-1">+20.1% from last month</p>
           </CardContent>
         </Card>
 
-        <Card className="border-none shadow-sm bg-white dark:bg-card">
+        <Card className="border-none shadow-sm bg-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">{language === 'ar' ? 'الطلبات' : 'Commandes'}</CardTitle>
             <ShoppingCart className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{orders.length}</div>
-            <p className="text-xs text-muted-foreground mt-1">+180 from last month</p>
           </CardContent>
         </Card>
 
-        <Card className="border-none shadow-sm bg-white dark:bg-card">
+        <Card className="border-none shadow-sm bg-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">{language === 'ar' ? 'العملاء' : 'Clients'}</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{customers.length}</div>
-            <p className="text-xs text-muted-foreground mt-1">+19 from last month</p>
           </CardContent>
         </Card>
 
-        <Card className={`border-none shadow-sm bg-white dark:bg-card ${pendingOrders > 0 ? 'ring-2 ring-amber-500 bg-amber-50 dark:bg-amber-900/10' : ''}`}>
+        <Card className={`border-none shadow-sm bg-card ${pendingOrders > 0 ? 'ring-2 ring-amber-500 bg-amber-50 dark:bg-amber-900/10' : ''}`}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className={`text-sm font-medium ${pendingOrders > 0 ? 'text-amber-700 dark:text-amber-400' : ''}`}>
               {language === 'ar' ? 'طلبات بانتظار المعالجة' : 'Commandes en attente'}
@@ -82,13 +114,12 @@ export default function AdminDashboardClient({ orders, customers }: AdminDashboa
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{pendingOrders}</div>
-            <p className="text-xs text-muted-foreground mt-1 text-amber-600/80">Require immediate attention</p>
           </CardContent>
         </Card>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-7 gap-6">
-        <Card className="lg:col-span-4 border-none shadow-sm bg-white dark:bg-card">
+        <Card className="lg:col-span-4 border-none shadow-sm bg-card">
           <CardHeader>
             <CardTitle>{language === 'ar' ? 'الإيرادات' : 'Revenus'}</CardTitle>
           </CardHeader>
@@ -108,7 +139,7 @@ export default function AdminDashboardClient({ orders, customers }: AdminDashboa
           </CardContent>
         </Card>
 
-        <Card className="lg:col-span-3 border-none shadow-sm bg-white dark:bg-card">
+        <Card className="lg:col-span-3 border-none shadow-sm bg-card">
           <CardHeader>
             <CardTitle>{language === 'ar' ? 'أحدث الطلبات' : 'Dernières commandes'}</CardTitle>
           </CardHeader>
@@ -120,19 +151,19 @@ export default function AdminDashboardClient({ orders, customers }: AdminDashboa
                   <div key={order.id} className="flex items-center justify-between border-b pb-2 last:border-0 hover:bg-muted/30 p-2 rounded-md transition-colors">
                     <div>
                       <p className="font-medium">{order.orderNumber}</p>
-                      <p className="text-sm text-muted-foreground">{customer?.firstName} {customer?.lastName || 'Guest'}</p>
+                      <p className="text-sm text-muted-foreground">{customer?.firstName || order.guestInfo?.firstName} {customer?.lastName || order.guestInfo?.lastName || 'Guest'}</p>
                     </div>
                     <div className="text-right">
                        <p className="font-bold text-primary">{order.total.toLocaleString()} {t('common.currency')}</p>
-                       <p className={`text-xs ${order.status === 'pending' ? 'text-amber-500' : 'text-emerald-500'}`}>
-                         {order.status}
+                       <p className={`text-xs font-semibold ${order.status === 'pending' ? 'text-amber-500' : 'text-emerald-500'}`}>
+                         {order.status.toUpperCase()}
                        </p>
                     </div>
                   </div>
                 )
               })}
               {orders.length === 0 && (
-                <div className="text-center py-8 text-muted-foreground">
+                <div className="text-center py-8 text-muted-foreground italic">
                    {language === 'ar' ? 'لا توجد طلبات بعد' : 'Aucune commande pour le moment'}
                 </div>
               )}

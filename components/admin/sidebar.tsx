@@ -58,13 +58,16 @@ export function AdminSidebar() {
       )}
 
       {/* Sidebar */}
-      <div className={`
-        fixed inset-y-0 ${dir === 'rtl' ? 'right-0' : 'left-0'} z-50 w-72 bg-card border-${dir === 'rtl' ? 'l' : 'r'} transform transition-transform duration-300 ease-in-out lg:translate-x-0
-        ${sidebarOpen 
-          ? 'translate-x-0' 
-          : dir === 'rtl' ? 'translate-x-full' : '-translate-x-full'
-        }
-      `}>
+      <div 
+        className={`
+          fixed inset-y-0 z-50 w-72 bg-card border-slate-200 shadow-2xl transform transition-transform duration-300 ease-in-out lg:translate-x-0
+          ${dir === 'rtl' ? 'right-0 border-l' : 'left-0 border-r'}
+          ${sidebarOpen 
+            ? 'translate-x-0' 
+            : dir === 'rtl' ? 'translate-x-[105%]' : '-translate-x-[105%]'
+          }
+        `}
+      >
         <div className="flex h-16 items-center border-b px-6 justify-between">
           <Link href="/admin" className="font-heading text-2xl font-bold text-primary">
             Amouris<span className="text-accent ml-1">Admin</span>

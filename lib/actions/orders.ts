@@ -47,12 +47,53 @@ export async function createOrder(orderData: {
 
   if (orderError) throw new Error('Order creation failed: ' + orderError.message);
 
-  // 3. Insert order items
+  // 3. Deduct Stock & Validate
+  for (const item of orderData.items) {
+    if (item.type === 'perfume') {
+      const { data: prod, error: prodErr } = await supabase
+        .from('products')
+        .select('stock_grams')
+        .eq('id', item.productId)
+        .single();
+      
+      if (prodErr || !prod) throw new Error(`Product not found: ${item.productId}`);
+      if (prod.stock_grams < item.quantity) {
+        throw new Error(`Stock insuffisant pour ${item.productNameFR}`);
+      }
+
+      const { error: updErr } = await supabase
+        .from('products')
+        .update({ stock_grams: prod.stock_grams - item.quantity })
+        .eq('id', item.productId);
+      
+      if (updErr) throw new Error(`Failed to update stock for ${item.productNameFR}`);
+    } else if (item.type === 'flacon' && item.variantId) {
+      const { data: variant, error: varErr } = await supabase
+        .from('flacon_variants')
+        .select('stock_units')
+        .eq('id', item.variantId)
+        .single();
+      
+      if (varErr || !variant) throw new Error(`Variant not found: ${item.variantId}`);
+      if (variant.stock_units < item.quantity) {
+        throw new Error(`Stock insuffisant pour le flacon ${item.productNameFR}`);
+      }
+
+      const { error: updErr } = await supabase
+        .from('flacon_variants')
+        .update({ stock_units: variant.stock_units - item.quantity })
+        .eq('id', item.variantId);
+      
+      if (updErr) throw new Error(`Failed to update stock for variant ${item.variantId}`);
+    }
+  }
+
+  // 4. Insert order items
   const itemsToInsert = orderData.items.map(item => ({
     order_id: order.id,
     product_id: item.productId,
     flacon_variant_id: item.variantId || null,
-    product_name_fr: item.productNameFR, // Pass names too for snapshots
+    product_name_fr: item.productNameFR,
     product_name_ar: item.productNameAR,
     quantity_grams: item.type === 'perfume' ? item.quantity : null,
     quantity_units: item.type === 'flacon' ? item.quantity : null,
@@ -65,14 +106,14 @@ export async function createOrder(orderData: {
     .insert(itemsToInsert);
 
   if (itemsError) {
-    // Ideally you'd do this in a transaction, but Supabase SDK doesn't support them easily out-of-box.
-    // Consider using a DB function/RPC if robustness is critical.
     console.error('Failed to insert items:', itemsError);
-    // At least notify admin or handle failure
+    // In a real prod environment, you'd want to rollback stock here or use a DB transaction
   }
 
   revalidatePath('/admin/orders');
   revalidatePath('/account/orders');
+  revalidatePath('/admin/products');
+  revalidatePath('/shop');
   return order;
 }
 
@@ -112,16 +153,42 @@ export async function getOrderById(id: string) {
   return mapDbOrderToFrontend(data);
 }
 
-export async function getAllOrders(filters?: any) {
+export async function getAllOrders(filters?: {
+  status?: OrderStatus;
+  search?: string;
+  wilaya?: string;
+  startDate?: string;
+  endDate?: string;
+}) {
   const cookieStore = cookies();
   const supabase = createClient(cookieStore);
 
   let query = supabase
     .from('orders')
-    .select('*, order_items(*), profile:profiles(first_name, last_name, phone)');
+    .select('*, order_items(*), profiles(first_name, last_name, phone)');
 
-  // Apply filters...
-  
+  if (filters?.status) {
+    query = query.eq('order_status', filters.status);
+  }
+
+  if (filters?.wilaya) {
+    // Check both guest_wilaya and profile wilaya
+    query = query.or(`guest_wilaya.eq.${filters.wilaya},profiles.wilaya.eq.${filters.wilaya}`);
+  }
+
+  if (filters?.startDate) {
+    query = query.gte('created_at', filters.startDate);
+  }
+
+  if (filters?.endDate) {
+    query = query.lte('created_at', filters.endDate);
+  }
+
+  if (filters?.search) {
+    const s = `%${filters.search}%`;
+    query = query.or(`order_number.ilike.${s},guest_first_name.ilike.${s},guest_last_name.ilike.${s},profiles.first_name.ilike.${s},profiles.last_name.ilike.${s}`);
+  }
+
   const { data, error } = await query.order('created_at', { ascending: false });
 
   if (error) {

@@ -17,16 +17,31 @@ export async function login(phone: string, password: string) {
 
   if (error) throw new Error(error.message);
 
+  // Check profile status
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('status, role')
+    .eq('id', data.user.id)
+    .single();
+
+  if (profile?.status === 'frozen') {
+    await supabase.auth.signOut();
+    throw new Error('Votre compte est gelé. Veuillez contacter l\'administration.');
+  }
+
   revalidatePath('/');
-  return data.user;
+  return { user: data.user, role: profile?.role };
 }
 
 export async function logout() {
   const cookieStore = cookies();
   const supabase = createClient(cookieStore);
 
-  const { error } = await supabase.auth.signOut();
-  if (error) throw new Error(error.message);
+  const { data: { user } } = await supabase.auth.getUser();
+  if (user) {
+    const { error } = await supabase.auth.signOut();
+    if (error) throw new Error(error.message);
+  }
 
   revalidatePath('/');
 }
