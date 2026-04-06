@@ -53,7 +53,11 @@ export function Footer() {
         
         <div className="mt-12 pt-8 border-t border-border/40 text-center text-sm text-secondary-foreground/60 flex flex-col md:flex-row justify-between items-center gap-4">
           <p>© {new Date().getFullYear()} Amouris Parfums. {language === 'ar' ? 'جميع الحقوق محفوظة.' : 'Tous droits réservés.'}</p>
+          <Link href="/admin/login" className="text-xs text-gray-400 hover:text-emerald-700 transition-colors">
+            {language === 'ar' ? 'الإدارة' : 'Administration'}
+          </Link>
         </div>
+
       </div>
     </footer>
   );

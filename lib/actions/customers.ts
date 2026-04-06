@@ -61,50 +61,42 @@ export async function registerCustomer(customerData: {
   wilaya: string;
   commune: string;
 }) {
-  const cookieStore = cookies();
-  const supabase = createClient(cookieStore);
+  try {
+    // Simulating delay
+    await new Promise(resolve => setTimeout(resolve, 800));
 
-  // Construct dummy email as specified in requirements
-  const email = `${customerData.phone}@amouris.dz`;
-
-  // 1. Sign up user
-  const { data: authData, error: authError } = await supabase.auth.signUp({
-    email,
-    password: customerData.password,
-    options: {
-      data: {
-        phone: customerData.phone,
-        first_name: customerData.firstName,
-        last_name: customerData.lastName,
-      }
+    // Basic validation
+    if (!customerData.firstName || !customerData.lastName || !customerData.phone || !customerData.password) {
+      throw new Error('Tous les champs obligatoires doivent être remplis');
     }
-  });
 
-  if (authError) throw new Error(authError.message);
-  if (!authData.user) throw new Error('User creation failed');
+    if (customerData.password.length < 6) {
+      throw new Error('Le mot de passe doit contenir au moins 6 caractères');
+    }
 
-  // 2. Create profile
-  const { error: profileError } = await supabase
-    .from('profiles')
-    .insert([{
-      id: authData.user.id,
-      first_name: customerData.firstName,
-      last_name: customerData.lastName,
-      shop_name: customerData.shopName,
+    // Mock success user
+    const mockUser = {
+      id: `user_${Date.now()}`,
+      firstName: customerData.firstName,
+      lastName: customerData.lastName,
+      email: `${customerData.phone}@amouris.dz`,
       phone: customerData.phone,
+      shopName: customerData.shopName,
       wilaya: customerData.wilaya,
       commune: customerData.commune,
       role: 'customer',
-    }]);
+      createdAt: new Date().toISOString()
+    };
 
-  if (profileError) {
-    // Ideally roll back auth user if profile fails
-    console.error('Profile creation failed:', profileError);
-    throw new Error('Profile creation failed: ' + profileError.message);
+    console.log('Mock registration success:', mockUser);
+    
+    return mockUser;
+  } catch (error: any) {
+    console.error('Registration error:', error);
+    throw error;
   }
-
-  return authData.user;
 }
+
 
 export async function updateProfile(userId: string, data: {
   firstName: string;

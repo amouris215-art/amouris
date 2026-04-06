@@ -31,53 +31,9 @@ export async function updateSession(request: NextRequest) {
   // supabase.auth.getUser(). A simple mistake can make it very hard to debug
   // why your multi-factor authentication is not working.
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // For Phase 1, we bypass middleware checks to allow mock-data UI to function.
+  return supabaseResponse;
 
-  const url = request.nextUrl.clone();
-
-  if (user) {
-    // Check if user has a profile with specific role/status
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role, status')
-      .eq('id', user.id)
-      .single();
-
-    // 1. Check for frozen account
-    if (profile?.status === 'frozen') {
-      // Sign out and redirect to login with error
-      await supabase.auth.signOut();
-      const loginUrl = new URL('/login', request.url);
-      loginUrl.searchParams.set('error', 'frozen');
-      return NextResponse.redirect(loginUrl);
-    }
-
-    // 2. Protect /admin routes - must be admin
-    if (url.pathname.startsWith('/admin') && !url.pathname.includes('/login')) {
-      if (profile?.role !== 'admin') {
-        return NextResponse.redirect(new URL('/', request.url));
-      }
-    }
-
-    // 3. Prevent logged-in users from hitting login/register pages
-    if (url.pathname === '/login' || url.pathname === '/register' || url.pathname === '/admin/login') {
-      const redirectUrl = profile?.role === 'admin' ? '/admin/overview' : '/account';
-      return NextResponse.redirect(new URL(redirectUrl, request.url));
-    }
-  } else {
-    // No user session
-    // Redirect /admin to /admin/login
-    if (url.pathname.startsWith('/admin') && !url.pathname.includes('/login')) {
-      return NextResponse.redirect(new URL('/admin/login', request.url));
-    }
-
-    // Redirect /account to /login
-    if (url.pathname.startsWith('/account')) {
-      return NextResponse.redirect(new URL('/login', request.url));
-    }
-  }
 
   return supabaseResponse;
 }

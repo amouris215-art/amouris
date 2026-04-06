@@ -46,97 +46,114 @@ export default function HomeClient({ categories, brands, announcements, tagSecti
 
   return (
     <div className="flex flex-col min-h-screen">
-      {/* Hero Section */}
-      <section ref={heroRef} className="relative h-[80vh] min-h-[600px] flex items-center justify-center overflow-hidden">
-        <motion.div style={{ y }} className="absolute inset-0 z-0">
-          <Image 
-            src="https://images.unsplash.com/photo-1615529182904-14819c35db37?q=80&w=2080&auto=format&fit=crop" 
-            alt="Luxury Perfume Bottles" 
-            fill 
-            className="object-cover object-center"
-            priority
-          />
-        </motion.div>
+      {/* Hero Section - Emerald & Gold Luxury */}
+      <section className="relative min-h-[85vh] flex items-center overflow-hidden">
+        {/* Fond gradient */}
+        <div className="absolute inset-0 bg-gradient-to-br from-emerald-950 via-emerald-900 to-black" />
         
-        <div className="absolute inset-0 z-10 bg-gradient-to-t from-background via-background/40 to-black/30" />
+        {/* Décoration géométrique */}
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 0.2, scale: 1 }}
+          transition={{ duration: 2 }}
+          className="absolute right-[-100px] top-1/2 -translate-y-1/2 w-[600px] h-[600px] border border-amber-400/20 rounded-full hidden lg:block" 
+        />
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 0.1, scale: 1 }}
+          transition={{ duration: 2.5 }}
+          className="absolute right-[50px] top-1/2 -translate-y-1/2 w-[400px] h-[400px] border border-amber-400/10 rounded-full hidden lg:block" 
+        />
         
-        <div className="container relative z-20 mx-auto px-4 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, delay: 0.2 }}
-            className="max-w-3xl mx-auto glass-panel p-8 rounded-2xl"
-          >
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-heading font-bold text-white mb-6 drop-shadow-lg tracking-wide">
-              {language === 'ar' ? 'اكتشف جوهر الفخامة' : 'Découvrez l\'Essence du Luxe'}
-            </h1>
-            <p className="text-lg md:text-xl text-white/90 mb-8 max-w-2xl mx-auto font-light leading-relaxed">
+        {/* Contenu */}
+        <div className="container relative z-10 mx-auto px-6 py-24 text-start">
+          <div className="max-w-3xl">
+            <motion.p 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-amber-400 text-sm tracking-[0.3em] uppercase mb-6 font-light"
+            >
+              Amouris Parfums
+            </motion.p>
+            <motion.h1 
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="text-5xl md:text-8xl font-serif text-white leading-tight mb-8"
+            >
+              {language === 'ar' ? (
+                <>اكتشف<br /><span className="text-amber-400">جوهر</span><br />الفخامة</>
+              ) : (
+                <>Découvrez<br /><span className="text-amber-400">l'Essence</span><br />du Luxe</>
+              )}
+            </motion.h1>
+            <motion.p 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              className="text-emerald-200/80 text-lg md:text-xl mb-10 font-light leading-relaxed max-w-xl"
+            >
               {t('home.hero_subtitle')}
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/shop">
-                <Button size="lg" className="w-full sm:w-auto h-14 px-8 text-lg bg-primary hover:bg-primary/90 text-primary-foreground shadow-luxury-glow transition-all duration-300">
-                  {t('home.shop_now')}
-                </Button>
+            </motion.p>
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6 }}
+              className="flex flex-wrap gap-4"
+            >
+              <Link href="/shop" className="bg-amber-400 text-emerald-950 px-10 py-5 font-medium hover:bg-amber-300 transition-all duration-300 rounded-none shadow-lg hover:shadow-amber-400/20 active:scale-95">
+                {t('home.shop_now')}
               </Link>
-              <Link href="/shop?category=collections">
-                <Button size="lg" variant="outline" className="w-full sm:w-auto h-14 px-8 text-lg bg-white/10 text-white border-white/30 hover:bg-white/20 backdrop-blur-sm transition-all duration-300">
-                  {language === 'ar' ? 'تصفح التشكيلات' : 'Voir les collections'}
-                </Button>
+              <Link href="/register" className="border border-white/30 text-white px-10 py-5 font-light hover:border-white/60 hover:bg-white/5 transition-all duration-300 rounded-none active:scale-95">
+                {t('nav.register')}
               </Link>
-            </div>
-          </motion.div>
+            </motion.div>
+          </div>
         </div>
       </section>
 
       {/* Announcements */}
-      {announcements.length > 0 && (
-        <div className="bg-primary text-primary-foreground py-2 text-center text-sm font-medium">
+      {announcements && announcements.length > 0 && (
+        <div className="bg-emerald-800 text-emerald-50 py-3 text-center text-sm font-light tracking-widest uppercase">
           {language === 'ar' ? announcements[0].textAR : announcements[0].textFR}
         </div>
       )}
 
-      {/* Brands Ribbon (using spans for simplicity as in original) */}
-      <section className="border-y border-border bg-background py-8 overflow-hidden relative">
-        <div className="absolute inset-0 pointer-events-none bg-gradient-to-r from-background via-transparent to-background z-10" />
-        <div className="container mx-auto px-4 z-0">
-          <motion.div 
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            className="flex flex-wrap justify-center gap-12 md:gap-24 items-center opacity-70"
-          >
+      {/* Brands Ribbon */}
+      <section className="bg-white py-12 border-b border-neutral-100 overflow-hidden relative">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-wrap justify-center gap-12 md:gap-24 items-center grayscale opacity-40 hover:grayscale-0 hover:opacity-100 transition-all duration-500">
             {brands.map((brand) => (
-              <span key={brand.id} className="text-xl md:text-2xl font-bold font-heading text-muted-foreground hover:text-foreground transition-colors duration-300">
+              <span key={brand.id} className="text-xl md:text-2xl font-serif text-emerald-950 tracking-tighter">
                 {language === 'ar' ? brand.nameAR : brand.nameFR}
               </span>
             ))}
-          </motion.div>
+          </div>
         </div>
       </section>
 
       {/* Dynamic Tag Sections */}
       {tagSections.map((section, sIndex) => (
-        <section key={section.id} className={`py-24 ${sIndex % 2 === 0 ? 'bg-secondary/10' : 'bg-background'}`}>
+        <section key={section.id} className={`py-24 ${sIndex % 2 === 0 ? 'bg-neutral-50' : 'bg-white'}`}>
           <div className="container mx-auto px-4">
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-100px" }}
-              transition={{ duration: 0.6 }}
-              className="flex flex-col items-center justify-center text-center mb-16"
+              viewport={{ once: true }}
+              className="flex flex-col items-center text-center mb-16"
             >
-              <h2 className="text-3xl md:text-4xl font-heading font-bold mb-4 tracking-wide">
+              <span className="text-amber-500 text-xs tracking-[0.2em] uppercase mb-4">{section.id === 't1' ? 'Nouveautés' : section.id === 't2' ? 'Les Préférés' : 'Excellence'}</span>
+              <h2 className="text-3xl md:text-5xl font-serif text-emerald-950 mb-6">
                 {language === 'ar' ? section.nameAR : section.nameFR}
               </h2>
-              <div className="w-24 h-1 bg-accent rounded-full mb-6" />
+              <div className="w-16 h-[1px] bg-amber-400" />
             </motion.div>
 
             <motion.div 
               variants={containerVariants}
               initial="hidden"
               whileInView="show"
-              viewport={{ once: true, margin: "-50px" }}
+              viewport={{ once: true }}
               className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8"
             >
               {section.products.map((product, index) => (
@@ -145,47 +162,55 @@ export default function HomeClient({ categories, brands, announcements, tagSecti
             </motion.div>
 
             {section.products.length === 0 && (
-              <div className="text-center py-10 text-muted-foreground italic">
-                {t('common.no_products_found')}
+              <div className="text-center py-20 bg-neutral-50 border border-dashed border-neutral-200">
+                <p className="text-gray-400 font-light italic">
+                  {t('common.no_products_found')}
+                </p>
               </div>
             )}
           </div>
         </section>
       ))}
 
-      {/* Categories Banner */}
-      <section className="py-24">
+      {/* Categories Banner with Gradient Styles */}
+      <section className="py-24 bg-white">
         <div className="container mx-auto px-4">
-          <motion.div 
-            variants={containerVariants}
-            initial="hidden"
-            whileInView="show"
-            viewport={{ once: true }}
-            className="grid grid-cols-1 md:grid-cols-3 gap-6"
-          >
-            {categories.slice(0, 3).map((category, i) => (
-              <motion.div key={category.id} variants={itemVariants}>
-                <Link href={`/shop?category=${category.id}`} className="group block relative h-80 rounded-2xl overflow-hidden">
-                  {category.image && (
-                    <Image 
-                      src={category.image} 
-                      alt={language === 'ar' ? category.nameAR : category.nameFR} 
-                      fill 
-                      className="object-cover transition-transform duration-700 ease-out group-hover:scale-110"
-                    />
-                  )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent group-hover:from-black/90 transition-colors duration-500" />
-                  <div className="absolute bottom-0 left-0 p-8 w-full">
-                    <h3 className="text-2xl font-bold font-heading text-white mb-2 group-hover:text-accent transition-colors">
-                      {language === 'ar' ? category.nameAR : category.nameFR}
-                    </h3>
-                  </div>
-                </Link>
-              </motion.div>
-            ))}
-          </motion.div>
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            {categories.map((category, i) => {
+              const bgGradients = [
+                'from-amber-950 to-amber-900',
+                'from-rose-950 to-rose-900',
+                'from-emerald-950 to-emerald-900',
+                'from-sky-950 to-sky-900',
+                'from-stone-800 to-stone-900',
+              ];
+              const gradient = bgGradients[i % bgGradients.length];
+              
+              return (
+                <motion.div 
+                  key={category.id} 
+                  variants={itemVariants}
+                  initial="hidden"
+                  whileInView="show"
+                  viewport={{ once: true }}
+                >
+                  <Link href={`/shop?category=${category.id}`} className="group block relative h-64 overflow-hidden">
+                    <div className={`absolute inset-0 bg-gradient-to-br ${gradient} transition-transform duration-500 group-hover:scale-105`} />
+                    <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center z-10 border border-white/5 group-hover:border-white/20 transition-all duration-500">
+                      <span className="text-white/40 text-xs tracking-[0.3em] uppercase mb-4 opacity-0 group-hover:opacity-100 transition-all duration-500 translate-y-4 group-hover:translate-y-0">Explorer</span>
+                      <h3 className="text-xl font-serif text-white group-hover:text-amber-400 transition-colors">
+                        {language === 'ar' ? category.nameAR : category.nameFR}
+                      </h3>
+                      <div className="mt-4 w-8 h-[1px] bg-amber-400/50 group-hover:w-16 transition-all duration-500" />
+                    </div>
+                  </Link>
+                </motion.div>
+              );
+            })}
+          </div>
         </div>
       </section>
     </div>
+
   );
 }
