@@ -39,93 +39,111 @@ export default function HomeClient({ categories, brands, tagSections }: HomeClie
   return (
     <div className="flex flex-col min-h-screen">
       {/* Hero Section - Emerald & Gold Luxury */}
-      <section className="relative min-h-[70vh] md:min-h-[85vh] flex items-center overflow-hidden bg-emerald-950">
-        {/* Background Particles (CSS only) */}
+      <section className="relative min-h-[92vh] bg-emerald-950 flex items-center overflow-hidden">
+        
+        {/* Cercles décoratifs — fond */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          {[...Array(6)].map((_, i) => (
-            <div 
-              key={i} 
-              className="particle" 
-              style={{
-                width: `${Math.random() * 100 + 50}px`,
-                height: `${Math.random() * 100 + 50}px`,
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-                animationDelay: `${Math.random() * 5}s`,
-                animationDuration: `${Math.random() * 10 + 10}s`
-              }} 
-            />
-          ))}
+          <div className="absolute -right-32 top-1/2 -translate-y-1/2 w-[700px] h-[700px] rounded-full border border-amber-400/10" />
+          <div className="absolute -right-16 top-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full border border-amber-400/15" />
+          <div className="absolute right-20 top-1/2 -translate-y-1/2 w-[300px] h-[300px] rounded-full border border-amber-400/20" />
+          {/* Glow effect */}
+          <div className="absolute right-0 top-1/4 w-96 h-96 bg-amber-400/5 rounded-full blur-3xl" />
+          <div className="absolute left-0 bottom-0 w-64 h-64 bg-emerald-800/30 rounded-full blur-3xl" />
         </div>
 
-        {/* Fond gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-br from-emerald-950 via-emerald-900/40 to-black/60" />
-        
-        {/* Contenu */}
-        <div className="container relative z-10 mx-auto px-6 py-16 md:py-32">
-          <div className="max-w-4xl">
-            <motion.p 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-amber-400 text-xs md:text-sm tracking-[0.3em] uppercase mb-4 md:mb-6 font-light"
-            >
-              Amouris Parfums
-            </motion.p>
-            <motion.h1 
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="text-4xl md:text-8xl font-serif text-white leading-[1.1] mb-6 md:mb-8"
-            >
-              {language === 'ar' ? (
-                <>اكتشف<br /><span className="text-amber-400 font-normal italic">جوهر</span><br />الفخامة</>
-              ) : (
-                <>Découvrez<br /><span className="text-amber-400 font-normal italic">l&apos;Essence</span><br />du Luxe</>
-              )}
-            </motion.h1>
-            <motion.p 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-              className="text-emerald-100/70 text-base md:text-xl mb-8 md:mb-12 font-light leading-relaxed max-w-xl"
-            >
-              {t('home.hero_subtitle')}
-            </motion.p>
-            
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6 }}
-              className="flex flex-col sm:flex-row gap-4"
-            >
-              <Link href="/shop" className="bg-amber-400 text-emerald-950 px-8 md:px-10 py-4 md:py-5 font-medium hover:bg-amber-300 transition-all duration-300 text-center uppercase tracking-wider text-sm active:scale-95">
-                {t('home.shop_now')}
-              </Link>
-              <Link href="/register" className="border border-white/30 text-white px-8 md:px-10 py-4 md:py-5 font-light hover:border-white/60 hover:bg-white/5 transition-all duration-300 text-center uppercase tracking-wider text-sm active:scale-95">
-                {t('nav.register')}
-              </Link>
-            </motion.div>
+        {/* Texture de points subtile */}
+        <div 
+          className="absolute inset-0 opacity-5"
+          style={{
+            backgroundImage: 'radial-gradient(circle, #C9A84C 1px, transparent 1px)',
+            backgroundSize: '40px 40px'
+          }}
+        />
 
-            {/* Hero Stats Bar */}
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 1, duration: 1 }}
-              className="flex gap-8 md:gap-12 mt-12 md:mt-20 pt-8 md:pt-10 border-t border-white/10"
-            >
-              <div>
-                <p className="text-xl md:text-3xl font-serif text-amber-400">500+</p>
-                <p className="text-[10px] md:text-xs text-emerald-200/60 uppercase tracking-wider mt-1">Références</p>
+        <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8 w-full">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            
+            {/* Colonne texte */}
+            <div className="text-center lg:text-start order-2 lg:order-1">
+              <p className="text-amber-400 text-xs tracking-[0.4em] uppercase mb-6 font-light">
+                Amouris Parfums — B2B
+              </p>
+              
+              <h1 className="font-serif text-white leading-none mb-6">
+                <span className="block text-5xl md:text-6xl lg:text-7xl font-light mb-2">
+                  {t('home.hero_title_1')}
+                </span>
+                <span className="block text-5xl md:text-6xl lg:text-7xl text-amber-400 font-light mb-2">
+                  {t('home.hero_title_2')}
+                </span>
+                <span className="block text-5xl md:text-6xl lg:text-7xl font-light">
+                  {t('home.hero_title_3')}
+                </span>
+              </h1>
+              
+              <p className="text-emerald-200/60 text-base lg:text-lg font-light leading-relaxed mb-10 max-w-lg mx-auto lg:mx-0">
+                {t('home.hero_subtitle')}
+              </p>
+              
+              <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                <Link
+                  href="/shop"
+                  className="inline-flex items-center justify-center gap-2 bg-amber-400 text-emerald-950 px-8 py-4 font-medium text-sm uppercase tracking-wider hover:bg-amber-300 transition-colors group"
+                >
+                  {t('home.hero_cta_primary')}
+                  <ChevronRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                </Link>
+                <Link
+                  href="/register"
+                  className="inline-flex items-center justify-center border border-white/20 text-white px-8 py-4 font-light text-sm uppercase tracking-wider hover:border-white/40 hover:bg-white/5 transition-all"
+                >
+                  {t('home.hero_cta_secondary')}
+                </Link>
               </div>
-              <div>
-                <p className="text-xl md:text-3xl font-serif text-amber-400">48</p>
-                <p className="text-[10px] md:text-xs text-emerald-200/60 uppercase tracking-wider mt-1">Wilayas livrées</p>
+            </div>
+
+            {/* Colonne décorative droite */}
+            <div className="order-1 lg:order-2 flex items-center justify-center">
+              <div className="relative w-72 h-72 lg:w-96 lg:h-96">
+                {/* Cercle principal */}
+                <div className="absolute inset-0 rounded-full border-2 border-amber-400/30" />
+                {/* Cercle intérieur */}
+                <div className="absolute inset-8 rounded-full border border-amber-400/20 bg-emerald-900/30 backdrop-blur-sm" />
+                {/* Centre */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="text-center">
+                    <div className="font-serif text-7xl lg:text-8xl text-amber-400/20 font-light select-none">A</div>
+                    <div className="text-amber-400/60 text-xs tracking-[0.5em] uppercase mt-2">Parfums</div>
+                  </div>
+                </div>
+                {/* Points décoratifs sur le cercle */}
+                {[0, 45, 90, 135, 180, 225, 270, 315].map((deg) => (
+                  <div
+                    key={deg}
+                    className="absolute w-1.5 h-1.5 bg-amber-400/40 rounded-full"
+                    style={{
+                      top: `${50 - 50 * Math.cos((deg * Math.PI) / 180)}%`,
+                      left: `${50 + 50 * Math.sin((deg * Math.PI) / 180)}%`,
+                      transform: 'translate(-50%, -50%)',
+                    }}
+                  />
+                ))}
               </div>
-              <div>
-                <p className="text-xl md:text-3xl font-serif text-amber-400">B2B</p>
-                <p className="text-[10px] md:text-xs text-emerald-200/60 uppercase tracking-wider mt-1">Professionnel</p>
+            </div>
+          </div>
+
+          {/* Stats bar */}
+          <div className="mt-16 pt-8 border-t border-white/10 grid grid-cols-3 gap-4 text-center">
+            {[
+              { value: '500+', label: t('home.stats_references') },
+              { value: '48', label: t('home.stats_wilayas') },
+              { value: 'B2B', label: t('home.stats_b2b') },
+            ].map(({ value, label }) => (
+              <div key={label}>
+                <div className="text-3xl font-serif text-amber-400 font-light">{value}</div>
+                <div className="text-xs text-emerald-200/40 uppercase tracking-widest mt-1">{label}</div>
               </div>
-            </motion.div>
+            ))}
           </div>
         </div>
       </section>

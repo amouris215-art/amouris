@@ -61,40 +61,69 @@ export async function registerCustomer(customerData: {
   wilaya: string;
   commune: string;
 }) {
-  try {
-    // Simulating delay
-    await new Promise(resolve => setTimeout(resolve, 800));
-
-    // Basic validation
-    if (!customerData.firstName || !customerData.lastName || !customerData.phone || !customerData.password) {
-      throw new Error('Tous les champs obligatoires doivent être remplis');
-    }
-
-    if (customerData.password.length < 6) {
-      throw new Error('Le mot de passe doit contenir au moins 6 caractères');
-    }
-
-    // Mock success user
-    const mockUser = {
-      id: `user_${Date.now()}`,
-      firstName: customerData.firstName,
-      lastName: customerData.lastName,
-      email: `${customerData.phone}@amouris.dz`,
-      phone: customerData.phone,
-      shopName: customerData.shopName,
-      wilaya: customerData.wilaya,
-      commune: customerData.commune,
-      role: 'customer',
-      createdAt: new Date().toISOString()
-    };
-
-    console.log('Mock registration success:', mockUser);
-    
-    return mockUser;
-  } catch (error: any) {
-    console.error('Registration error:', error);
-    throw error;
+  const cookieStore = cookies();
+  const supabase = createClient(cookieStore);
+  
+  // Normaliser le numéro de téléphone — supprimer espaces et tirets
+  const normalizedPhone = customerData.phone.replace(/[\s\-\.]/g, '').trim();
+  
+  // Vérifier si le numéro existe déjà dans profiles
+  const { data: existing } = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('phone', normalizedPhone)
+    .maybeSingle();
+  
+  if (existing) {
+    throw new Error('Un compte avec ce numéro existe déjà');
   }
+  
+  // Créer l'utilisateur Supabase Auth
+  // On utilise phone@amouris-user.dz comme email factice
+  const fakeEmail = `${normalizedPhone}@amouris-user.dz`;
+  
+  const { data: authData, error: authError } = await supabase.auth.signUp({
+    email: fakeEmail,
+    password: customerData.password,
+    options: {
+      data: {
+        first_name: customerData.firstName,
+        last_name: customerData.lastName,
+        phone: normalizedPhone,
+        role: 'customer',
+      }
+    }
+  });
+  
+  if (authError || !authData.user) {
+    console.error('Auth signup error:', authError);
+    throw new Error('Erreur lors de la création du compte. Veuillez réessayer.');
+  }
+  
+  // Créer le profil dans la table profiles
+  const { error: profileError } = await supabase
+    .from('profiles')
+    .insert({
+      id: authData.user.id,
+      role: 'customer',
+      first_name: customerData.firstName,
+      last_name: customerData.lastName,
+      shop_name: customerData.shopName || null,
+      phone: normalizedPhone,
+      wilaya: customerData.wilaya,
+      commune: customerData.commune || null,
+      is_frozen: false,
+    });
+  
+  if (profileError) {
+    console.error('Profile creation error:', profileError);
+    // Nettoyer : idéalement via createAdminClient(), suppression auth user
+    const adminSupabase = createAdminClient();
+    await adminSupabase.auth.admin.deleteUser(authData.user.id);
+    throw new Error('Erreur lors de la sauvegarde du profil.');
+  }
+  
+  return { success: true };
 }
 
 

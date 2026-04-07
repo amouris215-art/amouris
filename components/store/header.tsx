@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useI18n } from '@/i18n/i18n-context';
 import { LanguageToggle } from './language-toggle';
-import { ShoppingBag, User } from 'lucide-react';
+import { ShoppingBag, User, Shield } from 'lucide-react';
 import { Button } from '../ui/button';
 import { useCartStore } from '@/store/cart-store';
 import { useAuthStore } from '@/store/auth-store';
@@ -68,6 +68,15 @@ export function Header() {
                 <User className="h-5 w-5" />
                 <span className="sr-only">{t('common.account')}</span>
               </Button>
+            </Link>
+
+            {/* Admin — discret, sans texte, juste l'icône */}
+            <Link 
+              href="/admin/login" 
+              className="p-2 text-gray-300 hover:text-emerald-700 transition-colors"
+              title="Administration"
+            >
+              <Shield size={18} />
             </Link>
 
             <Button 
