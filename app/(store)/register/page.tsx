@@ -1,196 +1,185 @@
-"use client";
+'use client'
 
-import { useState } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useI18n } from '@/i18n/i18n-context';
-import { wilayas } from '@/lib/wilayas';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { toast } from 'sonner';
-import { registerCustomer } from '@/lib/actions/customers';
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { useCustomerAuth } from '@/store/customer-auth.store'
+import Link from 'next/link'
+
+const WILAYAS = [
+  'Adrar','Chlef','Laghouat','Oum El Bouaghi','Batna','Béjaïa','Biskra',
+  'Béchar','Blida','Bouira','Tamanrasset','Tébessa','Tlemcen','Tiaret',
+  'Tizi Ouzou','Alger','Djelfa','Jijel','Sétif','Saïda','Skikda',
+  'Sidi Bel Abbès','Annaba','Guelma','Constantine','Médéa','Mostaganem',
+  "M'Sila",'Mascara','Ouargla','Oran','El Bayadh','Illizi','Bordj Bou Arréridj',
+  'Boumerdès','El Tarf','Tindouf','Tissemsilt','El Oued','Khenchela',
+  'Souk Ahras','Tipaza','Mila','Aïn Defla','Naâma','Aïn Témouchent',
+  'Ghardaïa','Relizane','Timimoun','Bordj Badji Mokhtar','Ouled Djellal',
+  'Béni Abbès','In Salah','In Guezzam','Touggourt','Djanet','El MGhair','El Meniaa'
+]
 
 export default function RegisterPage() {
-  const router = useRouter();
-  const { t, language } = useI18n();
-  const [isLoading, setIsLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    shopName: '',
-    phone: '',
-    wilaya: '',
-    commune: '',
-    password: '',
-    confirmPassword: '',
-  });
+  const router = useRouter()
+  const { register } = useCustomerAuth()
 
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (formData.password !== formData.confirmPassword) {
-      toast.error(language === 'ar' ? 'كلمات المرور غير متطابقة' : 'Les mots de passe ne correspondent pas');
-      return;
+  const [form, setForm] = useState({
+    firstName: '', lastName: '', phone: '', shopName: '',
+    wilaya: '', commune: '', password: '', confirmPassword: '',
+  })
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  function update(field: string, value: string) {
+    setForm(prev => ({ ...prev, [field]: value }))
+    setError('')
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setError('')
+
+    if (!form.firstName.trim()) return setError('Le prénom est requis')
+    if (!form.lastName.trim()) return setError('Le nom est requis')
+    if (!form.phone.trim()) return setError('Le numéro de téléphone est requis')
+    if (!form.wilaya) return setError('Veuillez sélectionner votre wilaya')
+    if (form.password.length < 6) return setError('Le mot de passe doit contenir au moins 6 caractères')
+    if (form.password !== form.confirmPassword) return setError('Les mots de passe ne correspondent pas')
+
+    setLoading(true)
+    await new Promise(r => setTimeout(r, 400))
+
+    const result = register({
+      firstName: form.firstName.trim(),
+      lastName: form.lastName.trim(),
+      phone: form.phone.trim(),
+      shopName: form.shopName.trim() || undefined,
+      wilaya: form.wilaya,
+      commune: form.commune.trim() || undefined,
+      password: form.password,
+    })
+
+    if (result.ok) {
+      router.replace('/account')
+    } else {
+      setError(result.error || 'Échec de la création du compte')
     }
-
-    setIsLoading(true);
-    try {
-      await registerCustomer({
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        shopName: formData.shopName,
-        phone: formData.phone,
-        password: formData.password,
-        wilaya: formData.wilaya,
-        commune: formData.commune,
-      });
-
-      toast.success(language === 'ar' ? 'تم إنشاء الحساب بنجاح! يمكنك الآن تسجيل الدخول' : 'Compte créé avec succès ! Vous pouvez maintenant vous connecter.');
-      router.push('/login');
-    } catch (error) {
-      console.error('Registration error:', error);
-      toast.error(language === 'ar' ? 'فشل إنشاء الحساب' : 'Échec de la création du compte: ' + (error instanceof Error ? error.message : 'Unknown error'));
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.id]: e.target.value });
-  };
+    setLoading(false)
+  }
 
   return (
-    <div className="container mx-auto px-4 py-16 flex justify-center">
-      <div className="w-full max-w-2xl bg-card border rounded-xl p-8 shadow-sm">
-        <h1 className="text-3xl font-heading font-bold mb-2 text-center">
-          {language === 'ar' ? 'إنشاء حساب جديد' : 'Créer un compte'}
-        </h1>
-        <p className="text-center text-muted-foreground mb-8">
-          {language === 'ar' 
-            ? 'انضم إلينا كتاجر تجزئة للحصول على أفضل أسعار الجملة.' 
-            : 'Rejoignez-nous en tant que détaillant pour obtenir les meilleurs prix de gros.'}
-        </p>
-        
-        <form onSubmit={handleRegister} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <Label htmlFor="firstName">{t('checkout.first_name')} *</Label>
-              <Input 
-                id="firstName" 
-                required 
-                value={formData.firstName}
-                onChange={handleChange}
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4 py-12">
+      <div className="bg-white w-full max-w-lg p-8 rounded-2xl border border-gray-100 shadow-sm">
+        <div className="text-center mb-8">
+          <h1 className="font-serif text-2xl text-emerald-900">
+            Créer un compte
+          </h1>
+          <p className="text-gray-400 text-sm mt-1">Rejoignez Amouris Parfums</p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm text-gray-600 mb-1.5">Prénom *</label>
+              <input
+                type="text" value={form.firstName} onChange={e => update('firstName', e.target.value)}
+                placeholder="Mohammed"
+                className="w-full border border-gray-200 px-4 py-2.5 rounded-lg text-sm focus:outline-none focus:border-emerald-400"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="lastName">{t('checkout.last_name')} *</Label>
-              <Input 
-                id="lastName" 
-                required 
-                value={formData.lastName}
-                onChange={handleChange}
+            <div>
+              <label className="block text-sm text-gray-600 mb-1.5">Nom *</label>
+              <input
+                type="text" value={form.lastName} onChange={e => update('lastName', e.target.value)}
+                placeholder="Benali"
+                className="w-full border border-gray-200 px-4 py-2.5 rounded-lg text-sm focus:outline-none focus:border-emerald-400"
               />
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="shopName">{language === 'ar' ? 'اسم المحل التجاري' : 'Nom du magasin'} *</Label>
-            <Input 
-              id="shopName" 
-              required 
-              value={formData.shopName}
-              onChange={handleChange}
+          <div>
+            <label className="block text-sm text-gray-600 mb-1.5">Téléphone *</label>
+            <input
+              type="tel" value={form.phone} onChange={e => update('phone', e.target.value)}
+              placeholder="0550 00 00 00"
+              autoComplete="tel"
+              className="w-full border border-gray-200 px-4 py-2.5 rounded-lg text-sm focus:outline-none focus:border-emerald-400"
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="phone">{t('checkout.phone')} *</Label>
-            <Input 
-              id="phone" 
-              type="tel" 
-              dir="ltr" 
-              required 
-              placeholder="05xxxxxx"
-              value={formData.phone}
-              onChange={handleChange}
+          <div>
+            <label className="block text-sm text-gray-600 mb-1.5">
+              Nom du magasin <span className="text-gray-400">(optionnel)</span>
+            </label>
+            <input
+              type="text" value={form.shopName} onChange={e => update('shopName', e.target.value)}
+              placeholder="Parfumerie El Nour"
+              className="w-full border border-gray-200 px-4 py-2.5 rounded-lg text-sm focus:outline-none focus:border-emerald-400"
             />
-            <p className="text-xs text-muted-foreground">
-              {language === 'ar' ? 'سيتم استخدامه لتسجيل الدخول.' : 'Sera utilisé pour vous connecter.'}
-            </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <Label htmlFor="wilaya">{t('checkout.wilaya')} *</Label>
-              <Select 
-                required 
-                value={formData.wilaya} 
-                onValueChange={(val) => setFormData({ ...formData, wilaya: val })}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm text-gray-600 mb-1.5">Wilaya *</label>
+              <select
+                value={form.wilaya} onChange={e => update('wilaya', e.target.value)}
+                className="w-full border border-gray-200 px-4 py-2.5 rounded-lg text-sm focus:outline-none focus:border-emerald-400 bg-white"
               >
-                <SelectTrigger className={language === 'ar' ? 'flex-row-reverse' : ''}>
-                  <SelectValue placeholder={t('checkout.wilaya')} />
-                </SelectTrigger>
-                <SelectContent>
-                  {wilayas.map((w) => (
-                    <SelectItem key={w.id} value={w.name}>
-                      {w.id} - {language === 'ar' ? w.nameAR : w.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                <option value="">Sélectionner...</option>
+                {WILAYAS.map(w => <option key={w} value={w}>{w}</option>)}
+              </select>
             </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="commune">{language === 'ar' ? 'البلدية' : 'Commune'} *</Label>
-              <Input 
-                id="commune" 
-                required 
-                value={formData.commune}
-                onChange={handleChange}
+            <div>
+              <label className="block text-sm text-gray-600 mb-1.5">
+                Commune <span className="text-gray-400">(optionnel)</span>
+              </label>
+              <input
+                type="text" value={form.commune} onChange={e => update('commune', e.target.value)}
+                placeholder="Votre commune"
+                className="w-full border border-gray-200 px-4 py-2.5 rounded-lg text-sm focus:outline-none focus:border-emerald-400"
               />
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <Label htmlFor="password">{language === 'ar' ? 'كلمة المرور' : 'Mot de passe'} *</Label>
-              <Input 
-                id="password" 
-                type="password" 
-                dir="ltr" 
-                required 
-                value={formData.password}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">{language === 'ar' ? 'تأكيد كلمة المرور' : 'Confirmer le mot de passe'} *</Label>
-              <Input 
-                id="confirmPassword" 
-                type="password" 
-                dir="ltr" 
-                required 
-                value={formData.confirmPassword}
-                onChange={handleChange}
-              />
-            </div>
+          <div>
+            <label className="block text-sm text-gray-600 mb-1.5">Mot de passe *</label>
+            <input
+              type="password" value={form.password} onChange={e => update('password', e.target.value)}
+              placeholder="Minimum 6 caractères"
+              autoComplete="new-password"
+              className="w-full border border-gray-200 px-4 py-2.5 rounded-lg text-sm focus:outline-none focus:border-emerald-400"
+            />
           </div>
 
-          <Button type="submit" className="w-full h-12 text-lg" disabled={isLoading}>
-             {isLoading ? t('common.loading') : (language === 'ar' ? 'إنشاء الحساب' : 'Créer le compte')}
-          </Button>
+          <div>
+            <label className="block text-sm text-gray-600 mb-1.5">Confirmer le mot de passe *</label>
+            <input
+              type="password" value={form.confirmPassword} onChange={e => update('confirmPassword', e.target.value)}
+              placeholder="Répétez le mot de passe"
+              autoComplete="new-password"
+              className="w-full border border-gray-200 px-4 py-2.5 rounded-lg text-sm focus:outline-none focus:border-emerald-400"
+            />
+          </div>
+
+          {error && (
+            <div className="bg-red-50 border border-red-100 text-red-600 text-sm px-4 py-3 rounded-lg">
+              {error}
+            </div>
+          )}
+
+          <button
+            type="submit" disabled={loading}
+            className="w-full bg-emerald-800 text-white py-3 rounded-lg font-medium text-sm hover:bg-emerald-700 disabled:opacity-50 transition-colors mt-2"
+          >
+            {loading ? 'Création du compte...' : 'Créer mon compte'}
+          </button>
         </form>
 
-        <div className="mt-8 text-center text-sm text-muted-foreground border-t pt-6">
-          {language === 'ar' ? 'لديك حساب بالفعل؟' : 'Vous avez déjà un compte ?'}
-          <Link href="/login" className="text-primary font-medium hover:underline mx-2">
-            {t('common.login')}
+        <p className="text-center text-sm text-gray-500 mt-6">
+          Déjà un compte ?{' '}
+          <Link href="/login" className="text-emerald-700 font-medium hover:underline">
+            Se connecter
           </Link>
-        </div>
+        </p>
       </div>
     </div>
-  );
+  )
 }
-

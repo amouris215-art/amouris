@@ -1,87 +1,81 @@
-"use client";
-
-import { useState } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useI18n } from '@/i18n/i18n-context';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { toast } from 'sonner';
+'use client'
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { useCustomerAuth } from '@/store/customer-auth.store'
+import Link from 'next/link'
 
 export default function LoginPage() {
-  const router = useRouter();
-  const { t, language } = useI18n();
-  const [isLoading, setIsLoading] = useState(false);
-  const [phone, setPhone] = useState('');
-  const [password, setPassword] = useState('');
+  const router = useRouter()
+  const { login } = useCustomerAuth()
+  const [phone, setPhone] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    
-    // Mock login for Phase 1
-    setTimeout(() => {
-      if (phone === '0550123456' && password === '123456') {
-        toast.success(language === 'ar' ? 'تم تسجيل الدخول بنجاح' : 'Connexion réussie !');
-        router.push('/account');
-      } else {
-        toast.error(language === 'ar' ? 'بيانات غير صحيحة' : 'Identifiants incorrects');
-      }
-      setIsLoading(false);
-    }, 1000);
-  };
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setError('')
+    setLoading(true)
+    await new Promise(r => setTimeout(r, 400))
+    const result = login(phone, password)
+    if (result.ok) {
+      router.replace('/account')
+    } else {
+      setError(result.error || 'Identifiants incorrects')
+    }
+    setLoading(false)
+  }
 
   return (
-    <div className="container mx-auto px-4 py-16 flex justify-center min-h-[80vh] items-center">
-      <div className="w-full max-w-md bg-white border border-emerald-100 p-10 shadow-xl">
-        <h1 className="text-3xl font-serif text-emerald-950 mb-4 text-center">
-          {language === 'ar' ? 'تسجيل الدخول' : 'Connexion'}
-        </h1>
-        <p className="text-center text-gray-500 mb-8 font-light">
-          {language === 'ar' 
-            ? 'مرحباً بك مجدداً في متجر Amouris Parfums.' 
-            : 'Bon retour sur Amouris Parfums.'}
-        </p>
-        
-        <form onSubmit={handleLogin} className="space-y-6">
-          <div className="space-y-2 text-start">
-            <Label htmlFor="phone">{language === 'ar' ? 'رقم الهاتف' : 'Numéro de téléphone'}</Label>
-            <Input 
-              id="phone" 
-              type="tel" 
-              required 
-              placeholder="05xxxxxx" 
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              className="bg-neutral-50"
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <div className="bg-white w-full max-w-sm p-8 rounded-2xl border border-gray-100 shadow-sm">
+        <div className="text-center mb-8">
+          <h1 className="font-serif text-2xl text-emerald-900">Connexion</h1>
+          <p className="text-gray-400 text-sm mt-1">Accédez à votre compte</p>
+        </div>
+        <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+          <div>
+            <label className="block text-sm text-gray-600 mb-1.5">Numéro de téléphone</label>
+            <input
+              type="tel" value={phone} onChange={e => { setPhone(e.target.value); setError('') }}
+              placeholder="0550 00 00 00"
+              autoComplete="tel"
+              className="w-full border border-gray-200 px-4 py-2.5 rounded-lg text-sm focus:outline-none focus:border-emerald-400"
             />
           </div>
-
-          <div className="space-y-2 text-start">
-            <Label htmlFor="password">{language === 'ar' ? 'كلمة المرور' : 'Mot de passe'}</Label>
-            <Input 
-              id="password" 
-              type="password" 
-              required 
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="bg-neutral-50"
+          <div>
+            <label className="block text-sm text-gray-600 mb-1.5">Mot de passe</label>
+            <input
+              type="password" value={password} onChange={e => { setPassword(e.target.value); setError('') }}
+              placeholder="••••••••"
+              autoComplete="current-password"
+              className="w-full border border-gray-200 px-4 py-2.5 rounded-lg text-sm focus:outline-none focus:border-emerald-400"
             />
           </div>
-
-          <Button type="submit" className="w-full h-12 bg-emerald-900 hover:bg-emerald-950 text-white" disabled={isLoading}>
-             {isLoading ? t('common.loading') : (language === 'ar' ? 'دخول' : 'Se connecter')}
-          </Button>
+          {error && (
+            <div className="bg-red-50 border border-red-100 text-red-600 text-sm px-4 py-3 rounded-lg">
+              {error}
+            </div>
+          )}
+          <button
+            type="submit" disabled={loading}
+            className="w-full bg-emerald-800 text-white py-3 rounded-lg font-medium text-sm hover:bg-emerald-700 disabled:opacity-50 transition-colors"
+          >
+            {loading ? 'Connexion...' : 'Se connecter'}
+          </button>
         </form>
-
-        <div className="mt-8 text-center text-sm text-gray-500 border-t pt-6">
-          {language === 'ar' ? 'ليس لديك حساب؟' : 'Pas encore de compte ?'}
-          <Link href="/register" className="text-emerald-800 font-medium hover:underline mx-2">
-            {language === 'ar' ? 'إنشاء حساب جديد' : 'Créer un compte'}
+        <p className="text-center text-sm text-gray-500 mt-6">
+          Pas encore de compte ?{' '}
+          <Link href="/register" className="text-emerald-700 font-medium hover:underline">
+            Créer un compte
+          </Link>
+        </p>
+        <div className="mt-4 pt-4 border-t border-gray-100 text-center">
+          <Link href="/admin/login" className="text-xs text-gray-300 hover:text-gray-400 transition-colors">
+            Accès administrateur →
           </Link>
         </div>
       </div>
     </div>
-  );
+  )
 }
