@@ -145,7 +145,13 @@
     "order_total": "Total",
     "view_details": "Détails",
     "invoice": "Facture",
-    "download_invoice": "Télécharger la facture"
+    "download_invoice": "Télécharger la facture",
+    "profile_info": "Informations du profil",
+    "full_name": "Nom complet",
+    "shop_name": "Nom du magasin",
+    "phone": "Téléphone",
+    "address": "Adresse",
+    "wilaya": "Wilaya"
   },
   "footer": {
     "tagline": "La destination de choix pour les professionnels à la recherche d'huiles de parfum et flacons de luxe.",

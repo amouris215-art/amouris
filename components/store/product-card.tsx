@@ -1,30 +1,44 @@
-"use client";
-
-import Link from 'next/link';
-import Image from 'next/image';
-import { motion } from 'framer-motion';
-import { useI18n } from '@/i18n/i18n-context';
-import { Product } from '@/lib/types';
-import { tags as mockTags } from '@/lib/mock-data';
+'use client'
+import Link from 'next/link'
+import Image from 'next/image'
+import { motion } from 'framer-motion'
+import { useI18n } from '@/i18n/i18n-context'
+import { useTagsStore } from '@/store/tags.store'
+import { Product } from '@/store/products.store'
 
 interface ProductCardProps {
-  product: Product;
-  index?: number;
+  product: Product
+  index?: number
+  compact?: boolean
 }
 
-export function ProductCard({ product, index = 0 }: ProductCardProps) {
-  const { t, language } = useI18n();
+export function ProductCard({ product, index = 0, compact = false }: ProductCardProps) {
+  const { t, language } = useI18n()
+  const tags = useTagsStore(s => s.tags)
   
-  const name = language === 'ar' ? product.nameAR : product.nameFR;
-  const isPerfume = product.type === 'perfume';
+  const name = language === 'ar' ? product.name_ar : product.name_fr
+  const isPerfume = product.product_type === 'perfume'
   
-  // Get the first tag's name if available
-  const tag = mockTags.find(t => product.tagIds?.includes(t.id));
-  const tagName = tag ? (language === 'ar' ? tag.nameAR : tag.nameFR) : null;
+  // Get tag info
+  const firstTag = tags.find(t => product.tag_ids?.includes(t.id))
+  const tagName = firstTag ? (language === 'ar' ? firstTag.name_ar : firstTag.name_fr) : null
 
   const displayPrice = isPerfume 
-    ? product.pricePerGram
-    : Math.min(...(product.variants?.map(v => v.price) || [0]));
+    ? product.price_per_gram
+    : Math.min(...(product.variants?.map(v => v.price) || [0]))
+
+  // Category based styling
+  const getGradient = (catId: string) => {
+    const gradients: Record<string, string> = {
+      'cat-01': 'from-amber-50 to-orange-50', // Oud
+      'cat-02': 'from-rose-50 to-pink-50',     // Floral
+      'cat-03': 'from-indigo-50 to-blue-50',    // Oriental
+      'cat-04': 'from-emerald-50 to-teal-50',  // Frais
+      'cat-05': 'from-amber-100 to-yellow-50', // Boisé
+      'cat-06': 'from-neutral-50 to-gray-100', // Musqué
+    }
+    return gradients[catId] || 'from-emerald-50/50 to-amber-50/50'
+  }
 
   return (
     <motion.div
@@ -34,59 +48,67 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
       transition={{ delay: index * 0.05 }}
       className="h-full"
     >
-      <Link href={`/product/${product.id}`} className="group block relative bg-white border border-neutral-100 hover:border-emerald-200 hover:shadow-xl transition-all duration-300 rounded-none overflow-hidden h-full flex flex-col">
-        {/* Image Container */}
-        <div className="relative aspect-[4/5] bg-neutral-50 overflow-hidden">
-          <Image 
-            src={product.images[0] || 'https://images.unsplash.com/photo-1594035910387-fea477262dc0?q=80&w=800'} 
-            alt={name} 
-            fill 
-            sizes="(max-width: 768px) 50vw, 25vw"
-            className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-          />
+      <Link href={`/product/${product.slug}`} className="group block relative bg-white border border-emerald-50 hover:border-emerald-200 hover:shadow-2xl transition-all duration-500 rounded-2xl overflow-hidden h-full flex flex-col">
+        {/* Image / Gradient Container */}
+        <div className={`relative aspect-square md:aspect-[4/5] overflow-hidden bg-gradient-to-br ${getGradient(product.category_id)}`}>
+          {product.images?.[0] ? (
+            <Image 
+              src={product.images[0]} 
+              alt={name} 
+              fill 
+              sizes="(max-width: 768px) 50vw, 25vw"
+              className="object-cover transition-transform duration-1000 ease-out group-hover:scale-110"
+            />
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-emerald-900/10 font-serif text-8xl md:text-9xl select-none group-hover:scale-110 transition-transform duration-700">
+                    {product.name_fr.charAt(0)}
+                </span>
+            </div>
+          )}
           
-          {/* Tag badge */}
+          {/* Badge Tag */}
           {tagName && (
-            <div className="absolute top-2 left-2 md:top-4 md:left-4 z-10">
-              <span className={`text-[8px] md:text-[10px] uppercase tracking-[0.1em] md:tracking-[0.2em] px-2 py-1 md:px-3 md:py-1.5 font-bold shadow-sm ${
-                tag?.id === 't1' ? 'bg-emerald-800 text-white' : 
-                tag?.id === 't2' ? 'bg-amber-400 text-emerald-950' : 
-                'bg-rose-900 text-white'
-              }`}>
+            <div className="absolute top-3 left-3 z-10">
+              <span className="text-[9px] uppercase tracking-widest px-3 py-1.5 font-bold bg-white text-emerald-950 shadow-sm rounded-full">
                 {tagName}
               </span>
             </div>
           )}
 
-          {/* Hover overlay - Subtle */}
+          {/* Badge Type */}
+          <div className="absolute top-3 right-3 z-10">
+            <span className={`text-[8px] uppercase tracking-[0.2em] px-2.5 py-1.5 font-bold rounded-full ${isPerfume ? 'bg-emerald-900 text-white' : 'bg-amber-500 text-emerald-900'}`}>
+              {isPerfume ? (language === 'ar' ? 'عطر' : 'Parfum') : (language === 'ar' ? 'قارورة' : 'Flacon')}
+            </span>
+          </div>
+
           <div className="absolute inset-0 bg-emerald-950/0 group-hover:bg-emerald-950/5 transition-colors duration-300" />
           
-          <div className="absolute bottom-4 left-0 right-0 flex justify-center opacity-0 translate-y-2 lg:group-hover:opacity-100 lg:group-hover:translate-y-0 transition-all duration-300 hidden md:flex">
-            <span className="bg-white text-emerald-950 text-[10px] uppercase tracking-[0.2em] px-6 py-2.5 font-bold shadow-lg border border-emerald-50">
+          <div className="absolute bottom-4 left-4 right-4 flex justify-center opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-500">
+            <span className="w-full text-center bg-white/95 backdrop-blur-sm text-emerald-950 text-[10px] uppercase tracking-[0.2em] py-3 font-bold shadow-xl rounded-xl border border-emerald-100 ring-4 ring-black/5">
               {t('common.view_details')}
             </span>
           </div>
         </div>
 
         {/* Info */}
-        <div className="p-3 md:p-5 flex-1 flex flex-col justify-between">
-          <div>
-            <p className="text-[9px] md:text-[10px] text-amber-600 uppercase tracking-[0.2em] md:tracking-[0.3em] mb-1 md:mb-2 font-bold opacity-80">
-              {isPerfume ? (language === 'ar' ? 'عطر زيتي' : 'Huile de Parfum') : (language === 'ar' ? 'قارورة فاخرة' : 'Flacon de Luxe')}
-            </p>
-            <h3 className="font-serif text-base md:text-xl text-emerald-950 mb-2 line-clamp-2 md:line-clamp-1 group-hover:text-emerald-700 transition-colors uppercase tracking-tight md:tracking-normal leading-tight">
+        <div className="p-4 md:p-6 flex-1 flex flex-col">
+          <div className="mb-4">
+            <h3 className="font-serif text-lg md:text-xl text-emerald-950 mb-1 line-clamp-2 md:line-clamp-1 group-hover:text-emerald-700 transition-colors leading-tight">
               {name}
             </h3>
+            <p className="text-emerald-900/30 font-arabic text-sm text-right" dir="rtl">{language === 'ar' ? product.name_fr : product.name_ar}</p>
           </div>
           
-          <div className="pt-3 border-t border-neutral-50 flex flex-col">
-            <p className="text-emerald-900 font-bold text-sm md:text-lg">
-              {isPerfume ? `${displayPrice.toLocaleString()} DZD/g` : `Dès ${displayPrice.toLocaleString()} DZD`}
+          <div className="mt-auto pt-4 border-t border-emerald-50 flex items-center justify-between">
+            <p className="text-emerald-950 font-black text-base md:text-xl">
+              {displayPrice?.toLocaleString()} <span className="text-[10px] font-normal text-emerald-900/50 uppercase tracking-widest">{isPerfume ? 'DZD/g' : 'DZD'}</span>
             </p>
+            {!isPerfume && <span className="text-[10px] text-emerald-900/40 font-medium uppercase tracking-tighter italic">Dès</span>}
           </div>
         </div>
       </Link>
     </motion.div>
-  );
+  )
 }
-

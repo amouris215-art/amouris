@@ -3,42 +3,33 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
 interface AdminAuthStore {
-  isAdminAuthenticated: boolean
-  adminEmail: string | null
+  isAuthenticated: boolean
+  email: string | null
+  adminEmail: string | null // compatibility
   login: (email: string, password: string) => { ok: boolean; error?: string }
   logout: () => void
 }
 
-const ADMIN_CREDENTIALS = {
-  email: 'admin@gmail.com',
-  password: '123456',
-}
-
-export const useAdminAuth = create<AdminAuthStore>()(
+export const useAdminAuthStore = create<AdminAuthStore>()(
   persist(
     (set) => ({
-      isAdminAuthenticated: false,
-      adminEmail: null,
-
+      isAuthenticated: false,
+      email: null,
+      adminEmail: null, // compatibility
       login: (email, password) => {
-        if (
-          email.trim().toLowerCase() === ADMIN_CREDENTIALS.email &&
-          password === ADMIN_CREDENTIALS.password
-        ) {
-          set({ isAdminAuthenticated: true, adminEmail: email })
+        if (email === 'admin@gmail.com' && password === '123456') {
+          set({ isAuthenticated: true, email, adminEmail: email })
           return { ok: true }
         }
-        return { ok: false, error: 'Email ou mot de passe administrateur incorrect' }
+        return { ok: false, error: 'Identifiants incorrects' }
       },
-
-      logout: () => set({ isAdminAuthenticated: false, adminEmail: null }),
+      logout: () => set({ isAuthenticated: false, email: null, adminEmail: null }),
     }),
     {
       name: 'amouris_admin_session',
-      partialize: (s) => ({
-        isAdminAuthenticated: s.isAdminAuthenticated,
-        adminEmail: s.adminEmail,
-      }),
+      partialize: (s) => ({ isAuthenticated: s.isAuthenticated, email: s.email }),
     }
   )
 )
+
+export const useAdminAuth = useAdminAuthStore
