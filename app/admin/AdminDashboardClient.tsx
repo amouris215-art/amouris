@@ -1,53 +1,17 @@
 'use client'
-
-import { useState, useEffect } from 'react'
-import { useAdminAuthStore } from '@/store/admin-auth.store'
-import { getProducts } from '@/lib/actions/products'
-import { getAllOrders } from '@/lib/actions/orders'
-import { getCustomers } from '@/lib/actions/customers'
-import { ShoppingBag, Users, TrendingUp, Package, Clock, CheckCircle, ArrowRight, Loader2 } from 'lucide-react'
+import { ShoppingBag, Users, TrendingUp, Package, Clock, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
-import { Product, Order, Customer } from '@/lib/types'
+import { Order, Customer, Product } from '@/lib/types'
 
-export default function AdminDashboard() {
-  const { email } = useAdminAuthStore()
-  const [products, setProducts] = useState<Product[]>([])
-  const [orders, setOrders] = useState<Order[]>([])
-  const [customers, setCustomers] = useState<Customer[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+interface AdminDashboardClientProps {
+  orders: Order[]
+  customers: Customer[]
+  products: Product[]
+  adminEmail?: string
+}
 
-  const loadData = async () => {
-    setIsLoading(true)
-    try {
-      const [p, o, c] = await Promise.all([
-        getProducts({ status: 'active' }),
-        getAllOrders(),
-        getCustomers()
-      ])
-      setProducts(p)
-      setOrders(o)
-      setCustomers(c)
-    } catch (error) {
-      console.error('Failed to load dashboard data:', error)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    loadData()
-  }, [])
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="animate-spin text-emerald-900" size={48} />
-      </div>
-    )
-  }
-
+export default function AdminDashboardClient({ orders, customers, products, adminEmail }: AdminDashboardClientProps) {
   const totalRevenue = orders.reduce((s, o) => s + o.total, 0)
-  const pendingOrders = orders.filter(o => o.status === 'pending').length
   const activeProducts = products.filter(p => p.status === 'active').length
 
   const stats = [
@@ -64,7 +28,7 @@ export default function AdminDashboard() {
       <div className="flex justify-between items-end">
         <div>
           <h1 className="text-3xl font-bold text-emerald-950 font-serif">Vue d'ensemble</h1>
-          <p className="text-emerald-950/40 text-sm mt-1">Plateforme Amouris Parfums — Admin : {email}</p>
+          <p className="text-emerald-950/40 text-sm mt-1">Plateforme Amouris Parfums — Admin : {adminEmail}</p>
         </div>
         <div className="flex gap-4">
             <Link href="/admin/orders" className="text-xs font-bold bg-white px-4 py-2 border border-emerald-50 rounded-lg shadow-sm hover:bg-emerald-50 transition-colors uppercase tracking-widest">Voir Commandes</Link>
@@ -86,8 +50,8 @@ export default function AdminDashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Recent Orders */}
-        <div className="lg:col-span-2 bg-white rounded-[2.5rem] border border-emerald-50 overflow-hidden shadow-sm">
+        {/* Commandes récentes */}
+        <div className="lg:col-span-2 bg-white rounded-[2rem] border border-emerald-50 overflow-hidden shadow-sm">
             <div className="p-8 border-b border-emerald-50 flex items-center justify-between">
                 <h2 className="text-xl font-bold text-emerald-950 font-serif">Commandes récentes</h2>
                 <Link href="/admin/orders" className="text-xs font-black text-amber-600 hover:text-amber-500 flex items-center gap-2 uppercase tracking-widest">
@@ -104,8 +68,8 @@ export default function AdminDashboard() {
                                 </div>
                                 <div>
                                     <p className="font-black text-emerald-950 font-mono text-sm tracking-tight">{order.orderNumber}</p>
-                                    <p className="text-xs text-emerald-950/30 font-medium">
-                                      {order.guestInfo ? `${order.guestInfo.firstName} ${order.guestInfo.lastName}` : 'Client'}
+                                    <p className="text-xs text-emerald-950/30 font-medium whitespace-nowrap overflow-hidden text-ellipsis max-w-[150px]">
+                                      {order.guestInfo ? `${order.guestInfo.firstName} ${order.guestInfo.lastName}` : 'Client Inconnu'}
                                     </p>
                                 </div>
                             </div>
@@ -124,13 +88,13 @@ export default function AdminDashboard() {
             </div>
         </div>
 
-        {/* New Customers */}
-        <div className="bg-white rounded-[2.5rem] border border-emerald-50 p-8 shadow-sm">
+        {/* Nouveaux Clients */}
+        <div className="bg-white rounded-[2rem] border border-emerald-50 p-8 shadow-sm">
             <h2 className="text-xl font-bold text-emerald-950 font-serif mb-8 text-center">Nouveaux Clients</h2>
             <div className="space-y-6">
-                {customers.slice(0, 5).map(customer => (
+                {customers.slice(0, 8).map(customer => (
                     <div key={customer.id} className="flex items-center gap-4 group">
-                        <div className="w-10 h-10 bg-amber-50 rounded-full flex items-center justify-center text-amber-700 font-bold group-hover:bg-amber-500 group-hover:text-white transition-colors">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold group-hover:scale-110 transition-all ${customer.status === 'frozen' ? 'bg-rose-50 text-rose-300' : 'bg-amber-50 text-amber-700'}`}>
                             {customer.firstName.charAt(0)}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -143,7 +107,7 @@ export default function AdminDashboard() {
                     </div>
                 ))}
                 {customers.length === 0 && (
-                  <p className="text-center text-emerald-950/20 py-10">Aucun client inscrit</p>
+                   <p className="text-center text-emerald-950/20 py-8">Aucun client inscrit</p>
                 )}
             </div>
         </div>

@@ -1,6 +1,6 @@
 'use client'
 import { ProductCard } from './product-card'
-import { Product } from '@/store/products.store'
+import { Product } from '@/lib/types'
 
 export function ProductGrid({ products }: { products: Product[] }) {
   return (

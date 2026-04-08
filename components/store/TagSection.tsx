@@ -4,12 +4,18 @@ import { ArrowRight } from 'lucide-react'
 import { ProductCard } from './product-card'
 import { useI18n } from '@/i18n/i18n-context'
 import { motion } from 'framer-motion'
+import { Tag, Product } from '@/lib/types'
 
-export function TagSection({ tag, products }: { tag: any; products: any[] }) {
+interface TagSectionProps {
+  tag: Tag
+  products: Product[]
+}
+
+export function TagSection({ tag, products }: TagSectionProps) {
   const { language } = useI18n()
 
-  const title = language === 'ar' ? tag.name_ar : tag.name_fr
-  const subtitle = language === 'ar' ? tag.name_fr : tag.name_ar
+  const title = language === 'ar' ? tag.nameAR : tag.nameFR
+  const subtitle = language === 'ar' ? tag.nameFR : tag.nameAR
 
   return (
     <section className="py-24 overflow-hidden">
@@ -23,7 +29,7 @@ export function TagSection({ tag, products }: { tag: any; products: any[] }) {
         >
           <div className="relative">
             <div className="inline-block px-3 py-1 bg-amber-50 text-amber-700 text-[10px] font-black uppercase tracking-[0.2em] mb-3 rounded-full border border-amber-100">
-                {tag.slug}
+                {tag.id.startsWith('tag-') ? tag.id.replace('tag-', '') : 'tag'}
             </div>
             <h2 className="font-serif text-4xl md:text-5xl text-emerald-950 flex flex-col md:flex-row md:items-baseline gap-4">
               <span>{title}</span>
@@ -33,7 +39,7 @@ export function TagSection({ tag, products }: { tag: any; products: any[] }) {
           </div>
           
           <Link
-            href={`/shop?tag=${tag.slug}`}
+            href={`/shop?tag=${tag.id}`}
             className="flex items-center gap-2 text-sm text-emerald-800 hover:text-emerald-600 font-bold group bg-emerald-50 px-6 py-3 rounded-xl transition-all hover:bg-emerald-100"
           >
             Voir tout {title}

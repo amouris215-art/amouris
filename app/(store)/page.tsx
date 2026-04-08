@@ -1,21 +1,52 @@
 'use client'
-import { useMemo } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { HeroSection } from '@/components/store/HeroSection'
 import { BrandsMarquee } from '@/components/store/BrandsMarquee'
 import { TagSection } from '@/components/store/TagSection'
 import { CategoriesGrid } from '@/components/store/CategoriesGrid'
 import { HowItWorks } from '@/components/store/HowItWorks'
-import { useProductsStore } from '@/store/products.store'
-import { useTagsStore } from '@/store/tags.store'
-import { useBrandsStore } from '@/store/brands.store'
-import { useCategoriesStore } from '@/store/categories.store'
+import { getProducts } from '@/lib/actions/products'
+import { getHomepageTags } from '@/lib/actions/tags'
+import { getBrands } from '@/lib/actions/brands'
+import { getCategories } from '@/lib/actions/categories'
+import { Product, Tag, Brand, Category } from '@/lib/types'
 
 export default function HomePage() {
-  const products = useProductsStore(s => s.products)
-  const tags = useTagsStore(s => s.tags)
-  const homepageTags = useMemo(() => tags.filter(t => t.show_on_homepage).sort((a, b) => a.homepage_order - b.homepage_order), [tags])
-  const brands = useBrandsStore(s => s.brands)
-  const categories = useCategoriesStore(s => s.categories)
+  const [products, setProducts] = useState<Product[]>([])
+  const [tags, setTags] = useState<Tag[]>([])
+  const [brands, setBrands] = useState<Brand[]>([])
+  const [categories, setCategories] = useState<Category[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const [p, t, b, c] = await Promise.all([
+          getProducts({ status: 'active' }),
+          getHomepageTags(),
+          getBrands(),
+          getCategories()
+        ])
+        setProducts(p)
+        setTags(t)
+        setBrands(b)
+        setCategories(c)
+      } catch (error) {
+        console.error('Failed to load homepage data:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    loadData()
+  }, [])
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-emerald-900"></div>
+      </div>
+    )
+  }
 
   return (
     <main>
@@ -25,10 +56,10 @@ export default function HomePage() {
       {/* 2. Marques défilantes (Dynamique) */}
       <BrandsMarquee brands={brands} />
 
-      {/* 3. Sections par tag (Arrivage, Best-seller, Premium) - Dynamique depuis le store */}
-      {homepageTags.map(tag => {
+      {/* 3. Sections par tag (Arrivage, Best-seller, Premium) - Dynamique depuis Supabase */}
+      {tags.map(tag => {
         const tagProducts = products.filter(
-          p => p.status === 'active' && p.tag_ids?.includes(tag.id)
+          p => p.status === 'active' && p.tagIds?.includes(tag.id)
         )
         if (tagProducts.length === 0) return null
         return (
@@ -43,7 +74,7 @@ export default function HomePage() {
       {/* 4. Grille catégories (Dynamique) */}
       <CategoriesGrid categories={categories} />
 
-      {/* 5. Comment commander (Remplacé par la version premium) */}
+      {/* 5. Comment commander (Version premium) */}
       <HowItWorks />
     </main>
   )

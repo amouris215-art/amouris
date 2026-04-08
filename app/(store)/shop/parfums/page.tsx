@@ -1,14 +1,29 @@
 'use client'
-import { useMemo } from 'react'
-import { useProductsStore } from '@/store/products.store'
+import { useState, useEffect, useMemo } from 'react'
+import { getProducts } from '@/lib/actions/products'
 import { ProductGrid } from '@/components/store/ProductGrid'
 import { useI18n } from '@/i18n/i18n-context'
 import { motion } from 'framer-motion'
+import { Product } from '@/lib/types'
 
 export default function ParfumsPage() {
   const { language } = useI18n()
-  const allProducts = useProductsStore(s => s.products)
-  const parfums = useMemo(() => allProducts.filter(p => p.status === 'active' && p.product_type === 'perfume'), [allProducts])
+  const [products, setProducts] = useState<Product[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    async function loadProducts() {
+      try {
+        const data = await getProducts({ type: 'perfume', status: 'active' })
+        setProducts(data)
+      } catch (error) {
+        console.error('Failed to fetch perfumes:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    loadProducts()
+  }, [])
   
   return (
     <div>
@@ -24,13 +39,19 @@ export default function ParfumsPage() {
             </h1>
             <div className="w-12 h-1 bg-amber-400 mx-auto rounded-full mb-6" />
             <p className="text-emerald-200/60 text-sm md:text-base uppercase tracking-widest font-medium">
-                {parfums.length} {language === 'ar' ? 'مرجع متاح' : 'Références disponibles'} — {language === 'ar' ? 'الحد الأدنى للطلب 100 جم' : 'Min. 100g'}
+                {isLoading ? '...' : products.length} {language === 'ar' ? 'مرجع متاح' : 'Références disponibles'} — {language === 'ar' ? 'الحد الأدنى للطلب 100 جم' : 'Min. 100g'}
             </p>
         </motion.div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 py-20">
-        <ProductGrid products={parfums} />
+        {isLoading ? (
+          <div className="flex justify-center py-20">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-emerald-900"></div>
+          </div>
+        ) : (
+          <ProductGrid products={products} />
+        )}
       </div>
     </div>
   )

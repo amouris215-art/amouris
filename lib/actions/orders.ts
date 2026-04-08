@@ -141,7 +141,7 @@ export async function getOrderById(id: string) {
 
   const { data, error } = await supabase
     .from('orders')
-    .select('*, order_items(*)')
+    .select('*, order_items(*), profiles(first_name, last_name, phone, wilaya)')
     .eq('id', id)
     .single();
 
@@ -239,23 +239,9 @@ export async function updatePayment(id: string, amountPaid: number) {
   revalidatePath('/admin/orders');
 }
 
-function mapDbOrderToFrontend(dbOrder: {
-  id: string;
-  order_number: string;
-  customer_id: string | null;
-  guest_phone?: string;
-  guest_first_name?: string;
-  guest_last_name?: string;
-  guest_wilaya?: string;
-  order_items?: any[];
-  total_amount: number | string;
-  order_status: string;
-  payment_status: string;
-  amount_paid: number | string;
-  created_at: string;
-  updated_at: string;
-  admin_notes?: string;
-}): Order {
+function mapDbOrderToFrontend(dbOrder: any): Order {
+  const customerProfile = dbOrder.profiles;
+  
   return {
     id: dbOrder.id,
     orderNumber: dbOrder.order_number,
@@ -265,7 +251,12 @@ function mapDbOrderToFrontend(dbOrder: {
       lastName: dbOrder.guest_last_name || '',
       phoneNumber: dbOrder.guest_phone,
       wilaya: dbOrder.guest_wilaya || '',
-    } : undefined,
+    } : (customerProfile ? {
+      firstName: customerProfile.first_name || '',
+      lastName: customerProfile.last_name || '',
+      phoneNumber: customerProfile.phone || '',
+      wilaya: customerProfile.wilaya || '',
+    } : undefined),
     items: (dbOrder.order_items || []).map((item: any) => ({
       productId: item.product_id,
       variantId: item.flacon_variant_id,
@@ -283,3 +274,4 @@ function mapDbOrderToFrontend(dbOrder: {
     notes: dbOrder.admin_notes,
   };
 }
+

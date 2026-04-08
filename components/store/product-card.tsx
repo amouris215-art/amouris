@@ -4,7 +4,7 @@ import Image from 'next/image'
 import { motion } from 'framer-motion'
 import { useI18n } from '@/i18n/i18n-context'
 import { useTagsStore } from '@/store/tags.store'
-import { Product } from '@/store/products.store'
+import { Product } from '@/lib/types'
 
 interface ProductCardProps {
   product: Product
@@ -16,15 +16,15 @@ export function ProductCard({ product, index = 0, compact = false }: ProductCard
   const { t, language } = useI18n()
   const tags = useTagsStore(s => s.tags)
   
-  const name = language === 'ar' ? product.name_ar : product.name_fr
-  const isPerfume = product.product_type === 'perfume'
+  const name = language === 'ar' ? product.nameAR : product.nameFR
+  const isPerfume = product.type === 'perfume'
   
   // Get tag info
-  const firstTag = tags.find(t => product.tag_ids?.includes(t.id))
-  const tagName = firstTag ? (language === 'ar' ? firstTag.name_ar : firstTag.name_fr) : null
+  const firstTag = tags.find(tag => product.tagIds?.includes(tag.id))
+  const tagName = firstTag ? (language === 'ar' ? firstTag.nameAR : firstTag.nameFR) : null
 
   const displayPrice = isPerfume 
-    ? product.price_per_gram
+    ? product.pricePerGram
     : Math.min(...(product.variants?.map(v => v.price) || [0]))
 
   // Category based styling
@@ -50,7 +50,7 @@ export function ProductCard({ product, index = 0, compact = false }: ProductCard
     >
       <Link href={`/product/${product.slug}`} className="group block relative bg-white border border-emerald-50 hover:border-emerald-200 hover:shadow-2xl transition-all duration-500 rounded-2xl overflow-hidden h-full flex flex-col">
         {/* Image / Gradient Container */}
-        <div className={`relative aspect-square md:aspect-[4/5] overflow-hidden bg-gradient-to-br ${getGradient(product.category_id)}`}>
+        <div className={`relative aspect-square md:aspect-[4/5] overflow-hidden bg-gradient-to-br ${getGradient(product.categoryId)}`}>
           {product.images?.[0] ? (
             <Image 
               src={product.images[0]} 
@@ -62,7 +62,7 @@ export function ProductCard({ product, index = 0, compact = false }: ProductCard
           ) : (
             <div className="absolute inset-0 flex items-center justify-center">
                 <span className="text-emerald-900/10 font-serif text-8xl md:text-9xl select-none group-hover:scale-110 transition-transform duration-700">
-                    {product.name_fr.charAt(0)}
+                    {product.nameFR.charAt(0)}
                 </span>
             </div>
           )}
@@ -98,7 +98,7 @@ export function ProductCard({ product, index = 0, compact = false }: ProductCard
             <h3 className="font-serif text-lg md:text-xl text-emerald-950 mb-1 line-clamp-2 md:line-clamp-1 group-hover:text-emerald-700 transition-colors leading-tight">
               {name}
             </h3>
-            <p className="text-emerald-900/30 font-arabic text-sm text-right" dir="rtl">{language === 'ar' ? product.name_fr : product.name_ar}</p>
+            <p className="text-emerald-900/30 font-arabic text-sm text-right" dir="rtl">{language === 'ar' ? product.nameFR : product.nameAR}</p>
           </div>
           
           <div className="mt-auto pt-4 border-t border-emerald-50 flex items-center justify-between">

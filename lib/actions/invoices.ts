@@ -188,3 +188,19 @@ export async function getInvoiceByOrder(orderId: string) {
   if (error) return null;
   return data;
 }
+
+export async function getAllInvoices() {
+  const cookieStore = cookies();
+  const supabase = createClient(cookieStore);
+
+  const { data, error } = await supabase
+    .from('invoices')
+    .select('*, orders(order_number, total_amount, profiles(first_name, last_name, shop_name), guest_first_name, guest_last_name)')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching invoices:', error);
+    return [];
+  }
+  return data;
+}

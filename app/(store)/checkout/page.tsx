@@ -4,8 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useI18n } from '@/i18n/i18n-context'
 import { useCartStore } from '@/store/cart-store'
 import { useCustomerAuthStore } from '@/store/customer-auth.store'
-import { useOrdersStore } from '@/store/orders.store'
-import { useProductsStore } from '@/store/products.store'
+import { createOrder } from '@/lib/actions/orders'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -20,24 +19,21 @@ export default function CheckoutPage() {
   const { t, language } = useI18n()
   const { items, getTotal, clear } = useCartStore()
   const { currentCustomer: user } = useCustomerAuthStore()
-  const createOrderInstance = useOrdersStore(s => s.createOrder)
-  const updateStockGrams = useProductsStore(s => s.updateStockGrams)
-  const updateVariantStock = useProductsStore(s => s.updateVariantStock)
 
   const [formData, setFormData] = useState({
-    firstName: user?.first_name || '',
-    lastName: user?.last_name || '',
-    phone: user?.phone || '',
-    wilaya: user?.wilaya || '',
+    firstName: '',
+    lastName: '',
+    phone: '',
+    wilaya: '',
   })
 
   // Sync with user changes
   useEffect(() => {
     if (user) {
         setFormData({
-            firstName: user.first_name,
-            lastName: user.last_name,
-            phone: user.phone,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            phone: user.phoneNumber,
             wilaya: user.wilaya
         })
     }
@@ -64,45 +60,36 @@ export default function CheckoutPage() {
     setIsSubmitting(true)
     
     try {
-      const shippingFee = 800
+      const shippingFee = 810 // Example shipping fee
       const orderTotal = getTotal() + shippingFee
       
-      const order = createOrderInstance({
-        customer_id: user?.id || null,
-        guest_first_name: !user ? formData.firstName : undefined,
-        guest_last_name: !user ? formData.lastName : undefined,
-        guest_phone: !user ? formData.phone : undefined,
-        guest_wilaya: !user ? formData.wilaya : undefined,
+      const order = await createOrder({
+        customerId: user?.id || 'guest',
+        guestInfo: !user ? {
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          phoneNumber: formData.phone,
+          wilaya: formData.wilaya,
+        } : undefined,
         items: items.map(item => ({
-          product_id: item.product_id,
-          flacon_variant_id: item.flacon_variant_id,
-          product_name_fr: item.name_fr,
-          product_name_ar: item.name_ar,
-          quantity_grams: item.quantity_grams,
-          quantity_units: item.quantity_units,
-          unit_price: item.unit_price,
-          total_price: item.total_price,
+          productId: item.productId,
+          variantId: item.variantId,
+          productNameFR: item.nameFR,
+          productNameAR: item.nameAR,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          type: item.type,
         })),
-        total_amount: orderTotal,
-        order_status: 'pending',
-      })
-
-      // Update Stocks
-      items.forEach(item => {
-        if (item.product_type === 'perfume') {
-          updateStockGrams(item.product_id, -(item.quantity_grams || 0))
-        } else if (item.flacon_variant_id) {
-          updateVariantStock(item.product_id, item.flacon_variant_id, -(item.quantity_units || 0))
-        }
+        total: orderTotal,
       })
 
       clear()
       toast.success(language === 'ar' ? 'تم تقديم طلبك بنجاح' : 'Votre commande a été passée avec succès')
       router.push(`/checkout/success?order=${order.order_number}`)
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('Order submission error:', error)
-      toast.error(language === 'ar' ? 'فشل تقديم الطلب' : 'Une erreur est survenue lors de la validation')
+      toast.error(error.message || (language === 'ar' ? 'فشل تقديم الطلب' : 'Une erreur est survenue lors de la validation'))
     } finally {
       setIsSubmitting(false)
     }
@@ -222,7 +209,7 @@ export default function CheckoutPage() {
               <h2 className="text-2xl font-serif text-amber-400 mb-10 pb-6 border-b border-white/10 flex items-center justify-between">
                 {t('checkout.order_summary')}
                 <span className="text-[10px] bg-white/10 px-3 py-1 rounded-full text-white uppercase tracking-[0.2em] font-black">
-                    {items.length} {t('account.total_orders')}
+                    {items.length} {items.length > 1 ? 'Articles' : 'Article'}
                 </span>
               </h2>
               
@@ -231,16 +218,16 @@ export default function CheckoutPage() {
                   <div key={item.id} className="flex justify-between gap-6 group">
                     <div className="flex flex-col">
                       <span className="font-bold text-sm group-hover:text-amber-200 transition-colors">
-                        {item.quantity_grams || item.quantity_units}{item.product_type === 'flacon' ? 'x' : 'g'} {language === 'ar' ? item.name_ar : item.name_fr}
+                        {item.quantity}{item.type === 'perfume' ? 'g' : 'x'} {language === 'ar' ? item.nameAR : item.nameFR}
                       </span>
-                      {item.variant_label && (
+                      {item.variantLabel && (
                         <span className="text-[9px] text-white/30 uppercase tracking-widest mt-1 font-black">
-                          {item.variant_label}
+                          {item.variantLabel}
                         </span>
                       )}
                     </div>
                     <span className="shrink-0 text-amber-200/60 font-mono text-sm group-hover:text-amber-200 transition-colors">
-                      {item.total_price.toLocaleString()}
+                      {item.total.toLocaleString()}
                     </span>
                   </div>
                 ))}
@@ -256,12 +243,12 @@ export default function CheckoutPage() {
                     <Truck size={14} className="text-amber-400" />
                     Livraison (Yalidine)
                   </span>
-                  <span>{formData.wilaya ? `800 DZD` : '---'}</span>
+                  <span>{formData.wilaya ? `810 DZD` : '---'}</span>
                 </div>
                 <div className="flex justify-between text-3xl font-serif text-white pt-6 border-t border-white/20">
                   <span className="text-white/40 text-xs self-center tracking-widest font-sans font-black">TOTAL</span>
                   <span className="text-amber-400">
-                    {(getTotal() + (formData.wilaya ? 800 : 0)).toLocaleString()} <span className="text-xs">DZD</span>
+                    {(getTotal() + (formData.wilaya ? 810 : 0)).toLocaleString()} <span className="text-xs">DZD</span>
                   </span>
                 </div>
               </div>

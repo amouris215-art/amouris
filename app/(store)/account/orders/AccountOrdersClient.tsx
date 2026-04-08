@@ -6,6 +6,7 @@ import { Order } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Package } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 
 interface AccountOrdersClientProps {
@@ -17,6 +18,7 @@ export default function AccountOrdersClient({ orders: initialOrders, customerId 
   const { t, language } = useI18n();
   const [orders, setOrders] = useState<Order[]>(initialOrders);
   const supabase = createClient();
+  const router = useRouter();
 
   useEffect(() => {
     const channel = supabase
@@ -41,7 +43,7 @@ export default function AccountOrdersClient({ orders: initialOrders, customerId 
             } : o));
           } else if (payload.eventType === 'INSERT') {
             // Usually orders are added through the checkout flow, but handle just in case
-            window.location.reload(); // Harder to map full DB order to frontend Order type here without fetch
+            router.refresh(); // Harder to map full DB order to frontend Order type here without fetch
           }
         }
       )

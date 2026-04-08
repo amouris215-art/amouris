@@ -246,3 +246,28 @@ export async function deleteProduct(id: string) {
   revalidatePath('/');
 }
 
+export async function updatePerfumeStock(id: string, stockInGrams: number) {
+  const supabase = createAdminClient();
+  const { error } = await supabase
+    .from('products')
+    .update({ stock_grams: stockInGrams })
+    .eq('id', id)
+    .eq('product_type', 'perfume');
+
+  if (error) throw new Error(error.message);
+  revalidatePath('/admin/inventory');
+  revalidatePath('/admin/products');
+}
+
+export async function updateVariantStock(variantId: string, stock: number) {
+  const supabase = createAdminClient();
+  const { error } = await supabase
+    .from('flacon_variants')
+    .update({ stock_units: stock })
+    .eq('id', variantId);
+
+  if (error) throw new Error(error.message);
+  revalidatePath('/admin/inventory');
+  revalidatePath('/admin/products');
+}
+

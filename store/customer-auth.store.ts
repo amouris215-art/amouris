@@ -1,7 +1,7 @@
 'use client'
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { Customer } from './customers.store'
+import { Customer } from '@/lib/types'
 
 interface CustomerAuthStore {
   currentCustomer: Customer | null
