@@ -1,87 +1,123 @@
-'use client'
-import { Suspense } from 'react'
-import { useSearchParams } from 'next/navigation'
-import Link from 'next/link'
-import { useI18n } from '@/i18n/i18n-context'
-import { Button } from '@/components/ui/button'
-import { CheckCircle2, ShoppingBag, ArrowRight, PackageCheck } from 'lucide-react'
-import { motion } from 'framer-motion'
+"use client";
+
+import { useSearchParams } from 'next/navigation';
+import { useOrdersStore } from '@/store/orders.store';
+import { useI18n } from '@/i18n/i18n-context';
+import { motion } from 'framer-motion';
+import { CheckCircle, ArrowRight, Package, Truck, Phone } from 'lucide-react';
+import Link from 'next/link';
+import { Suspense } from 'react';
 
 function SuccessContent() {
-  const { t, language } = useI18n()
-  const searchParams = useSearchParams()
-  const orderNumber = searchParams.get('order') || '-----'
+  const searchParams = useSearchParams();
+  const orderId = searchParams.get('id');
+  const { orders } = useOrdersStore();
+  const { language } = useI18n();
+  const isAr = language === 'ar';
+
+  const order = orders.find(o => o.id === orderId);
+
+  if (!order) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center">
+        <h1 className="font-serif text-3xl text-emerald-950 mb-4">Commande introuvable</h1>
+        <Link href="/shop" className="text-[#C9A84C] font-bold uppercase tracking-widest text-xs">Retour à la boutique</Link>
+      </div>
+    );
+  }
 
   return (
-    <div className="container mx-auto px-4 py-24 text-center max-w-2xl flex flex-col items-center">
-      <motion.div
-        initial={{ scale: 0, rotate: -45 }}
-        animate={{ scale: 1, rotate: 0 }}
-        transition={{ type: "spring", stiffness: 260, damping: 20 }}
-        className="w-32 h-32 bg-emerald-50 rounded-[3rem] flex items-center justify-center mb-12 shadow-2xl shadow-emerald-900/10 border-4 border-white"
-      >
-        <CheckCircle2 className="w-16 h-16 text-emerald-900" strokeWidth={1.5} />
-      </motion.div>
-
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-      >
-        <h1 className="text-5xl font-serif text-emerald-950 mb-6">
-          {t('checkout.success_title')}
-        </h1>
-        
-        <div className="bg-white border border-emerald-50 p-8 rounded-[2rem] shadow-sm mb-12 relative overflow-hidden group">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-50 rounded-bl-full -mr-8 -mt-8 opacity-50 transition-transform group-hover:scale-110" />
-            
-            <p className="text-emerald-950/40 uppercase tracking-[0.2em] font-black text-[10px] mb-2">Référence Commande</p>
-            <div className="text-3xl font-mono font-black text-emerald-900 tracking-tighter mb-4">
-                {orderNumber}
+    <div className="min-h-screen bg-neutral-50 py-20 px-6">
+      <div className="max-w-3xl mx-auto">
+        <motion.div 
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white rounded-[3rem] shadow-2xl shadow-emerald-950/5 border border-emerald-950/5 overflow-hidden"
+        >
+          {/* Header Accent */}
+          <div className="bg-[#0a3d2e] py-16 px-8 text-center relative overflow-hidden">
+            <div className="absolute inset-0 opacity-10 pointer-events-none">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-400 rounded-full blur-[80px]" />
             </div>
-            
-            <div className="h-px bg-emerald-50 w-full mb-6" />
-            
-            <p className="text-emerald-900/60 leading-relaxed font-medium">
-            {language === 'ar'
-                ? 'لقد استلمنا طلبك وسنتواصل معك قريباً لتأكيد تفاصيل الشحن. شكراً لثقتك بـ Amouris Parfums!'
-                : 'Nous avons bien reçu votre commande et nous vous contacterons bientôt pour confirmer les détails d\'expédition.'}
+            <motion.div
+               initial={{ scale: 0 }}
+               animate={{ scale: 1 }}
+               transition={{ type: "spring", damping: 12, delay: 0.2 }}
+               className="w-20 h-20 bg-white/10 backdrop-blur-xl rounded-full flex items-center justify-center mx-auto mb-6 border border-white/20"
+            >
+              <CheckCircle size={40} className="text-amber-400" />
+            </motion.div>
+            <h1 className="font-serif text-3xl md:text-5xl text-white mb-2">
+              {isAr ? 'شكراً لثقتكم في أموريس' : 'Merci pour votre confiance'}
+            </h1>
+            <p className="text-emerald-100/40 text-[10px] font-black uppercase tracking-[0.4em]">
+              {isAr ? 'تم تسجيل طلبيتك بنجاح' : 'Votre commande a été enregistrée'}
             </p>
-        </div>
-      </motion.div>
+          </div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4 }}
-        className="flex flex-col sm:flex-row gap-4 justify-center w-full"
-      >
-        <Link href="/shop" className="flex-1">
-          <Button variant="outline" className="w-full h-16 rounded-2xl border-emerald-100 text-emerald-900 hover:bg-emerald-50 gap-3 font-bold">
-            <ShoppingBag className="w-5 h-5" />
-            {t('cart.continue_shopping')}
-          </Button>
-        </Link>
-        <Link href="/account" className="flex-1">
-          <Button className="w-full h-16 rounded-2xl bg-emerald-900 text-white hover:bg-emerald-800 gap-3 font-bold shadow-xl shadow-emerald-900/10">
-            {language === 'ar' ? 'متابعة الطلب' : 'Suivre ma commande'}
-            <ArrowRight className="w-5 h-5" />
-          </Button>
-        </Link>
-      </motion.div>
+          {/* Details */}
+          <div className="p-8 md:p-12 space-y-12">
+            <div className="flex flex-col md:flex-row justify-between items-center gap-8 border-b border-emerald-950/5 pb-12">
+               <div className="text-center md:text-left">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-emerald-950/20 mb-2">Numéro de commande</p>
+                  <p className="font-serif text-3xl text-emerald-950 tracking-tight">{order.order_number}</p>
+               </div>
+               <div className="text-center md:text-right">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-emerald-950/20 mb-2">Total à régler (Cash)</p>
+                  <p className="font-serif text-3xl text-[#C9A84C] tracking-tight">{order.total_amount.toLocaleString()} DZD</p>
+               </div>
+            </div>
 
-      <div className="mt-16 flex items-center gap-4 text-emerald-950/20 uppercase tracking-[0.3em] font-black text-[9px]">
-        <PackageCheck size={16} />
-        Vérifié par l'équipe Amouris
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center md:text-left">
+               <div className="space-y-4">
+                  <div className="w-10 h-10 rounded-2xl bg-emerald-50 flex items-center justify-center text-[#0a3d2e] mx-auto md:mx-0">
+                    <Package size={18} />
+                  </div>
+                  <h4 className="text-xs font-black uppercase tracking-widest text-emerald-950">Préparation</h4>
+                  <p className="text-xs text-emerald-950/40 leading-relaxed font-medium">Nos artisans préparent vos parfums avec soin.</p>
+               </div>
+               <div className="space-y-4">
+                  <div className="w-10 h-10 rounded-2xl bg-amber-50 flex items-center justify-center text-[#C9A84C] mx-auto md:mx-0">
+                    <Phone size={18} />
+                  </div>
+                  <h4 className="text-xs font-black uppercase tracking-widest text-emerald-950">Confirmation</h4>
+                  <p className="text-xs text-emerald-950/40 leading-relaxed font-medium">Un conseiller va vous appeler pour valider l'adresse.</p>
+               </div>
+               <div className="space-y-4">
+                  <div className="w-10 h-10 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-900 mx-auto md:mx-0">
+                    <Truck size={18} />
+                  </div>
+                  <h4 className="text-xs font-black uppercase tracking-widest text-emerald-950">Livraison</h4>
+                  <p className="text-xs text-emerald-950/40 leading-relaxed font-medium">Réception sous 48-72h dans toute l'Algérie.</p>
+               </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-4 pt-12 border-t border-emerald-950/5">
+               <Link 
+                 href="/account/orders" 
+                 className="flex-1 h-16 bg-[#0a3d2e] text-white rounded-2xl flex items-center justify-center text-[10px] font-black uppercase tracking-[0.2em] hover:scale-[1.02] transition-all shadow-xl shadow-emerald-900/10 gap-3 group"
+               >
+                 {isAr ? 'تتبع الطلبية' : 'Suivre ma commande'}
+                 <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+               </Link>
+               <Link 
+                 href="/shop" 
+                 className="flex-1 h-16 bg-white border border-emerald-950/5 text-emerald-950 rounded-2xl flex items-center justify-center text-[10px] font-black uppercase tracking-[0.2em] hover:bg-neutral-50 transition-all font-bold"
+               >
+                 {isAr ? 'العودة للمتجر' : 'Continuer mes achats'}
+               </Link>
+            </div>
+          </div>
+        </motion.div>
       </div>
     </div>
-  )
+  );
 }
 
-export default function CheckoutSuccessPage() {
+export default function SuccessPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Chargement...</div>}>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#0a3d2e]"></div></div>}>
       <SuccessContent />
     </Suspense>
-  )
+  );
 }

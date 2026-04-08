@@ -1,12 +1,47 @@
 "use client";
 
 import { useI18n } from '@/i18n/i18n-context';
-import { brands } from '@/lib/mock-data';
+import { useBrandsStore } from '@/store/brands.store';
+import { getBrands } from '@/lib/actions/brands';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 
 export default function BrandsPage() {
   const { language } = useI18n();
+  const { brands, seed } = useBrandsStore();
+  const [loading, setLoading] = useState(brands.length === 0);
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const data = await getBrands();
+        // The store currently uses name/name_ar/logo_url in its interface,
+        // but the action returns nameFR/nameAR/logo. We adapt here.
+        const adaptedData = data.map(b => ({
+          id: b.id,
+          name: b.nameFR,
+          name_ar: b.nameAR,
+          logo_url: b.logo || null,
+          description_fr: ''
+        }));
+        seed(adaptedData);
+      } catch (err) {
+        console.error('Failed to load brands:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    load();
+  }, [seed]);
+
+  if (loading && brands.length === 0) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-emerald-900"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-white py-16 px-6">
@@ -32,9 +67,9 @@ export default function BrandsPage() {
               className="group relative h-48 flex items-center justify-center border border-emerald-50 bg-neutral-50 hover:bg-white hover:border-emerald-200 hover:shadow-xl transition-all duration-300"
             >
               <div className="text-center p-6 grayscale group-hover:grayscale-0 transition-all">
-                <span className="text-4xl font-serif text-emerald-900 block mb-2">{brand.nameFR.charAt(0)}</span>
+                <span className="text-4xl font-serif text-emerald-900 block mb-2">{brand.name.charAt(0)}</span>
                 <p className="text-lg font-serif tracking-widest text-emerald-950">
-                  {language === 'ar' ? brand.nameAR : brand.nameFR}
+                  {language === 'ar' ? brand.name_ar : brand.name}
                 </p>
                 <Link 
                   href={`/shop?brand=${brand.id}`}

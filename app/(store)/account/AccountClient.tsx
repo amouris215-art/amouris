@@ -1,189 +1,229 @@
-'use client'
-import { useRouter } from 'next/navigation'
-import { useI18n } from '@/i18n/i18n-context'
-import { logout as supabaseLogout } from '@/lib/actions/auth'
-import { useCustomerAuthStore } from '@/store/customer-auth.store'
-import { Package, User, MapPin, ShoppingBag, LogOut, Phone, Building2, CreditCard } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { motion } from 'framer-motion'
-import { Order, Customer } from '@/lib/types'
+"use client";
 
-interface AccountClientProps {
-  customer: Customer
-  orders: Order[]
-}
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useI18n } from '@/i18n/i18n-context';
+import { useCustomerAuthStore } from '@/store/customer-auth.store';
+import { useOrdersStore } from '@/store/orders.store';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  Package, User, MapPin, ShoppingBag, LogOut, 
+  Phone, Building2, CreditCard, ChevronRight, 
+  Settings, Clock, CheckCircle2, AlertCircle 
+} from 'lucide-react';
 
-export default function AccountClient({ customer, orders }: AccountClientProps) {
-  const { language, t } = useI18n()
-  const router = useRouter()
-  const customerLogout = useCustomerAuthStore(s => s.logout)
+export default function AccountClient() {
+  const { language, t } = useI18n();
+  const router = useRouter();
+  const { customer, isAuthenticated, logout } = useCustomerAuthStore();
+  const { getByCustomer } = useOrdersStore();
+  const [activeTab, setActiveTab] = useState<'orders' | 'profile'>('orders');
 
-  const totalSpent = orders.reduce((sum, o) => sum + o.total, 0)
+  const isAr = language === 'ar';
 
-  const handleLogout = async () => {
-    await supabaseLogout()
-    customerLogout()
-    router.replace('/')
-  }
+  // Route Protection
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.replace('/login');
+    }
+  }, [isAuthenticated, router]);
+
+  if (!isAuthenticated || !customer) return null;
+
+  const orders = getByCustomer(customer.id);
+  const totalSpent = orders.reduce((sum, o) => sum + o.total_amount, 0);
+
+  const handleLogout = () => {
+    logout();
+    router.replace('/');
+  };
 
   return (
-    <div className="min-h-screen bg-neutral-50/50 py-12 px-4 sm:px-6 lg:px-8 font-sans">
-      <div className="max-w-7xl mx-auto">
-        {/* Header Section */}
-        <motion.div 
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-6 bg-white p-8 rounded-3xl border border-emerald-50 shadow-sm"
-        >
-          <div className="flex items-center gap-6">
-            <div className="w-20 h-20 bg-emerald-900 rounded-2xl flex items-center justify-center text-white text-3xl font-serif shadow-xl shadow-emerald-900/20">
-                {customer.firstName.charAt(0)}
+    <div className="min-h-screen bg-neutral-50/50 pt-12 pb-32">
+      <div className="container mx-auto px-6 max-w-6xl">
+        
+        {/* Header Hero */}
+        <header className="mb-16">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-8">
+            <div className="flex items-center gap-6">
+              <div className="w-24 h-24 rounded-[2rem] bg-[#0a3d2e] shadow-2xl shadow-emerald-900/20 flex items-center justify-center text-white font-serif text-4xl border border-emerald-400/10">
+                {customer.first_name.charAt(0)}
+              </div>
+              <div>
+                <h1 className="font-serif text-4xl md:text-5xl text-emerald-950 mb-2 tracking-tight">
+                  {isAr ? `مرحباً بك، ${customer.first_name}` : `Espace ${customer.first_name}`}
+                </h1>
+                <p className="text-[10px] font-black uppercase tracking-[0.4em] text-[#C9A84C]">
+                  {isAr ? 'عضو في برنامج أموريس للمحترفين' : 'Membre Amouris Premium B2B'}
+                </p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-3xl font-serif text-emerald-950">
-                {language === 'ar' ? `مرحباً، ${customer.firstName}` : `Bonjour, ${customer.firstName}`}
-              </h1>
-              <p className="text-emerald-900/40 font-medium mt-1">
-                {language === 'ar' ? 'لوحة تحكم الحساب الخاص بك' : 'Tableau de bord de votre compte professionnel'}
-              </p>
-            </div>
+            <button 
+              onClick={handleLogout}
+              className="px-8 py-4 bg-white border border-emerald-950/5 text-emerald-950 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-50 hover:text-rose-600 hover:border-rose-100 transition-all flex items-center gap-3 shadow-sm"
+            >
+              <LogOut size={16} />
+              {isAr ? 'تسجيل الخروج' : 'Déconnexion'}
+            </button>
           </div>
-          <Button 
-            onClick={handleLogout}
-            variant="outline" 
-            className="group w-full md:w-auto px-8 py-6 rounded-2xl border-emerald-100 text-emerald-900 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-100 transition-all font-bold"
-          >
-            <LogOut className="h-4 w-4 mx-2 transition-transform group-hover:-translate-x-1" />
-            {t('nav.logout')}
-          </Button>
-        </motion.div>
+        </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Sidebar Stats & Profile */}
-          <div className="lg:col-span-1 space-y-8">
-            {/* Quick Stats */}
-            <div className="grid grid-cols-2 gap-4">
-                <div className="bg-emerald-900 p-6 rounded-3xl text-white shadow-xl shadow-emerald-900/10">
-                    <ShoppingBag className="w-5 h-5 text-emerald-400 mb-3" />
-                    <p className="text-2xl font-bold">{orders.length}</p>
-                    <p className="text-[10px] uppercase tracking-widest text-emerald-300 font-black">{t('account.total_orders')}</p>
-                </div>
-                <div className="bg-white p-6 rounded-3xl border border-emerald-50 shadow-sm">
-                    <CreditCard className="w-5 h-5 text-amber-500 mb-3" />
-                    <p className="text-xl font-bold text-emerald-950">{totalSpent.toLocaleString()} <span className="text-[10px]">DZD</span></p>
-                    <p className="text-[10px] uppercase tracking-widest text-emerald-900/30 font-black">{t('account.total_spent')}</p>
-                </div>
-            </div>
+        {/* Navigation Tabs */}
+        <div className="flex gap-4 mb-12 bg-white p-2 rounded-3xl border border-emerald-950/5 w-fit">
+           <button 
+             onClick={() => setActiveTab('orders')}
+             className={`px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'orders' ? 'bg-[#0a3d2e] text-white shadow-xl shadow-emerald-900/10' : 'text-emerald-950/40 hover:text-emerald-950'}`}
+           >
+             {isAr ? 'طلباتي' : 'Mes Commandes'}
+           </button>
+           <button 
+             onClick={() => setActiveTab('profile')}
+             className={`px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'profile' ? 'bg-[#0a3d2e] text-white shadow-xl shadow-emerald-900/10' : 'text-emerald-950/40 hover:text-emerald-950'}`}
+           >
+             {isAr ? 'ملفي الشخصي' : 'Mon Profil'}
+           </button>
+        </div>
 
-            {/* Profile Info */}
-            <Card className="border-emerald-50 rounded-[2rem] shadow-sm overflow-hidden bg-white">
-              <CardHeader className="bg-emerald-50/30 border-b border-emerald-50 px-8 py-6">
-                <CardTitle className="text-lg font-serif flex items-center gap-3 text-emerald-900">
-                  <User className="h-5 w-5" />
-                  {t('account.profile_info')}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-8 space-y-6">
-                <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center flex-shrink-0">
-                        <User className="w-4 h-4 text-emerald-700" />
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+          
+          {/* Main Content Area */}
+          <div className="lg:col-span-8">
+            <AnimatePresence mode="wait">
+              {activeTab === 'orders' ? (
+                <motion.div 
+                  key="orders"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  className="space-y-6"
+                >
+                  {orders.length === 0 ? (
+                    <div className="bg-white p-16 rounded-[3rem] text-center border border-emerald-950/5 shadow-2xl shadow-emerald-950/5">
+                       <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-6 text-emerald-200">
+                          <ShoppingBag size={32} />
+                       </div>
+                       <h3 className="font-serif text-2xl text-emerald-950 mb-4">Aucune commande encore</h3>
+                       <p className="text-emerald-950/40 text-sm max-w-sm mx-auto leading-relaxed mb-8">
+                          Commencez à explorer nos essences d'exception pour remplir votre historique.
+                       </p>
+                       <Link href="/shop" className="inline-flex bg-[#0a3d2e] text-white px-8 py-4 rounded-xl text-[10px] font-black uppercase tracking-widest">
+                          Découvrir la boutique
+                       </Link>
                     </div>
-                    <div>
-                        <label className="text-[10px] text-emerald-900/30 uppercase tracking-[0.2em] block mb-1 font-black">{t('account.full_name')}</label>
-                        <p className="font-bold text-emerald-950 text-lg">{customer.firstName} {customer.lastName}</p>
-                    </div>
-                </div>
-
-                <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center flex-shrink-0">
-                        <Building2 className="w-4 h-4 text-emerald-700" />
-                    </div>
-                    <div>
-                        <label className="text-[10px] text-emerald-900/30 uppercase tracking-[0.2em] block mb-1 font-black">{t('account.shop_name')}</label>
-                        <p className="font-bold text-emerald-950">{customer.shopName || '—'}</p>
-                    </div>
-                </div>
-
-                <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center flex-shrink-0">
-                        <Phone className="w-4 h-4 text-emerald-700" />
-                    </div>
-                    <div>
-                        <label className="text-[10px] text-emerald-900/30 uppercase tracking-[0.2em] block mb-1 font-black">{t('account.phone')}</label>
-                        <p className="font-bold text-emerald-950 font-mono tracking-wider">{customer.phoneNumber}</p>
-                    </div>
-                </div>
-
-                <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center flex-shrink-0">
-                        <MapPin className="w-4 h-4 text-emerald-700" />
-                    </div>
-                    <div>
-                        <label className="text-[10px] text-emerald-900/30 uppercase tracking-[0.2em] block mb-1 font-black">{t('account.address')}</label>
-                        <p className="font-bold text-emerald-950">{customer.wilaya} {customer.commune ? `, ${customer.commune}` : ''}</p>
-                    </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Orders List */}
-          <div className="lg:col-span-2 space-y-6">
-            <Card className="border-emerald-50 rounded-[2rem] shadow-sm h-full overflow-hidden bg-white">
-              <CardHeader className="bg-emerald-50/30 border-b border-emerald-50 px-8 py-6">
-                <CardTitle className="text-lg font-serif flex items-center gap-3 text-emerald-900">
-                  <ShoppingBag className="h-5 w-5" />
-                  {t('account.my_orders')}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-0">
-                {orders.length > 0 ? (
-                  <div className="divide-y divide-emerald-50">
-                    {orders.map(order => (
-                      <div key={order.id} className="group p-8 flex flex-col md:flex-row items-start md:items-center justify-between hover:bg-emerald-50/30 transition-all duration-300">
-                        <div className="flex items-center gap-6 mb-4 md:mb-0">
-                            <div className="w-12 h-12 rounded-2xl bg-white border border-emerald-50 flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
-                                <Package className="w-5 h-5 text-emerald-800" />
-                            </div>
-                            <div>
-                                <p className="font-black text-emerald-950 text-lg uppercase tracking-tight">{order.orderNumber}</p>
-                                <p className="text-xs text-emerald-900/30 font-medium">{new Date(order.createdAt).toLocaleDateString(language === 'ar' ? 'ar-DZ' : 'fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
-                            </div>
+                  ) : (
+                    orders.map(order => (
+                      <div key={order.id} className="bg-white p-6 md:p-8 rounded-[2.5rem] border border-emerald-950/5 hover:border-emerald-950/10 transition-all shadow-sm shadow-emerald-900/5 group flex flex-col md:flex-row justify-between items-center gap-6">
+                        <div className="flex items-center gap-6 w-full md:w-auto">
+                           <div className="w-16 h-16 rounded-2xl bg-neutral-50 flex items-center justify-center text-emerald-950/20 group-hover:scale-110 group-hover:bg-emerald-50 group-hover:text-[#0a3d2e] transition-all">
+                              <Package size={24} />
+                           </div>
+                           <div>
+                              <p className="text-[10px] font-black uppercase tracking-widest text-[#C9A84C] mb-1">{order.order_number}</p>
+                              <h4 className="font-serif text-xl text-emerald-950">
+                                {new Date(order.created_at).toLocaleDateString(isAr ? 'ar-DZ' : 'fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                              </h4>
+                           </div>
                         </div>
-                        
-                        <div className="flex flex-row md:flex-col items-center md:items-end justify-between w-full md:w-auto gap-4">
-                          <p className="font-black text-emerald-900 text-xl">{order.total.toLocaleString()} <span className="text-[10px] font-normal">DZD</span></p>
-                          <span className={`text-[10px] uppercase font-black px-4 py-1.5 rounded-full ring-4 ring-black/5 ${
-                            order.status === 'delivered' ? 'bg-emerald-500 text-white' : 
-                            order.status === 'cancelled' ? 'bg-rose-500 text-white' :
-                            'bg-amber-400 text-emerald-950'
-                          }`}>
-                            {t(`status.${order.status}`)}
-                          </span>
+
+                        <div className="flex items-center gap-8 w-full md:w-auto justify-between border-t md:border-t-0 border-emerald-950/5 pt-6 md:pt-0">
+                           <div className="text-right">
+                              <p className="text-[10px] font-black uppercase tracking-widest text-emerald-950/20 mb-1">Montant Total</p>
+                              <p className="font-serif text-2xl text-emerald-950">{order.total_amount.toLocaleString()} <span className="text-xs font-normal">DZD</span></p>
+                           </div>
+                           <div className={`px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-widest flex items-center gap-2 ${
+                             order.order_status === 'delivered' ? 'bg-emerald-50 text-emerald-600' : 
+                             order.order_status === 'cancelled' ? 'bg-rose-50 text-rose-600' :
+                             'bg-amber-50 text-amber-700'
+                           }`}>
+                             {order.order_status === 'pending' && <Clock size={12} />}
+                             {order.order_status === 'delivered' && <CheckCircle2 size={12} />}
+                             {order.order_status === 'cancelled' && <AlertCircle size={12} />}
+                             {order.order_status}
+                           </div>
                         </div>
                       </div>
-                    ))}
+                    ))
+                  )}
+                </motion.div>
+              ) : (
+                <motion.div 
+                  key="profile"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  className="bg-white p-8 md:p-12 rounded-[3rem] border border-emerald-950/5 shadow-2xl shadow-emerald-950/5"
+                >
+                  <h3 className="font-serif text-3xl text-emerald-950 mb-10 pb-6 border-b border-emerald-950/5">Mes Coordonnées</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                     <ProfileField icon={User} label="Nom Complet" value={`${customer.first_name} ${customer.last_name}`} />
+                     <ProfileField icon={Building2} label="Nom de la Boutique" value={customer.shop_name || 'Particulier'} />
+                     <ProfileField icon={Phone} label="Contact Téléphonique" value={customer.phone} />
+                     <ProfileField icon={MapPin} label="Localisation" value={`${customer.wilaya}${customer.commune ? `, ${customer.commune}` : ''}`} />
                   </div>
-                ) : (
-                  <div className="text-center py-32 px-10">
-                    <div className="w-24 h-24 bg-emerald-50 rounded-[2rem] flex items-center justify-center mx-auto mb-6">
-                        <Package className="h-10 w-10 text-emerald-900/10" />
-                    </div>
-                    <p className="text-emerald-900/40 text-lg font-medium">{t('account.no_orders')}</p>
-                    <Button 
-                        onClick={() => router.push('/shop')}
-                        className="mt-8 bg-emerald-900 text-white px-8 py-6 rounded-2xl font-bold hover:bg-emerald-800 transition-all"
-                    >
-                        {t('cart.browse_shop')}
-                    </Button>
+                  
+                  <div className="mt-16 p-8 bg-emerald-50 rounded-[2rem] border border-emerald-100 flex items-start gap-4">
+                     <Settings className="text-[#0a3d2e] shrink-0" size={24} />
+                     <div>
+                        <h4 className="font-bold text-emerald-950 text-sm mb-1">Demande de modification</h4>
+                        <p className="text-emerald-950/40 text-xs leading-relaxed">
+                          Pour modifier vos informations professionnelles, contactez le support Amouris sur WhatsApp. Les modifications sont validées par un administrateur sous 24h.
+                        </p>
+                     </div>
                   </div>
-                )}
-              </CardContent>
-            </Card>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
+
+          {/* Sidebar Stats */}
+          <div className="lg:col-span-4 space-y-8">
+             <div className="bg-[#0a3d2e] p-10 rounded-[2.5rem] text-white shadow-2xl shadow-emerald-900/20 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-48 h-48 bg-emerald-400/10 rounded-full blur-[60px] -translate-y-1/2 translate-x-1/2" />
+                <div className="relative z-10">
+                   <CreditCard className="text-amber-400 mb-6" size={32} />
+                   <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-emerald-100/40 mb-2">Total des achats</h3>
+                   <p className="font-serif text-5xl text-white mb-2 tracking-tighter">{totalSpent.toLocaleString()}</p>
+                   <p className="text-sm font-bold text-amber-500 italic">Dinar Algérien</p>
+                </div>
+             </div>
+
+             <div className="bg-white p-10 rounded-[2.5rem] border border-emerald-950/5 shadow-sm">
+                <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-emerald-950/20 mb-8 border-b border-emerald-950/5 pb-4">Activité Récente</h3>
+                <div className="space-y-6">
+                   <div className="flex gap-4">
+                      <div className="w-1 h-auto bg-amber-400 rounded-full" />
+                      <div>
+                         <p className="text-xs font-bold text-emerald-950">Dernière commande</p>
+                         <p className="text-[10px] text-emerald-950/40 font-medium">Il y a quelques instants</p>
+                      </div>
+                   </div>
+                   <div className="flex gap-4">
+                      <div className="w-1 h-auto bg-emerald-100 rounded-full" />
+                      <div>
+                         <p className="text-xs font-bold text-emerald-950">Inscription validée</p>
+                         <p className="text-[10px] text-emerald-950/40 font-medium">{new Date(customer.joined_at).toLocaleDateString()}</p>
+                      </div>
+                   </div>
+                </div>
+             </div>
+          </div>
+
         </div>
       </div>
     </div>
-  )
+  );
+}
+
+function ProfileField({ icon: Icon, label, value }: { icon: any, label: string, value: string }) {
+  return (
+    <div className="flex items-start gap-4">
+      <div className="w-12 h-12 rounded-2xl bg-neutral-50 flex items-center justify-center text-emerald-950/20">
+        <Icon size={20} />
+      </div>
+      <div>
+        <p className="text-[10px] font-black uppercase tracking-widest text-[#C9A84C] mb-1">{label}</p>
+        <p className="text-lg font-serif text-emerald-950">{value}</p>
+      </div>
+    </div>
+  );
 }

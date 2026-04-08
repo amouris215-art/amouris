@@ -1,25 +1,5 @@
-import { getProducts } from '@/lib/actions/products';
-import { getCategories } from '@/lib/actions/categories';
-import { getBrands } from '@/lib/actions/brands';
-import { ShopContent } from '@/components/store/shop-content';
-import { Suspense } from 'react';
-import ShopLoading from '../loading';
+import FlaconsClient from './FlaconsClient';
 
-export default async function FlaconsPage() {
-  const [products, categories, brands] = await Promise.all([
-    getProducts({ type: 'flacon', status: 'active' }),
-    getCategories(),
-    getBrands()
-  ]);
-
-  return (
-    <Suspense fallback={<ShopLoading />}>
-      <ShopContent 
-        initialProducts={products} 
-        categories={categories} 
-        brands={brands} 
-        initialType="flacon" 
-      />
-    </Suspense>
-  );
+export default function FlaconsPage() {
+  return <FlaconsClient />;
 }

@@ -13,8 +13,8 @@ interface TagSectionProps {
 
 export function TagSection({ tag, products }: TagSectionProps) {
   const { language } = useI18n()
-  const title = language === 'ar' ? tag.nameAR : tag.nameFR
-  const subtitle = language === 'ar' ? tag.nameFR : tag.nameAR
+  const title = language === 'ar' ? tag.name_ar : tag.name_fr
+  const subtitle = language === 'ar' ? tag.name_fr : tag.name_ar
 
   return (
     <section className="py-24 bg-white relative overflow-hidden">
@@ -44,15 +44,15 @@ export function TagSection({ tag, products }: TagSectionProps) {
           >
             {/* Logic to determine the best landing page based on contents */}
             {(() => {
-              const types = products.map(p => p.type);
+              const types = products.map(p => p.product_type);
               const isAllPerfume = types.length > 0 && types.every(t => t === 'perfume');
               const isAllFlacon = types.length > 0 && types.every(t => t === 'flacon');
-              const baseUrl = isAllPerfume ? '/shop/perfumes' : isAllFlacon ? '/shop/flacons' : '/shop';
+              const baseUrl = isAllPerfume ? '/shop/parfums' : isAllFlacon ? '/shop/flacons' : '/shop';
               
               return (
                 <Link 
                   href={`${baseUrl}?tag=${tag.id}`}
-                  className="group flex items-center gap-3 text-emerald-950 font-bold uppercase tracking-widest text-[10px] hover:text-amber-600 transition-colors"
+                  className="group flex items-center gap-3 text-emerald-950 font-bold uppercase tracking-widest text-[10px] hover:text-amber-600 transition-colors underline-offset-8 decoration-amber-400/30"
                 >
                   {language === 'ar' ? 'اكتشف المجموعة' : 'Découvrir la collection'}
                   <div className="w-10 h-10 rounded-full border border-emerald-950/10 flex items-center justify-center group-hover:bg-emerald-950 group-hover:text-white transition-all duration-500">

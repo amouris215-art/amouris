@@ -1,188 +1,208 @@
-'use client'
-import { useState } from 'react'
-import { Search, Eye, Filter, CheckCircle2, Clock, Truck, XCircle, AlertCircle } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { toast } from 'sonner'
-import { Order, OrderStatus } from '@/lib/types'
-import { updateOrderStatus } from '@/lib/actions/orders'
+"use client";
+
+import { useState, useMemo } from 'react';
+import { useOrdersStore, Order, OrderStatus } from '@/store/orders.store';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  Search, Filter, Clock, CheckCircle2, 
+  Truck, XCircle, AlertCircle, FileText, 
+  Printer, ChevronRight, Eye 
+} from 'lucide-react';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 const STATUS_LABELS: Record<OrderStatus, string> = {
-  pending: 'En attente', 
-  confirmed: 'Confirmé', 
+  pending: 'En attente',
+  confirmed: 'Confirmé',
   preparing: 'En préparation',
-  shipped: 'Expédié', 
-  delivered: 'Livré', 
+  shipped: 'Expédié',
+  delivered: 'Livré',
   cancelled: 'Annulé',
-}
+};
 
 const STATUS_COLORS: Record<OrderStatus, string> = {
-  pending: 'bg-amber-100 text-amber-700 ring-amber-500/20',
-  confirmed: 'bg-emerald-100 text-emerald-700 ring-emerald-500/20',
-  preparing: 'bg-purple-100 text-purple-700 ring-purple-500/20',
-  shipped: 'bg-blue-100 text-blue-700 ring-blue-500/20',
-  delivered: 'bg-emerald-900 text-white ring-emerald-500/20',
-  cancelled: 'bg-rose-100 text-rose-700 ring-rose-500/20',
-}
+  pending: 'bg-amber-50 text-amber-700 border-amber-200',
+  confirmed: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+  preparing: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+  shipped: 'bg-blue-50 text-blue-700 border-blue-200',
+  delivered: 'bg-emerald-900 text-white border-emerald-800',
+  cancelled: 'bg-rose-50 text-rose-700 border-rose-200',
+};
 
-const STATUS_ICONS: Record<OrderStatus, any> = {
-  pending: Clock,
-  confirmed: CheckCircle2,
-  preparing: AlertCircle,
-  shipped: Truck,
-  delivered: CheckCircle2,
-  cancelled: XCircle,
-}
+export default function AdminOrdersClient() {
+  const { orders, updateStatus } = useOrdersStore();
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
 
-interface AdminOrdersClientProps {
-  initialOrders: Order[]
-}
+  const filtered = useMemo(() => {
+    return orders.filter(o => {
+      const customerName = o.guest_first_name ? `${o.guest_first_name} ${o.guest_last_name}` : 'Client Enregistré';
+      const matchSearch = o.order_number.toLowerCase().includes(search.toLowerCase()) || 
+                          customerName.toLowerCase().includes(search.toLowerCase());
+      const matchStatus = statusFilter === 'all' || o.order_status === statusFilter;
+      return matchSearch && matchStatus;
+    });
+  }, [orders, search, statusFilter]);
 
-export default function AdminOrdersClient({ initialOrders }: AdminOrdersClientProps) {
-  const [orders, setOrders] = useState(initialOrders)
-  const [search, setSearch] = useState('')
-  const [statusFilter, setStatusFilter] = useState('all')
+  const generatePDF = (order: Order) => {
+    const doc = new jsPDF();
+    
+    // Header
+    doc.setFontSize(22);
+    doc.setTextColor(10, 61, 46); // Emerald 950
+    doc.text('AMOURIS PARFUMS', 14, 20);
+    
+    doc.setFontSize(10);
+    doc.setTextColor(150, 150, 150);
+    doc.text('FACTURE DE COMMANDE', 14, 28);
+    doc.text(`N°: ${order.order_number}`, 140, 28);
+    doc.text(`Date: ${new Date(order.created_at).toLocaleDateString()}`, 140, 33);
 
-  const filtered = orders.filter(o => {
-    const name = o.guestInfo ? `${o.guestInfo.firstName} ${o.guestInfo.lastName}` : 'Client Inconnu'
-    const matchSearch = o.orderNumber.toLowerCase().includes(search.toLowerCase()) || name.toLowerCase().includes(search.toLowerCase())
-    const matchStatus = statusFilter === 'all' || o.status === statusFilter
-    return matchSearch && matchStatus
-  })
+    // Client Info
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(12);
+    doc.text('DESTINATAIRE:', 14, 50);
+    doc.setFontSize(10);
+    const name = order.guest_first_name ? `${order.guest_first_name} ${order.guest_last_name}` : `Client ID: ${order.customer_id}`;
+    doc.text(name, 14, 57);
+    doc.text(`Tél: ${order.guest_phone || 'N/A'}`, 14, 62);
+    doc.text(`Wilaya: ${order.guest_wilaya || 'N/A'}`, 14, 67);
 
-  const handleStatusUpdate = async (orderId: string, newStatus: OrderStatus) => {
-    try {
-      await updateOrderStatus(orderId, newStatus)
-      setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus } : o))
-      toast.success(`Statut mis à jour : ${STATUS_LABELS[newStatus]}`)
-    } catch (error) {
-      toast.error('Erreur lors de la mise à jour du statut')
-    }
-  }
+    // Items Table
+    autoTable(doc, {
+      startY: 80,
+      head: [['Produit', 'Détails', 'Prix Unitaire', 'Total']],
+      body: order.items.map(item => [
+        item.product_name_fr,
+        item.quantity_grams ? `${item.quantity_grams}g` : `${item.quantity_units} unités`,
+        `${item.unit_price} DZD`,
+        `${item.total_price} DZD`
+      ]),
+      headStyles: { fillColor: [10, 61, 46], textColor: [255, 255, 255] },
+      margin: { top: 80 }
+    });
+
+    // Total
+    const finalY = (doc as any).lastAutoTable.finalY + 10;
+    doc.setFontSize(14);
+    doc.text(`TOTAL FINAL: ${order.total_amount.toLocaleString()} DZD`, 120, finalY + 10);
+
+    // Footer
+    doc.setFontSize(10);
+    doc.setTextColor(150, 150, 150);
+    doc.text('Merci pour votre confiance.', 14, finalY + 30);
+    doc.text('Livraison assurée par Amouris Parfums.', 14, finalY + 35);
+
+    doc.save(`Facture_${order.order_number}.pdf`);
+  };
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold font-serif text-emerald-950">Gestion des Commandes</h1>
-        <p className="text-emerald-950/40 text-sm mt-1">Gérez le statut et le suivi des ventes en temps réel</p>
-      </div>
-
-      <div className="flex flex-col md:flex-row gap-4 items-center">
-        <div className="relative flex-1 group w-full">
-          <Search size={20} className="absolute left-6 top-1/2 -translate-y-1/2 text-emerald-950/20 transition-colors group-focus-within:text-emerald-900" />
-          <input
-            type="text" 
-            placeholder="Rechercher par numéro de commande ou nom client..."
-            value={search} 
-            onChange={e => setSearch(e.target.value)}
-            className="w-full pl-14 pr-6 py-4 bg-white border border-emerald-50 rounded-2xl text-base focus:outline-none focus:ring-4 focus:ring-emerald-900/5 transition-all shadow-sm"
-          />
+    <div className="space-y-12">
+      <header className="flex flex-col md:flex-row md:items-center justify-between gap-8">
+        <div>
+           <h1 className="font-serif text-4xl text-emerald-950 mb-2">Flux de Ventes</h1>
+           <p className="text-[10px] font-black uppercase tracking-[0.4em] text-[#C9A84C]">Gestion des commandes & Expéditions</p>
         </div>
-        
-        <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-2xl border border-emerald-50 shadow-sm w-full md:w-auto">
-            <Filter size={18} className="text-emerald-950/20 ml-2" />
-            <select
-                value={statusFilter} 
-                onChange={e => setStatusFilter(e.target.value)}
-                className="bg-transparent text-emerald-950 font-bold text-sm focus:outline-none py-2 px-2 min-w-[150px] appearance-none cursor-pointer"
+      </header>
+
+      <section className="flex flex-col md:flex-row gap-6">
+        <div className="relative flex-1 group">
+           <Search size={18} className="absolute left-6 top-1/2 -translate-y-1/2 text-emerald-950/20 group-focus-within:text-[#C9A84C] transition-colors" />
+           <input 
+             type="text"
+             placeholder="Numéro ou Nom Client..."
+             value={search}
+             onChange={e => setSearch(e.target.value)}
+             className="w-full h-16 pl-16 pr-8 bg-white border border-emerald-950/5 rounded-2xl outline-none focus:border-[#C9A84C] shadow-sm font-medium text-emerald-950 transition-all"
+           />
+        </div>
+        <div className="flex bg-neutral-100 p-1.5 rounded-2xl border border-emerald-950/5 h-16 items-center">
+            <Filter size={16} className="text-emerald-950/20 mx-4" />
+            <select 
+              value={statusFilter}
+              onChange={e => setStatusFilter(e.target.value)}
+              className="bg-transparent text-[10px] font-black uppercase tracking-widest text-emerald-950 outline-none pr-8 cursor-pointer"
             >
-                <option value="all">Tous les Statuts</option>
-                {Object.entries(STATUS_LABELS).map(([v, l]) => (
-                    <option key={v} value={v}>{l}</option>
-                ))}
+              <option value="all">Tous les Statuts</option>
+              {Object.entries(STATUS_LABELS).map(([k, v]) => (
+                <option key={k} value={k}>{v.toUpperCase()}</option>
+              ))}
             </select>
         </div>
-      </div>
+      </section>
 
-      <div className="bg-white rounded-[2.5rem] border border-emerald-50 overflow-hidden shadow-sm">
-        <div className="overflow-x-auto">
-            <table className="w-full text-left">
+      <div className="bg-white rounded-[3rem] border border-emerald-950/5 shadow-2xl shadow-emerald-950/5 overflow-hidden">
+        <div className="overflow-x-auto no-scrollbar">
+          <table className="w-full border-collapse">
             <thead>
-                <tr className="bg-emerald-50/30">
-                <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-emerald-900/40">Commande</th>
-                <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-emerald-900/40">Client</th>
-                <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-emerald-900/40">Total</th>
-                <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-emerald-900/40">Statut actuel</th>
-                <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-emerald-900/40">Paiement</th>
-                <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-emerald-900/40 text-right">Actions</th>
-                </tr>
+              <tr className="border-b border-emerald-950/5 bg-neutral-50/50">
+                <th className="px-10 py-6 text-left text-[9px] font-black uppercase tracking-[0.3em] text-emerald-950/30">N° Commande</th>
+                <th className="px-10 py-6 text-left text-[9px] font-black uppercase tracking-[0.3em] text-emerald-950/30">Client / Destination</th>
+                <th className="px-10 py-6 text-left text-[9px] font-black uppercase tracking-[0.3em] text-emerald-950/30">Total</th>
+                <th className="px-10 py-6 text-left text-[9px] font-black uppercase tracking-[0.3em] text-emerald-950/30">Statut</th>
+                <th className="px-10 py-6 text-right text-[9px] font-black uppercase tracking-[0.3em] text-emerald-950/30">Actions</th>
+              </tr>
             </thead>
-            <tbody className="divide-y divide-emerald-50 text-sm">
-                <AnimatePresence mode="popLayout">
-                {filtered.map(order => {
-                const name = order.guestInfo ? `${order.guestInfo.firstName} ${order.guestInfo.lastName}` : 'Client Inconu'
-                return (
+            <tbody className="divide-y divide-emerald-950/5">
+              <AnimatePresence mode="popLayout">
+                {filtered.map((order) => {
+                  const name = order.guest_first_name ? `${order.guest_first_name} ${order.guest_last_name}` : `Client #${order.customer_id?.slice(0, 5)}`;
+                  return (
                     <motion.tr 
-                        layout
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        className="hover:bg-emerald-50/20 transition-all group"
-                        key={order.id}
+                      layout
+                      key={order.id}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="group hover:bg-neutral-50/50 transition-colors"
                     >
-                    <td className="px-8 py-6">
-                        <div className="font-mono font-black text-emerald-900 text-base">{order.orderNumber}</div>
-                        <div className="text-[10px] text-emerald-950/30 font-bold mt-1 uppercase tracking-widest">{new Date(order.createdAt).toLocaleDateString()}</div>
-                    </td>
-                    <td className="px-8 py-6">
-                        <div className="font-bold text-emerald-950">{name}</div>
-                        {order.customerId === 'guest' && <div className="text-[10px] text-amber-600 font-black uppercase tracking-tighter">Client invité</div>}
-                    </td>
-                    <td className="px-8 py-6">
-                        <div className="font-sans font-black text-emerald-950 text-lg">{order.total.toLocaleString()} <span className="text-[10px] font-normal">DZD</span></div>
-                    </td>
-                    <td className="px-8 py-6">
-                        <StatusBadge status={order.status} />
-                    </td>
-                    <td className="px-8 py-6">
-                        <span className={`text-[10px] px-3 py-1.5 rounded-full font-black uppercase tracking-widest ${
-                            order.paymentStatus === 'paid' ? 'bg-green-100 text-green-700' : 
-                            order.paymentStatus === 'partial' ? 'bg-orange-100 text-orange-700' : 
-                            'bg-red-50 text-red-700'
-                        }`}>
-                            {order.paymentStatus === 'paid' ? 'Payé' : order.paymentStatus === 'partial' ? 'Partiel' : 'À régler'}
-                        </span>
-                    </td>
-                    <td className="px-8 py-6">
-                        <div className="flex justify-end items-center gap-3">
-                            <select 
-                                value={order.status}
-                                onChange={(e) => handleStatusUpdate(order.id, e.target.value as OrderStatus)}
-                                className="bg-emerald-50 text-emerald-950 text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-900 border-none appearance-none cursor-pointer"
-                            >
-                                {Object.entries(STATUS_LABELS).map(([v, l]) => (
-                                    <option key={v} value={v}>{l}</option>
-                                ))}
-                            </select>
-                            <button className="w-10 h-10 flex items-center justify-center text-emerald-900/20 hover:text-emerald-900 hover:bg-emerald-50 rounded-xl transition-all">
-                                <Eye size={16} />
-                            </button>
+                      <td className="px-10 py-8">
+                        <div>
+                          <p className="font-serif text-lg text-emerald-950">{order.order_number}</p>
+                          <p className="text-[9px] font-black tracking-widest text-emerald-950/20 uppercase mt-1">
+                            {new Date(order.created_at).toLocaleDateString()}
+                          </p>
                         </div>
-                    </td>
+                      </td>
+                      <td className="px-10 py-8">
+                        <div>
+                          <p className="text-sm font-bold text-emerald-950">{name}</p>
+                          <p className="text-[10px] text-emerald-950/40 font-medium">{order.guest_wilaya || '—'}</p>
+                        </div>
+                      </td>
+                      <td className="px-10 py-8">
+                        <p className="font-serif text-xl text-emerald-950">{order.total_amount.toLocaleString()} <span className="text-xs font-normal">DZD</span></p>
+                      </td>
+                      <td className="px-10 py-8">
+                         <select 
+                           value={order.order_status}
+                           onChange={e => updateStatus(order.id, e.target.value as OrderStatus)}
+                           className={`px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-widest border transition-all cursor-pointer ${STATUS_COLORS[order.order_status]}`}
+                         >
+                           {Object.entries(STATUS_LABELS).map(([k, v]) => (
+                             <option key={k} value={k}>{v.toUpperCase()}</option>
+                           ))}
+                         </select>
+                      </td>
+                      <td className="px-10 py-8 text-right">
+                         <div className="flex justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button 
+                              onClick={() => generatePDF(order)}
+                              className="w-12 h-12 rounded-xl bg-white border border-emerald-950/5 flex items-center justify-center text-emerald-950/40 hover:text-emerald-950 hover:border-emerald-950/20 transition-all shadow-sm"
+                              title="Imprimer la facture"
+                            >
+                               <Printer size={16} />
+                            </button>
+                         </div>
+                      </td>
                     </motion.tr>
-                )
+                  );
                 })}
-                </AnimatePresence>
+              </AnimatePresence>
             </tbody>
-            </table>
+          </table>
         </div>
-        {filtered.length === 0 && (
-          <div className="p-32 text-center">
-              <div className="w-24 h-24 bg-emerald-50 rounded-[2.5rem] flex items-center justify-center mx-auto mb-8">
-                <Clock className="w-10 h-10 text-emerald-950/10" />
-              </div>
-              <p className="text-emerald-950/20 font-serif text-2xl">Aucune commande trouvée</p>
-          </div>
-        )}
       </div>
     </div>
-  )
-}
-
-function StatusBadge({ status }: { status: OrderStatus }) {
-  const Icon = STATUS_ICONS[status]
-  return (
-    <span className={`inline-flex items-center gap-2 text-[9px] px-4 py-2 rounded-full font-black uppercase tracking-[0.15em] ring-4 ring-black/[0.02] shadow-sm ${STATUS_COLORS[status]}`}>
-      <Icon size={12} strokeWidth={3} />
-      {STATUS_LABELS[status]}
-    </span>
-  )
+  );
 }
