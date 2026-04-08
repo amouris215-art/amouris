@@ -11,7 +11,9 @@
     "register": "Créer un compte",
     "admin_access": "Espace Admin",
     "logout": "Déconnexion",
-    "language": "Français"
+    "language": "Français",
+    "about": "À propos",
+    "contact": "Contact"
   },
   "home": {
     "shop_now": "Explorer la boutique",
@@ -62,7 +64,10 @@
     "units": "unités",
     "currency": "DZD",
     "payment_cod": "Paiement à la livraison",
-    "free_shipping_label": "Livraison gratuite dès 50 000 DZD"
+    "free_shipping_label": "Livraison gratuite dès 50 000 DZD",
+    "account": "Mon compte",
+    "cart": "Panier",
+    "login": "Connexion"
   },
   "product": {
     "description": "Description",

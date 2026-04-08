@@ -1,12 +1,7 @@
 'use client'
-import { useSearchParams } from 'next/navigation'
-import Link from 'next/link'
-import { useI18n } from '@/i18n/i18n-context'
-import { Button } from '@/components/ui/button'
-import { CheckCircle2, ShoppingBag, ArrowRight, PackageCheck } from 'lucide-react'
-import { motion } from 'framer-motion'
+import { Suspense } from 'react'
 
-export default function CheckoutSuccessPage() {
+function SuccessContent() {
   const { t, language } = useI18n()
   const searchParams = useSearchParams()
   const orderNumber = searchParams.get('order') || '-----'
@@ -74,5 +69,13 @@ export default function CheckoutSuccessPage() {
         Vérifié par l'équipe Amouris
       </div>
     </div>
+  )
+}
+
+export default function CheckoutSuccessPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Chargement...</div>}>
+      <SuccessContent />
+    </Suspense>
   )
 }

@@ -11,7 +11,9 @@
     "register": "إنشاء حساب",
     "admin_access": "لوحة الإدارة",
     "logout": "تسجيل الخروج",
-    "language": "العربية"
+    "language": "العربية",
+    "about": "من نحن",
+    "contact": "اتصل بنا"
   },
   "home": {
     "shop_now": "اكتشف المتجر",
@@ -62,7 +64,10 @@
     "units": "وحدات",
     "currency": "دج",
     "payment_cod": "الدفع عند الاستلام",
-    "free_shipping_label": "توصيل مجاني للطلبات فوق 50,000 دج"
+    "free_shipping_label": "توصيل مجاني للطلبات فوق 50,000 دج",
+    "account": "حسابي",
+    "cart": "السلة",
+    "login": "تسجيل الدخول"
   },
   "product": {
     "description": "الوصف",
