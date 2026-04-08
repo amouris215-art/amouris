@@ -19,6 +19,7 @@ const CartDrawer = dynamic(() => import('./CartDrawer'), {
 
 export function Header() {
   const { t } = useI18n();
+  const pathname = usePathname();
   const cartCount = useCartStore((state) => state.getCount());
   const { customer: user } = useCustomerAuth();
   
