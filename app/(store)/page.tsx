@@ -1,4 +1,5 @@
 'use client'
+import { useMemo } from 'react'
 import { HeroSection } from '@/components/store/HeroSection'
 import { BrandsMarquee } from '@/components/store/BrandsMarquee'
 import { TagSection } from '@/components/store/TagSection'
@@ -11,7 +12,8 @@ import { useCategoriesStore } from '@/store/categories.store'
 
 export default function HomePage() {
   const products = useProductsStore(s => s.products)
-  const homepageTags = useTagsStore(s => s.getHomepageTags())
+  const tags = useTagsStore(s => s.tags)
+  const homepageTags = useMemo(() => tags.filter(t => t.show_on_homepage).sort((a, b) => a.homepage_order - b.homepage_order), [tags])
   const brands = useBrandsStore(s => s.brands)
   const categories = useCategoriesStore(s => s.categories)
 

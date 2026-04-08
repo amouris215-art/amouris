@@ -1,4 +1,5 @@
 'use client'
+import { useMemo } from 'react'
 import { useProductsStore } from '@/store/products.store'
 import { ProductGrid } from '@/components/store/ProductGrid'
 import { useI18n } from '@/i18n/i18n-context'
@@ -6,7 +7,8 @@ import { motion } from 'framer-motion'
 
 export default function ParfumsPage() {
   const { language } = useI18n()
-  const parfums = useProductsStore(s => s.getActiveByType('perfume'))
+  const allProducts = useProductsStore(s => s.products)
+  const parfums = useMemo(() => allProducts.filter(p => p.status === 'active' && p.product_type === 'perfume'), [allProducts])
   
   return (
     <div>
