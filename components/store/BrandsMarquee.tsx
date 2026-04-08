@@ -34,7 +34,7 @@ export function BrandsMarquee({ brands }: { brands: any[] }) {
             >
                 <div className="relative">
                     <span className="text-gray-300 group-hover/brand:text-emerald-950 font-serif text-4xl md:text-6xl transition-all duration-700 scale-90 group-hover/brand:scale-100 italic opacity-20 group-hover/brand:opacity-100 px-6 select-none">
-                        {language === 'ar' ? brand.nameAR : brand.nameFR}
+                        {language === 'ar' ? brand.name_ar : brand.name}
                     </span>
                     <div className="absolute -bottom-2 left-0 w-0 group-hover/brand:w-full h-[1px] bg-gradient-to-r from-transparent via-amber-400 to-transparent transition-all duration-700 ease-out" />
                 </div>

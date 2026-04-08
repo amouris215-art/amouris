@@ -4,7 +4,7 @@ import Image from 'next/image'
 import { motion } from 'framer-motion'
 import { useI18n } from '@/i18n/i18n-context'
 import { useTagsStore } from '@/store/tags.store'
-import { Product } from '@/lib/types'
+import { Product } from '@/store/products.store'
 
 interface ProductCardProps {
   product: Product

@@ -5,7 +5,9 @@ import { useI18n } from '@/i18n/i18n-context';
 import { ProductCard } from '@/components/store/product-card';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Product, Category, Brand } from '@/lib/types';
+import { Product } from '@/store/products.store';
+import { Category } from '@/store/categories.store';
+import { Brand } from '@/store/brands.store';
 import { useSearchParams } from 'next/navigation';
 
 interface ShopContentProps {
@@ -148,7 +150,7 @@ export function ShopContent({ initialProducts, categories, brands, initialType }
                   {brands.map(brand => (
                     <FilterChip 
                       key={brand.id}
-                      label={language === 'ar' ? brand.name_ar : brand.name_fr} 
+                      label={language === 'ar' ? brand.name_ar : brand.name} 
                       active={selectedBrand === brand.id} 
                       onClick={() => setSelectedBrand(brand.id)} 
                     />

@@ -1,7 +1,15 @@
 'use client'
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { Tag } from '@/lib/types'
+
+export interface Tag {
+  id: string
+  name_fr: string
+  name_ar: string
+  slug: string
+  show_on_homepage?: boolean
+  homepage_order?: number
+}
 
 interface TagsStore {
   tags: Tag[]
@@ -24,8 +32,8 @@ export const useTagsStore = create<TagsStore>()(
       remove: (id) => set(s => ({ tags: s.tags.filter(t => t.id !== id) })),
       getHomepageTags: () =>
         get().tags
-          .filter(t => t.showOnHomepage)
-          .sort((a, b) => (a.homepageOrder || 0) - (b.homepageOrder || 0)),
+          .filter(t => t.show_on_homepage)
+          .sort((a, b) => (a.homepage_order || 0) - (b.homepage_order || 0)),
     }),
     { name: 'amouris_tags' }
   )

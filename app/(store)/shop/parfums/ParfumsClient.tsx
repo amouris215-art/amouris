@@ -95,7 +95,7 @@ export default function ParfumsClient() {
                   <button onClick={() => setSelectedBrand('all')} className={`px-4 py-2 rounded-full text-xs font-bold transition-all ${selectedBrand === 'all' ? 'bg-[#0a3d2e] text-white shadow-lg' : 'bg-white text-emerald-950/40 border border-emerald-950/5 hover:border-emerald-950/20'}`}>TOUT</button>
                   {brands.map(brand => (
                     <button key={brand.id} onClick={() => setSelectedBrand(brand.id)} className={`px-4 py-2 rounded-full text-xs font-bold transition-all ${selectedBrand === brand.id ? 'bg-[#0a3d2e] text-white shadow-lg' : 'bg-white text-emerald-950/40 border border-emerald-950/5 hover:border-emerald-950/20'}`}>
-                      {isAr ? brand.name_ar : brand.name_fr}
+                      {isAr ? brand.name_ar : brand.name}
                     </button>
                   ))}
                 </div>

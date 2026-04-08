@@ -1,53 +1,20 @@
 'use client'
 
-import { useState, useEffect } from 'react'
 import { useAdminAuthStore } from '@/store/admin-auth.store'
-import { getProducts } from '@/lib/actions/products'
-import { getAllOrders } from '@/lib/actions/orders'
-import { getAllCustomers } from '@/lib/actions/customers'
-import { ShoppingBag, Users, TrendingUp, Package, Clock, CheckCircle, ArrowRight, Loader2 } from 'lucide-react'
+import { useProductsStore } from '@/store/products.store'
+import { useOrdersStore } from '@/store/orders.store'
+import { useCustomersStore } from '@/store/customers.store'
+import { ShoppingBag, Users, TrendingUp, Package, Clock, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
-import { Product, Order, Customer } from '@/lib/types'
 
 export default function AdminDashboard() {
   const { email } = useAdminAuthStore()
-  const [products, setProducts] = useState<Product[]>([])
-  const [orders, setOrders] = useState<Order[]>([])
-  const [customers, setCustomers] = useState<Customer[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  const products = useProductsStore(s => s.products)
+  const orders = useOrdersStore(s => s.orders)
+  const customers = useCustomersStore(s => s.customers)
 
-  const loadData = async () => {
-    setIsLoading(true)
-    try {
-      const [p, o, c] = await Promise.all([
-        getProducts({ status: 'active' }),
-        getAllOrders(),
-        getAllCustomers()
-      ])
-      setProducts(p)
-      setOrders(o)
-      setCustomers(c)
-    } catch (error) {
-      console.error('Failed to load dashboard data:', error)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    loadData()
-  }, [])
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="animate-spin text-emerald-900" size={48} />
-      </div>
-    )
-  }
-
-  const totalRevenue = orders.reduce((s, o) => s + o.total, 0)
-  const pendingOrders = orders.filter(o => o.status === 'pending').length
+  const totalRevenue = orders.reduce((s, o) => s + o.total_amount, 0)
+  const pendingOrders = orders.filter(o => o.order_status === 'pending').length
   const activeProducts = products.filter(p => p.status === 'active').length
 
   const stats = [
@@ -63,7 +30,7 @@ export default function AdminDashboard() {
     <div className="space-y-8">
       <div className="flex justify-between items-end">
         <div>
-          <h1 className="text-3xl font-bold text-emerald-950 font-serif">Vue d'ensemble</h1>
+          <h1 className="text-3xl font-bold text-emerald-950 font-serif">Vue d&apos;ensemble</h1>
           <p className="text-emerald-950/40 text-sm mt-1">Plateforme Amouris Parfums — Admin : {email}</p>
         </div>
         <div className="flex gap-4">
@@ -96,28 +63,31 @@ export default function AdminDashboard() {
             </div>
             <div className="divide-y divide-emerald-50">
                 {recentOrders.length > 0 ? (
-                    recentOrders.map(order => (
-                        <div key={order.id} className="flex items-center justify-between p-8 hover:bg-emerald-50/20 transition-all group">
-                            <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-900 font-bold group-hover:bg-emerald-900 group-hover:text-white transition-colors">
-                                    <ShoppingBag size={20} />
-                                </div>
-                                <div>
-                                    <p className="font-black text-emerald-950 font-mono text-sm tracking-tight">{order.orderNumber}</p>
-                                    <p className="text-xs text-emerald-950/30 font-medium">
-                                      {order.guestInfo ? `${order.guestInfo.firstName} ${order.guestInfo.lastName}` : 'Client'}
-                                    </p>
-                                </div>
-                            </div>
-                            <div className="flex items-center gap-6">
-                                <div className="text-right">
-                                    <p className="text-sm font-black text-emerald-900">{order.total.toLocaleString()} <span className="text-[10px] font-normal">DZD</span></p>
-                                    <p className="text-[10px] text-emerald-950/20 font-medium">{new Date(order.createdAt).toLocaleDateString()}</p>
-                                </div>
-                                <StatusBadge status={order.status} />
-                            </div>
-                        </div>
-                    ))
+                    recentOrders.map(order => {
+                        const name = order.guest_first_name
+                          ? `${order.guest_first_name} ${order.guest_last_name}`
+                          : (order.customer_id ? `Client #${order.customer_id.slice(0, 6)}` : 'Client');
+                        return (
+                          <div key={order.id} className="flex items-center justify-between p-8 hover:bg-emerald-50/20 transition-all group">
+                              <div className="flex items-center gap-4">
+                                  <div className="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-900 font-bold group-hover:bg-emerald-900 group-hover:text-white transition-colors">
+                                      <ShoppingBag size={20} />
+                                  </div>
+                                  <div>
+                                      <p className="font-black text-emerald-950 font-mono text-sm tracking-tight">{order.order_number}</p>
+                                      <p className="text-xs text-emerald-950/30 font-medium">{name}</p>
+                                  </div>
+                              </div>
+                              <div className="flex items-center gap-6">
+                                  <div className="text-right">
+                                      <p className="text-sm font-black text-emerald-900">{order.total_amount.toLocaleString()} <span className="text-[10px] font-normal">DZD</span></p>
+                                      <p className="text-[10px] text-emerald-950/20 font-medium">{new Date(order.created_at).toLocaleDateString()}</p>
+                                  </div>
+                                  <StatusBadge status={order.order_status} />
+                              </div>
+                          </div>
+                        );
+                    })
                 ) : (
                     <div className="p-12 text-center text-emerald-950/20 font-serif text-lg">Aucune commande pour le moment</div>
                 )}
@@ -131,10 +101,10 @@ export default function AdminDashboard() {
                 {customers.slice(0, 5).map(customer => (
                     <div key={customer.id} className="flex items-center gap-4 group">
                         <div className="w-10 h-10 bg-amber-50 rounded-full flex items-center justify-center text-amber-700 font-bold group-hover:bg-amber-500 group-hover:text-white transition-colors">
-                            {(customer.firstName || customer.phoneNumber).charAt(0)}
+                            {(customer.first_name || customer.phone || '?').charAt(0)}
                         </div>
                         <div className="flex-1 min-w-0">
-                            <p className="text-sm font-bold text-emerald-950 truncate">{customer.firstName} {customer.lastName}</p>
+                            <p className="text-sm font-bold text-emerald-950 truncate">{customer.first_name} {customer.last_name}</p>
                             <p className="text-[10px] text-emerald-950/30 uppercase tracking-widest font-black">{customer.wilaya}</p>
                         </div>
                         <Link href="/admin/customers" className="text-emerald-900/10 hover:text-emerald-900 transition-colors">

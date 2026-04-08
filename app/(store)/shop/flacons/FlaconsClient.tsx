@@ -6,7 +6,7 @@ import { useProductsStore } from '@/store/products.store';
 import { ProductCard } from '@/components/store/product-card';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Slider } from '@/components/ui/slider';
-import { ChevronDown, Filter, X, Grid, List } from 'lucide-react';
+import { ChevronDown, Filter, X } from 'lucide-react';
 
 export default function FlaconsClient() {
   const { language } = useI18n();
@@ -29,8 +29,8 @@ export default function FlaconsClient() {
 
     products.forEach(p => {
       p.variants?.forEach(v => {
-        if (v.size) sizes.add(v.size);
-        if (v.color) colors.add(v.color);
+        if (v.size_ml) sizes.add(`${v.size_ml}ml`);
+        if (v.color_name) colors.add(v.color_name);
         if (v.shape) shapes.add(v.shape);
       });
     });
@@ -46,8 +46,8 @@ export default function FlaconsClient() {
     let result = products.filter(p => {
       // For flacons, we look if ANY variant matches the filters
       const matchesVariant = p.variants?.some(v => {
-        const sizeMatch = selectedSize === 'all' || v.size === selectedSize;
-        const colorMatch = selectedColor === 'all' || v.color === selectedColor;
+        const sizeMatch = selectedSize === 'all' || `${v.size_ml}ml` === selectedSize;
+        const colorMatch = selectedColor === 'all' || v.color_name === selectedColor;
         const shapeMatch = selectedShape === 'all' || v.shape === selectedShape;
         const priceMatch = v.price <= maxPrice;
         return sizeMatch && colorMatch && shapeMatch && priceMatch;
@@ -123,18 +123,14 @@ export default function FlaconsClient() {
               {/* Color Swatches */}
               <div className="space-y-6">
                 <h3 className="text-[10px] uppercase font-black tracking-[0.2em] text-emerald-950/20 border-b border-emerald-950/5 pb-2">Coloris</h3>
-                <div className="flex flex-wrap gap-3">
-                  <button onClick={() => setSelectedColor('all')} className={`w-8 h-8 rounded-full border-2 transition-all flex items-center justify-center ${selectedColor === 'all' ? 'border-amber-600 bg-amber-600 text-white' : 'border-emerald-950/10 text-emerald-950/20'}`}>
-                    <Grid size={12} />
-                  </button>
+                <div className="flex flex-wrap gap-2">
+                  <button onClick={() => setSelectedColor('all')} className={`px-4 py-2 rounded-full text-xs font-bold transition-all ${selectedColor === 'all' ? 'bg-amber-600 text-white shadow-lg' : 'bg-white text-emerald-950/40 border border-emerald-950/5 hover:border-emerald-950/20'}`}>TOUT</button>
                   {filterOptions.colors.map(color => (
                     <button 
                          key={color} 
                          onClick={() => setSelectedColor(color)} 
-                         title={color}
-                         className={`w-8 h-8 rounded-full border-2 transition-all block ${selectedColor === color ? 'border-amber-600 scale-125' : 'border-emerald-950/10'}`}
-                         style={{ backgroundColor: color }}
-                    />
+                         className={`px-4 py-2 rounded-full text-xs font-bold transition-all ${selectedColor === color ? 'bg-amber-600 text-white shadow-lg' : 'bg-white text-emerald-950/40 border border-emerald-950/5'}`}
+                    >{color}</button>
                   ))}
                 </div>
               </div>
