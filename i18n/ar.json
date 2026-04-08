@@ -156,7 +156,23 @@
     "shop_name": "اسم المحل",
     "phone": "الهاتف",
     "address": "العنوان",
-    "wilaya": "الولاية"
+    "wilaya": "الولاية",
+    "order_id": "رقم الطلب",
+    "amount_paid": "المبلغ المدفوع",
+    "welcome": "أهلاً بك، ",
+    "stats": {
+      "total_orders": "إجمالي الطلبات",
+      "total_spent": "إجمالي المنفق",
+      "active_orders": "طلبات قيد المعالجة"
+    },
+    "recent_orders": "أحدث الطلبات",
+    "nav": {
+      "dashboard": "لوحة التحكم",
+      "orders": "طلباتي",
+      "favorites": "المفضلة",
+      "settings": "الإعدادات",
+      "logout": "تسجيل الخروج"
+    }
   },
   "footer": {
     "tagline": "الوجهة المثالية للمهنيين الباحثين عن زيوت العطور والقوارير الفاخرة.",
@@ -182,6 +198,59 @@
     "cancelled": "ملغى",
     "paid": "مدفوع",
     "partial": "جزئي",
-    "unpaid": "غير مدفوع"
+    "unpaid": "غير مدفوع",
+    "active": "نشط",
+    "draft": "مسودة",
+    "perfume": "عطر",
+    "flacon": "قارورة"
+  },
+  "admin": {
+    "dashboard": {
+      "title": "نظرة عامة",
+      "subtitle": "منصة Amouris Parfums — المسؤول : {email}",
+      "stats": {
+        "active_products": "المنتجات النشطة",
+        "total_orders": "إجمالي الطلبات",
+        "total_customers": "العملاء المسجلين",
+        "total_revenue": "إجمالي الإيرادات (دج)"
+      },
+      "orders": {
+        "recent": "الطلبات الأخيرة",
+        "view_all": "عرض الكل",
+        "none": "لا توجد طلبات حالياً"
+      },
+      "customers": {
+        "new": "عملاء جدد",
+        "none": "لا يوجد عملاء مسجلون",
+        "view_all": "عرض الكل"
+      }
+    },
+    "orders": {
+      "title": "سجل الطلبات",
+      "subtitle": "متابعة المبيعات والمدفوعات",
+      "search_placeholder": "رقم الطلب أو اسم العميل...",
+      "filters": "فلاتر",
+      "reduce": "تقليص",
+      "filter_status": "حالة الطلب",
+      "filter_payment": "الدفع",
+      "filter_wilaya": "الولاية",
+      "status_all": "جميع الحالات",
+      "payment_all": "جميع المدفوعات",
+      "wilaya_all": "جميع الولايات",
+      "table": {
+        "id_date": "المعرف / التاريخ",
+        "customer": "العميل",
+        "amount_payment": "المبلغ / الدفع",
+        "progress": "التقدم",
+        "actions": "الإجراءات"
+      },
+      "view_details": "عرض التفاصيل",
+      "print_invoice": "طباعة الفاتورة",
+      "payment_unpaid": "غير مدفوع",
+      "payment_partial": "جزئي",
+      "payment_paid": "مدفوع",
+      "no_wilaya": "بدون ولاية",
+      "none_found": "لم يتم العثور على طلبات."
+    }
   }
 }

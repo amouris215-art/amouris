@@ -36,7 +36,7 @@ export function ProductCard({ product, index = 0, compact = false }: ProductCard
       transition={{ delay: index * 0.05, duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
       className="h-full group"
     >
-      <Link href={`/product/${product.slug}`} className="block relative h-full flex flex-col bg-white overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-1000 border border-transparent hover:border-emerald-100/50 rounded-2xl">
+      <Link href={`/product/${product.slug}`} className="block relative h-full flex flex-col bg-white overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-1000 border border-transparent hover:border-emerald-100/50 rounded-xl sm:rounded-2xl">
         {/* Image Container */}
         <div className="relative aspect-[4/5] overflow-hidden bg-neutral-100">
           {/* Subtle overlay */}
@@ -60,8 +60,8 @@ export function ProductCard({ product, index = 0, compact = false }: ProductCard
           
           {/* Badge Tag */}
           {tagName && (
-            <div className="absolute top-4 left-4 z-20">
-              <span className="text-[8px] uppercase tracking-[0.3em] font-black px-4 py-2 bg-[#0a3d2e] text-white rounded-full">
+            <div className="absolute top-2 left-2 sm:top-4 sm:left-4 z-20">
+              <span className="text-[7px] sm:text-[8px] uppercase tracking-[0.2em] sm:tracking-[0.3em] font-black px-2 py-1 sm:px-4 sm:py-2 bg-[#0a3d2e] text-white rounded-full">
                 {tagName}
               </span>
             </div>
@@ -76,21 +76,21 @@ export function ProductCard({ product, index = 0, compact = false }: ProductCard
         </div>
 
         {/* Content */}
-        <div className="p-6 flex-1 flex flex-col items-center text-center">
-          <div className="space-y-1 mb-6">
-            <h3 className="font-serif text-xl text-emerald-950 group-hover:text-emerald-700 transition-colors duration-500">
+        <div className="p-3 sm:p-6 flex-1 flex flex-col items-center text-center">
+          <div className="space-y-0.5 sm:space-y-1 mb-3 sm:mb-6">
+            <h3 className="font-serif text-sm sm:text-xl text-emerald-950 group-hover:text-emerald-700 transition-colors duration-500 line-clamp-2">
               {name}
             </h3>
-            <p className="text-emerald-950/30 text-[10px] uppercase font-black tracking-[0.2em] rtl:font-arabic" dir={language === 'ar' ? 'ltr' : 'rtl'}>
+            <p className="text-emerald-950/30 text-[8px] sm:text-[10px] uppercase font-black tracking-[0.1em] sm:tracking-[0.2em] rtl:font-arabic hidden sm:block" dir={language === 'ar' ? 'ltr' : 'rtl'}>
               {subName}
             </p>
           </div>
           
-          <div className="mt-auto w-full pt-4 border-t border-emerald-50 flex items-center justify-center gap-2">
-            <span className="text-emerald-950 font-serif text-2xl tracking-tighter">
+          <div className="mt-auto w-full pt-2 sm:pt-4 border-t border-emerald-50 flex items-center justify-center gap-1 sm:gap-2">
+            <span className="text-emerald-950 font-serif text-base sm:text-2xl tracking-tighter">
               {displayPrice?.toLocaleString()}
             </span>
-            <span className="text-[10px] font-black uppercase tracking-widest text-emerald-950/20">
+            <span className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest text-emerald-950/20">
               DZD {isPerfume ? '/ G' : ''}
             </span>
           </div>

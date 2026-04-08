@@ -4,6 +4,7 @@ import { useEffect, useMemo } from 'react'
 import { useOrdersStore } from '@/store/orders.store'
 import { useCustomersStore } from '@/store/customers.store'
 import { TrendingUp, ArrowUpRight, ArrowDownRight, Loader2, PieChart as PieChartIcon } from 'lucide-react'
+import { ReportsSection } from '@/components/admin/reports-section'
 import {
   AreaChart,
   Area,
@@ -221,6 +222,8 @@ export default function AdminAnalyticsPage() {
           </div>
         </div>
       </div>
+
+      <ReportsSection />
     </div>
   )
 }

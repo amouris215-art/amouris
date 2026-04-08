@@ -34,7 +34,7 @@ export function Footer() {
         { label: t('nav.about'), href: '/about' },
         { label: t('nav.contact'), href: '/contact' },
         { label: t('common.login'), href: '/login' },
-        { label: language === 'ar' ? 'بياناتي' : 'Mon compte', href: '/account' },
+        { label: language === 'ar' ? 'الإدارة' : 'Admin', href: '/admin/login', discret: true },
       ]
     },
     {
@@ -52,7 +52,7 @@ export function Footer() {
     <footer className="bg-emerald-950 text-white border-t border-white/5 pt-16 pb-8">
       <div className="container mx-auto px-6">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
-          {/* Brand Column */}
+          {/* Column 1: Brand & Socials */}
           <div className="space-y-6">
             <Link href="/" className="font-serif text-2xl tracking-tighter hover:opacity-80 transition-opacity">
               <span className="text-white">{language === 'ar' ? settings.storeNameAR.split(' ')[0] : settings.storeNameFR.split(' ')[0]}</span>
@@ -72,16 +72,10 @@ export function Footer() {
                   <Facebook size={18} />
                 </Link>
               )}
-              {!settings.instagram && !settings.facebook && (
-                 <div className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center opacity-50 cursor-not-allowed">
-                    <Globe size={18} />
-                 </div>
-              )}
             </div>
           </div>
 
-
-          {/* Desktop Links Columns / Mobile Accordion */}
+          {/* Columns 2, 3, 4: Shop, Links, Contact */}
           {sections.map((section) => (
             <div key={section.id} className="md:block border-b border-white/10 md:border-0 pb-4 md:pb-0">
               <button 
@@ -99,7 +93,10 @@ export function Footer() {
                   <ul className="space-y-4 text-sm text-emerald-100/60 font-light">
                     {section.links.map((link) => (
                       <li key={link.href}>
-                        <Link href={link.href} className="hover:text-amber-400 transition-colors">
+                        <Link 
+                          href={link.href} 
+                          className={`transition-colors ${link.discret ? 'text-emerald-100/20 hover:text-emerald-100/60 text-[10px]' : 'hover:text-amber-400'}`}
+                        >
                           {link.label}
                         </Link>
                       </li>
@@ -121,13 +118,15 @@ export function Footer() {
           ))}
         </div>
         
-        <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6 text-[10px] md:text-sm text-emerald-100/40 uppercase tracking-widest">
+        {/* Bottom Footer */}
+        <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6 text-[10px] md:text-sm text-emerald-100/40 uppercase tracking-widest font-light">
           <p>© {new Date().getFullYear()} {language === 'ar' ? settings.storeNameAR : settings.storeNameFR}. {language === 'ar' ? 'جميع الحقوق محفوظة.' : 'Tous droits réservés.'}</p>
           <div className="flex gap-8">
-            <Link href="/privacy" className="hover:text-amber-400 transition-colors">Confidentialité</Link>
-            <Link href="/terms" className="hover:text-amber-400 transition-colors">Conditions</Link>
-            <Link href="/admin/login" className="hover:text-emerald-300 transition-colors">
-              {language === 'ar' ? 'الإدارة' : 'Administration'}
+            <Link href="/confidentialite" className="hover:text-amber-400 transition-colors">
+              {language === 'ar' ? 'سياسة الخصوصية' : 'Confidentialité'}
+            </Link>
+            <Link href="/conditions" className="hover:text-amber-400 transition-colors">
+              {language === 'ar' ? 'الشروط والأحكام' : 'Conditions'}
             </Link>
           </div>
         </div>
@@ -135,5 +134,3 @@ export function Footer() {
     </footer>
   );
 }
-
-

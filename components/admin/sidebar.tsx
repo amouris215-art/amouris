@@ -80,10 +80,10 @@ export function AdminSidebar() {
 
         <div className="overflow-y-auto h-[calc(100vh-64px)] p-4 no-scrollbar">
           <Link href="/admin" className="block mb-6">
-            <Button 
-                variant={pathname === '/admin' ? 'secondary' : 'ghost'} 
-                className={`w-full justify-start ${pathname === '/admin' ? 'font-bold text-primary' : ''}`}
-              >
+                <Button 
+                    variant={pathname === '/admin' ? 'secondary' : 'ghost'} 
+                    className={`w-full justify-start min-h-[44px] ${pathname === '/admin' ? 'font-bold text-primary' : ''}`}
+                  >
                 <LayoutDashboard className="mr-3 w-5 h-5 rtl:mr-0 rtl:ml-3" />
                 {language === 'ar' ? 'نظرة عامة' : 'Vue d\'ensemble'}
             </Button>
@@ -102,7 +102,7 @@ export function AdminSidebar() {
                       <Link key={item.name} href={item.href}>
                         <Button 
                           variant={isActive ? 'secondary' : 'ghost'} 
-                          className={`w-full justify-start ${isActive ? 'font-bold text-primary' : 'text-foreground/80'}`}
+                          className={`w-full justify-start min-h-[44px] ${isActive ? 'font-bold text-primary' : 'text-foreground/80'}`}
                         >
                           <item.icon className="mr-3 w-5 h-5 rtl:mr-0 rtl:ml-3" />
                           {item.name}

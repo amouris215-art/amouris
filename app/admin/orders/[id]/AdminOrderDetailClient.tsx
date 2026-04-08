@@ -1,5 +1,3 @@
-'use client'
-
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { CheckCircle2, FileText, ArrowLeft, Loader2, Save } from 'lucide-react'
@@ -8,16 +6,10 @@ import { toast } from 'sonner'
 import { updateOrderStatus, updatePayment } from '@/lib/actions/orders'
 import { generateInvoice } from '@/lib/actions/invoices'
 import { Order, OrderStatus, PaymentStatus } from '@/lib/types'
+import { useI18n } from '@/i18n/i18n-context'
+import { getOrderStatusLabel, getPaymentStatusLabel } from '@/lib/status-helpers'
 
 const STATUSES: OrderStatus[] = ['pending', 'confirmed', 'preparing', 'shipped', 'delivered']
-const STATUS_LABELS: Record<string, string> = {
-  pending: 'En attente',
-  confirmed: 'Confirmé',
-  preparing: 'En préparation',
-  shipped: 'Expédié',
-  delivered: 'Livré',
-  cancelled: 'Annulé',
-}
 
 interface AdminOrderDetailClientProps {
   order: Order
@@ -25,6 +17,7 @@ interface AdminOrderDetailClientProps {
 }
 
 export default function AdminOrderDetailClient({ order: initialOrder, invoice: initialInvoice }: AdminOrderDetailClientProps) {
+  const { t, language } = useI18n()
   const [order, setOrder] = useState(initialOrder)
   const [invoice, setInvoice] = useState(initialInvoice)
   const [isGenerating, setIsGenerating] = useState(false)
@@ -35,9 +28,9 @@ export default function AdminOrderDetailClient({ order: initialOrder, invoice: i
     try {
       await updateOrderStatus(order.id, newStatus)
       setOrder({ ...order, status: newStatus })
-      toast.success(`Statut mis à jour : ${STATUS_LABELS[newStatus]}`)
+      toast.success(`${t('admin.orders.detail.status_updated')} : ${getOrderStatusLabel(newStatus, language)}`)
     } catch (e) {
-      toast.error('Erreur lors de la mise à jour du statut')
+      toast.error(t('admin.orders.detail.error_status_update'))
     }
   }
 
@@ -46,9 +39,9 @@ export default function AdminOrderDetailClient({ order: initialOrder, invoice: i
       const amountPaid = targetStatus === 'paid' ? order.total : targetStatus === 'partial' ? (order.total / 2) : 0;
       await updatePayment(order.id, amountPaid)
       setOrder({ ...order, paymentStatus: targetStatus, amountPaid })
-      toast.success('Paiement mis à jour')
+      toast.success(t('admin.orders.detail.payment_updated'))
     } catch (e) {
-      toast.error('Erreur lors de la mise à jour du paiement')
+      toast.error(t('admin.orders.detail.error_payment_update'))
     }
   }
 
@@ -57,7 +50,7 @@ export default function AdminOrderDetailClient({ order: initialOrder, invoice: i
       setIsGenerating(true)
       const newInvoice = await generateInvoice(order.id)
       setInvoice(newInvoice)
-      toast.success('Facture générée avec succès')
+      toast.success(t('admin.orders.detail.invoice_generated'))
     } catch (error: any) {
       toast.error('Erreur: ' + error.message)
     } finally {
@@ -67,7 +60,7 @@ export default function AdminOrderDetailClient({ order: initialOrder, invoice: i
 
   const name = order.guestInfo?.firstName 
     ? `${order.guestInfo.firstName} ${order.guestInfo.lastName}`
-    : (order as any).profiles ? `${(order as any).profiles.first_name} ${(order as any).profiles.last_name}` : 'Inconnu';
+    : (order as any).profiles ? `${(order as any).profiles.first_name} ${(order as any).profiles.last_name}` : t('admin.orders.detail.not_set');
 
   return (
     <div className="space-y-8 pb-12">
@@ -78,8 +71,8 @@ export default function AdminOrderDetailClient({ order: initialOrder, invoice: i
           </button>
         </Link>
         <div>
-          <h1 className="text-3xl font-bold font-serif text-emerald-950">Commande {order.orderNumber}</h1>
-          <p className="text-emerald-950/40 text-sm mt-1">Passée le {new Date(order.createdAt).toLocaleString('fr-FR')}</p>
+          <h1 className="text-3xl font-bold font-serif text-emerald-950">{t('admin.orders.detail.title').replace('{number}', order.orderNumber)}</h1>
+          <p className="text-emerald-950/40 text-sm mt-1">{t('admin.orders.detail.date_prefix')} {new Date(order.createdAt).toLocaleString(language === 'ar' ? 'ar-DZ' : 'fr-FR')}</p>
         </div>
       </div>
 
@@ -90,11 +83,11 @@ export default function AdminOrderDetailClient({ order: initialOrder, invoice: i
           
           {/* Tracking Timeline */}
           <div className="bg-white rounded-[2.5rem] p-8 border border-emerald-50 shadow-sm">
-            <h2 className="text-xl font-bold font-serif text-emerald-950 mb-8">Suivi de la Commande</h2>
+            <h2 className="text-xl font-bold font-serif text-emerald-950 mb-8">{t('admin.orders.detail.tracking_title')}</h2>
             
             {order.status === 'cancelled' ? (
               <div className="p-6 bg-rose-50 text-rose-700 rounded-2xl font-bold text-center">
-                Cette commande a été annulée.
+                {t('admin.orders.detail.cancelled_msg')}
               </div>
             ) : (
               <div className="relative">
@@ -135,7 +128,7 @@ export default function AdminOrderDetailClient({ order: initialOrder, invoice: i
                         <span className={`text-[10px] font-black uppercase tracking-widest text-center transition-colors
                           ${isCurrent ? 'text-emerald-950' : isCompleted ? 'text-emerald-950/60' : 'text-emerald-950/20'}
                         `}>
-                          {STATUS_LABELS[status]}
+                          {getOrderStatusLabel(status, language)}
                         </span>
                       </div>
                     )
@@ -150,7 +143,7 @@ export default function AdminOrderDetailClient({ order: initialOrder, invoice: i
                    onClick={() => handleStatusChange('cancelled')}
                    className="text-xs text-rose-500 hover:text-rose-700 font-bold underline"
                  >
-                   Annuler la commande
+                   {t('admin.orders.detail.cancel_btn')}
                  </button>
               </div>
             )}
@@ -159,26 +152,26 @@ export default function AdminOrderDetailClient({ order: initialOrder, invoice: i
           {/* Ordered Items */}
           <div className="bg-white rounded-[2.5rem] overflow-hidden border border-emerald-50 shadow-sm">
             <div className="p-8 border-b border-emerald-50 bg-emerald-50/20">
-              <h2 className="text-xl font-bold font-serif text-emerald-950">Produits Commandés</h2>
+              <h2 className="text-xl font-bold font-serif text-emerald-950">{t('admin.orders.detail.products_title')}</h2>
             </div>
             <div className="divide-y divide-emerald-50">
               {order.items.map((item, idx) => (
                 <div key={idx} className="p-6 flex items-center justify-between hover:bg-emerald-50/10 transition-colors">
                   <div>
-                    <div className="font-bold text-emerald-950">{item.productNameFR}</div>
+                    <div className="font-bold text-emerald-950">{language === 'ar' ? (item as any).productNameAR || item.productNameFR : item.productNameFR}</div>
                     <div className="text-xs text-emerald-900/40 mt-1">
-                      {item.quantity} × {item.unitPrice.toLocaleString()} DZD
+                      {item.quantity} × {item.unitPrice.toLocaleString()} {t('common.dzd')}
                     </div>
                   </div>
                   <div className="font-black text-emerald-900 text-lg">
-                    {(item.quantity * item.unitPrice).toLocaleString()} <span className="text-[10px] font-normal text-emerald-900/40">DZD</span>
+                    {(item.quantity * item.unitPrice).toLocaleString()} <span className="text-[10px] font-normal text-emerald-900/40">{t('common.dzd')}</span>
                   </div>
                 </div>
               ))}
             </div>
             <div className="p-6 bg-emerald-50/10 flex justify-between items-center border-t border-emerald-50">
-              <span className="font-bold text-emerald-950 uppercase text-xs tracking-widest">Sous-total</span>
-              <span className="font-black text-emerald-950 text-xl">{order.total.toLocaleString()} <span className="text-[10px] font-normal">DZD</span></span>
+              <span className="font-bold text-emerald-950 uppercase text-xs tracking-widest">{t('admin.orders.detail.subtotal')}</span>
+              <span className="font-black text-emerald-950 text-xl">{order.total.toLocaleString()} <span className="text-[10px] font-normal">{t('common.dzd')}</span></span>
             </div>
           </div>
         </div>
@@ -188,22 +181,22 @@ export default function AdminOrderDetailClient({ order: initialOrder, invoice: i
           
           {/* Customer Info */}
           <div className="bg-white rounded-[2.5rem] p-8 border border-emerald-50 shadow-sm">
-            <h2 className="text-lg font-bold font-serif text-emerald-950 mb-6">Client</h2>
+            <h2 className="text-lg font-bold font-serif text-emerald-950 mb-6">{t('admin.orders.detail.customer_title')}</h2>
             <div className="space-y-4">
               <div>
-                <div className="text-[10px] font-black uppercase tracking-widest text-emerald-900/40 mb-1">Nom Complet</div>
+                <div className="text-[10px] font-black uppercase tracking-widest text-emerald-900/40 mb-1">{t('admin.orders.detail.customer_name')}</div>
                 <div className="font-bold text-emerald-950">{name}</div>
               </div>
               <div>
-                <div className="text-[10px] font-black uppercase tracking-widest text-emerald-900/40 mb-1">Téléphone</div>
+                <div className="text-[10px] font-black uppercase tracking-widest text-emerald-900/40 mb-1">{t('admin.orders.detail.customer_phone')}</div>
                 <div className="font-bold text-emerald-950">
-                  {order.guestInfo?.phoneNumber || (order as any).profiles?.phone || 'Non renseigné'}
+                  {order.guestInfo?.phoneNumber || (order as any).profiles?.phone || t('admin.orders.detail.not_set')}
                 </div>
               </div>
               <div>
-                <div className="text-[10px] font-black uppercase tracking-widest text-emerald-900/40 mb-1">Wilaya</div>
+                <div className="text-[10px] font-black uppercase tracking-widest text-emerald-900/40 mb-1">{t('admin.orders.detail.customer_wilaya')}</div>
                 <div className="font-bold text-emerald-950">
-                  {order.guestInfo?.wilaya || (order as any).profiles?.wilaya || 'Non renseignée'}
+                  {order.guestInfo?.wilaya || (order as any).profiles?.wilaya || t('admin.orders.detail.not_set')}
                 </div>
               </div>
             </div>
@@ -211,35 +204,35 @@ export default function AdminOrderDetailClient({ order: initialOrder, invoice: i
 
           {/* Payment Status */}
           <div className="bg-white rounded-[2.5rem] p-8 border border-emerald-50 shadow-sm">
-            <h2 className="text-lg font-bold font-serif text-emerald-950 mb-6">Paiement</h2>
+            <h2 className="text-lg font-bold font-serif text-emerald-950 mb-6">{t('admin.orders.detail.payment_title')}</h2>
             
             <div className="mb-6">
-              <div className="text-[10px] font-black uppercase tracking-widest text-emerald-900/40 mb-1">Statut Actuel</div>
+              <div className="text-[10px] font-black uppercase tracking-widest text-emerald-900/40 mb-1">{t('admin.orders.detail.payment_status')}</div>
               <select 
                 value={order.paymentStatus}
                 onChange={(e) => handlePaymentStatusChange(e.target.value as PaymentStatus)}
                 className={`w-full p-4 rounded-xl font-bold appearance-none cursor-pointer border-none focus:ring-2 focus:ring-emerald-900 outline-none
                   ${order.paymentStatus === 'paid' ? 'bg-green-100 text-green-800' : order.paymentStatus === 'partial' ? 'bg-orange-100 text-orange-800' : 'bg-red-50 text-red-800'}`}
               >
-                <option value="unpaid">Non Payé (À régler)</option>
-                <option value="partial">Partiel</option>
-                <option value="paid">Payé en totalité</option>
+                <option value="unpaid">{t('admin.orders.payment_unpaid')}</option>
+                <option value="partial">{t('admin.orders.payment_partial')}</option>
+                <option value="paid">{t('admin.orders.payment_paid')}</option>
               </select>
             </div>
 
             <div>
-               <div className="text-[10px] font-black uppercase tracking-widest text-emerald-900/40 mb-1">Montant Réglé</div>
+               <div className="text-[10px] font-black uppercase tracking-widest text-emerald-900/40 mb-1">{t('admin.orders.detail.payment_paid_amount')}</div>
                <div className="font-black text-emerald-950 text-2xl">
-                 {order.amountPaid.toLocaleString()} <span className="text-sm font-normal">/ {order.total.toLocaleString()} DZD</span>
+                 {order.amountPaid.toLocaleString()} <span className="text-sm font-normal">/ {order.total.toLocaleString()} {t('common.dzd')}</span>
                </div>
             </div>
           </div>
 
           {/* Invoice Generation */}
           <div className="bg-emerald-950 text-white rounded-[2.5rem] p-8 shadow-sm">
-            <h2 className="text-lg font-bold font-serif mb-2">Facturation</h2>
+            <h2 className="text-lg font-bold font-serif mb-2">{t('admin.orders.detail.billing_title')}</h2>
             <p className="text-emerald-50/60 text-xs mb-8">
-              Générez une facture PDF professionnelle pour cette commande.
+              {t('admin.orders.detail.billing_desc')}
             </p>
 
             {invoice?.pdf_url ? (
@@ -249,14 +242,14 @@ export default function AdminOrderDetailClient({ order: initialOrder, invoice: i
                     <CheckCircle2 size={20} className="text-emerald-400" />
                   </div>
                   <div>
-                    <div className="font-bold text-sm">Facture Générée</div>
+                    <div className="font-bold text-sm">{t('admin.orders.detail.invoice_generated')}</div>
                     <div className="text-xs text-emerald-400 font-mono">{invoice.invoice_number}</div>
                   </div>
                 </div>
                 <Link href={invoice.pdf_url} target="_blank" className="block w-full">
                   <button className="w-full py-4 bg-white text-emerald-950 font-bold rounded-xl flex items-center justify-center gap-2 hover:bg-emerald-50 transition-colors">
                     <FileText size={18} />
-                    Ouvrir le PDF
+                    {t('admin.orders.detail.open_pdf')}
                   </button>
                 </Link>
                 {/* Re-Generate Option */}
@@ -266,7 +259,7 @@ export default function AdminOrderDetailClient({ order: initialOrder, invoice: i
                   className="w-full py-3 text-xs text-emerald-50/60 hover:text-white font-medium flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
                 >
                   {isGenerating ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
-                  Régénérer la facture
+                  {t('admin.orders.detail.regenerate_invoice')}
                 </button>
               </div>
             ) : (
@@ -280,7 +273,7 @@ export default function AdminOrderDetailClient({ order: initialOrder, invoice: i
                 ) : (
                   <FileText size={18} />
                 )}
-                Générer la Facture
+                {t('admin.orders.detail.generate_invoice')}
               </button>
             )}
           </div>

@@ -125,3 +125,64 @@
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* =============================
+   BLOC 12 — Mobile Responsiveness
+   ============================= */
+
+/* 12.3 / 12.5 — Safe area padding for iPhone (sticky bottom buttons) */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* 12.4 — Admin table horizontal scroll on mobile */
+.admin-table-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.admin-table-wrapper table {
+  min-width: 600px;
+}
+
+/* 12.4 — Admin forms: single column on mobile */
+@media (max-width: 767px) {
+  .admin-form-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* 12.5 — Touch targets: enforce minimum 44×44px on all interactive elements */
+@media (max-width: 767px) {
+  button,
+  a,
+  [role="button"],
+  input[type="checkbox"],
+  input[type="radio"],
+  select {
+    min-height: 44px;
+    /* min-width applied only to icon-only buttons via a class */
+  }
+
+  /* Input fields: minimum height 44px */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  input[type="tel"],
+  input[type="url"],
+  input[type="search"],
+  input[type="date"],
+  textarea,
+  select,
+  .input-field {
+    min-height: 44px;
+  }
+}
+
+/* 12.5 — List item spacing */
+@media (max-width: 767px) {
+  .mobile-list > * + * {
+    margin-top: 8px;
+  }
+}

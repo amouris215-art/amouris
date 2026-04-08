@@ -156,7 +156,23 @@
     "shop_name": "Nom du magasin",
     "phone": "Téléphone",
     "address": "Adresse",
-    "wilaya": "Wilaya"
+    "wilaya": "Wilaya",
+    "order_id": "N° Commande",
+    "amount_paid": "Montant payé",
+    "welcome": "Bienvenue, ",
+    "stats": {
+      "total_orders": "Total des commandes",
+      "total_spent": "Total dépensé",
+      "active_orders": "Commandes en cours"
+    },
+    "recent_orders": "Dernières commandes",
+    "nav": {
+      "dashboard": "Tableau de bord",
+      "orders": "Mes commandes",
+      "favorites": "Favoris",
+      "settings": "Paramètres",
+      "logout": "Déconnexion"
+    }
   },
   "footer": {
     "tagline": "La destination de choix pour les professionnels à la recherche d'huiles de parfum et flacons de luxe.",
@@ -182,6 +198,10 @@
     "cancelled": "Annulé",
     "paid": "Payé",
     "partial": "Partiel",
-    "unpaid": "Non payé"
+    "unpaid": "Non payé",
+    "active": "Actif",
+    "draft": "Brouillon",
+    "perfume": "Parfum",
+    "flacon": "Flacon"
   }
 }

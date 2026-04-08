@@ -22,14 +22,6 @@ export default function AdminInventoryPage() {
   const [filterLowStock, setFilterLowStock] = useState(false)
   const [categoryFilter, setCategoryFilter] = useState('all')
 
-  const { settings, fetchSettings } = useSettingsStore()
-  const { categories, fetchCategories } = useCategoriesStore()
-  
-  const [search, setSearch] = useState('')
-  const [isSaving, setIsSaving] = useState<string | null>(null)
-  const [filterLowStock, setFilterLowStock] = useState(false)
-  const [categoryFilter, setCategoryFilter] = useState('all')
-
   useEffect(() => {
     fetchProducts()
     fetchSettings()

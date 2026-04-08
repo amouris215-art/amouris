@@ -10,7 +10,7 @@ import { createClient } from '@/lib/supabase/client';
 
 export function AdminHeader() {
   const { toggleSidebar } = useAdminStore();
-  const { language } = useI18n();
+  const { t, language } = useI18n();
   const [pendingCount, setPendingCount] = useState(0);
   const supabase = createClient();
 
@@ -53,22 +53,22 @@ export function AdminHeader() {
 
   return (
     <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b bg-background px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8">
-      <Button variant="ghost" size="icon" className="-m-2.5 p-2.5 text-muted-foreground lg:hidden" onClick={toggleSidebar}>
-        <span className="sr-only">Open sidebar</span>
+      <Button variant="ghost" size="icon" className="-m-2.5 p-2.5 min-w-[44px] min-h-[44px] text-muted-foreground lg:hidden" onClick={toggleSidebar}>
+        <span className="sr-only">{t('admin.common.open_sidebar')}</span>
         <Menu className="h-6 w-6" aria-hidden="true" />
       </Button>
 
       <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
         <div className="flex flex-1 items-center">
            <div className="text-sm font-medium text-muted-foreground">
-             Amouris Admin Portal
+             {t('admin.common.portal_title')}
            </div>
         </div>
         <div className="flex items-center gap-x-4 lg:gap-x-6">
           <LanguageToggle />
           
-          <Button variant="ghost" size="icon" className="-m-2.5 p-2.5 text-muted-foreground relative">
-            <span className="sr-only">View notifications</span>
+          <Button variant="ghost" size="icon" className="-m-2.5 p-2.5 min-w-[44px] min-h-[44px] text-muted-foreground relative">
+            <span className="sr-only">{t('admin.common.view_notifications')}</span>
             <Bell className="h-6 w-6" aria-hidden="true" />
             {pendingCount > 0 && (
               <span className="absolute top-1 right-2 w-5 h-5 bg-destructive rounded-full text-[10px] text-white flex items-center justify-center font-bold ring-2 ring-background">

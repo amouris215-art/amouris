@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react'
 import { X, Menu, ShoppingBag, User } from 'lucide-react'
 import Link from 'next/link'
 import { useCartStore } from '@/store/cart.store'
+import { useCustomerAuth } from '@/store/customer-auth.store'
+import { useI18n } from '@/i18n/i18n-context'
 import { LanguageToggle } from './language-toggle'
 import dynamic from 'next/dynamic'
 
@@ -16,14 +18,16 @@ export function MobileHeader() {
   const [isOpen, setIsOpen] = useState(false)
   const [isCartOpen, setIsCartOpen] = useState(false)
   const cartCount = useCartStore((state) => state.getCount())
+  const { customer: user } = useCustomerAuth()
+  const { t, language, dir } = useI18n()
   
   const [mounted, setMounted] = useState(false)
   
   const navLinks = [
-    { label: 'Boutique', href: '/shop' },
-    { label: 'Parfums', href: '/shop/perfumes' },
-    { label: 'Flacons', href: '/shop/flacons' },
-    { label: 'Marques', href: '/brands' }
+    { label: t('nav.shop'), href: '/shop' },
+    { label: t('nav.perfumes'), href: '/shop/perfumes' },
+    { label: t('nav.flacons'), href: '/shop/flacons' },
+    { label: t('nav.brands'), href: '/brands' }
   ]
 
   useEffect(() => setMounted(true), [])
@@ -38,13 +42,15 @@ export function MobileHeader() {
     return () => { document.body.style.overflow = '' }
   }, [isOpen])
 
+  const isRtl = dir === 'rtl'
+
   return (
     <>
       <header className="md:hidden sticky top-0 z-50 bg-white border-b border-gray-100">
         <div className="flex items-center justify-between h-14 px-4">
           <button
             onClick={() => setIsOpen(true)}
-            className="p-2 -ml-2 touch-manipulation"
+            className="min-w-[44px] min-h-[44px] flex items-center justify-center -ml-2 touch-manipulation"
             aria-label="Menu"
           >
             <Menu size={22} className="text-emerald-900" />
@@ -58,16 +64,19 @@ export function MobileHeader() {
           </Link>
           
           <div className="flex items-center gap-1">
-            <Link href="/account" className="p-2 touch-manipulation">
+            <Link 
+              href={mounted && user ? "/account" : "/login"} 
+              className="min-w-[44px] min-h-[44px] flex items-center justify-center touch-manipulation"
+            >
               <User size={20} className="text-emerald-900" />
             </Link>
             <button 
               onClick={() => setIsCartOpen(true)}
-              className="p-2 -mr-2 relative touch-manipulation"
+              className="min-w-[44px] min-h-[44px] flex items-center justify-center -mr-2 relative touch-manipulation"
             >
               <ShoppingBag size={20} className="text-emerald-900" />
               {mounted && cartCount > 0 && (
-                <span className="absolute top-1 right-0 bg-emerald-700 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-medium">
+                <span className="absolute top-1.5 right-0.5 bg-emerald-700 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-medium">
                   {cartCount}
                 </span>
               )}
@@ -87,8 +96,12 @@ export function MobileHeader() {
         />
       )}
 
-      {/* Navigation Drawer */}
-      <div className={`md:hidden fixed inset-y-0 left-0 z-[70] w-[85vw] max-w-sm bg-white shadow-xl transform transition-transform duration-300 ease-out ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      {/* Navigation Drawer — slides from LEFT in LTR, from RIGHT in RTL */}
+      <div className={`md:hidden fixed inset-y-0 z-[70] w-[85vw] max-w-sm bg-white shadow-xl transform transition-transform duration-300 ease-out ${
+        isRtl
+          ? `right-0 ${isOpen ? 'translate-x-0' : 'translate-x-full'}`
+          : `left-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`
+      }`}>
         <div className="flex flex-col h-full">
           {/* Drawer header */}
           <div className="flex items-center justify-between p-4 border-b border-gray-100">
@@ -96,7 +109,10 @@ export function MobileHeader() {
               <span className="text-emerald-800">Amouris</span>
               <span className="text-amber-500"> Parfums</span>
             </span>
-            <button onClick={() => setIsOpen(false)} className="p-2">
+            <button 
+              onClick={() => setIsOpen(false)} 
+              className="min-w-[44px] min-h-[44px] flex items-center justify-center"
+            >
               <X size={20} />
             </button>
           </div>
@@ -108,7 +124,7 @@ export function MobileHeader() {
                 key={link.href}
                 href={link.href}
                 onClick={() => setIsOpen(false)}
-                className="flex items-center h-12 px-3 text-gray-800 hover:text-emerald-800 hover:bg-emerald-50 rounded-lg font-light text-lg transition-colors"
+                className="flex items-center min-h-[44px] px-3 text-gray-800 hover:text-emerald-800 hover:bg-emerald-50 rounded-lg font-light text-lg transition-colors"
               >
                 {link.label}
               </Link>
@@ -120,14 +136,38 @@ export function MobileHeader() {
             <div className="py-2">
                <LanguageToggle />
             </div>
-            <Link href="/login" onClick={() => setIsOpen(false)} className="flex items-center gap-2 text-sm text-gray-500">
+            
+            <Link 
+              href={mounted && user ? "/account" : "/login"} 
+              onClick={() => setIsOpen(false)} 
+              className="flex items-center gap-2 min-h-[44px] text-sm text-gray-500"
+            >
               <User size={16} />
-              <span>Connexion / Créer un compte</span>
+              <span>
+                {mounted && user 
+                  ? t('nav.account') 
+                  : t('nav.login')
+                }
+              </span>
             </Link>
+
+            {mounted && user && (
+              <button 
+                onClick={() => {
+                  logout()
+                  setIsOpen(false)
+                }}
+                className="flex items-center gap-2 min-h-[44px] text-sm text-rose-500 w-full"
+              >
+                <X size={16} />
+                <span className="font-bold">
+                  {isAr ? 'تسجيل الخروج' : 'Déconnexion'}
+                </span>
+              </button>
+            )}
           </div>
         </div>
       </div>
     </>
   )
 }
-

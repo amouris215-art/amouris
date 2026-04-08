@@ -158,7 +158,7 @@ export default function ParfumsClient() {
               </div>
             </div>
 
-            <motion.div layout className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 pb-32">
+            <motion.div layout className="grid grid-cols-2 md:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-8 pb-32">
               <AnimatePresence mode="popLayout">
                 {filteredProducts.map((product, i) => (
                   <motion.div

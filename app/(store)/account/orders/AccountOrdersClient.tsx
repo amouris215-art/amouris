@@ -6,6 +6,7 @@ import { useOrdersStore } from '@/store/orders.store';
 import { Button } from '@/components/ui/button';
 import { Package } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { getOrderStatusLabel } from '@/lib/status-helpers';
 
 export default function AccountOrdersClient({ customerId }: { customerId: string }) {
   const { t, language } = useI18n();
@@ -23,7 +24,7 @@ export default function AccountOrdersClient({ customerId }: { customerId: string
       <div className="flex items-center gap-4 mb-8">
         <Package className="h-8 w-8 text-emerald-900" />
         <h1 className="text-3xl font-serif font-bold text-emerald-950">
-          {language === 'ar' ? 'طلباتي' : 'Mes Commandes'}
+          {t('account.my_orders')}
         </h1>
       </div>
 
@@ -32,11 +33,11 @@ export default function AccountOrdersClient({ customerId }: { customerId: string
           <table className="w-full text-sm text-left rtl:text-right">
             <thead className="text-[10px] font-black tracking-widest text-emerald-950/40 bg-neutral-50/50 uppercase border-b border-emerald-950/5">
               <tr>
-                <th className="px-6 py-5">{language === 'ar' ? 'رقم الطلب' : 'N° Commande'}</th>
-                <th className="px-6 py-5">{language === 'ar' ? 'التاريخ' : 'Date'}</th>
-                <th className="px-6 py-5">{language === 'ar' ? 'الحالة' : 'Statut'}</th>
-                <th className="px-6 py-5">{language === 'ar' ? 'المدفوع' : 'Montant payé'}</th>
-                <th className="px-6 py-5">{language === 'ar' ? 'المجموع' : 'Total'}</th>
+                <th className="px-6 py-5">{t('account.order_id')}</th>
+                <th className="px-6 py-5">{t('account.order_date')}</th>
+                <th className="px-6 py-5">{t('account.order_status')}</th>
+                <th className="px-6 py-5">{t('account.amount_paid')}</th>
+                <th className="px-6 py-5">{t('account.order_total')}</th>
                 <th className="px-6 py-5 text-right"></th>
               </tr>
             </thead>
@@ -45,7 +46,7 @@ export default function AccountOrdersClient({ customerId }: { customerId: string
                 <tr key={order.id} className="hover:bg-neutral-50/50 transition-colors">
                    <td className="px-6 py-5 font-bold font-mono">{order.order_number}</td>
                    <td className="px-6 py-5 text-emerald-950/50 font-medium">
-                     {new Date(order.created_at).toLocaleDateString(language === 'ar' ? 'ar-DZ' : 'fr-DZ', {
+                     {new Date(order.created_at).toLocaleDateString(language === 'ar' ? 'ar-DZ' : 'fr-FR', {
                        year: 'numeric',
                        month: 'long',
                        day: 'numeric'
@@ -53,19 +54,19 @@ export default function AccountOrdersClient({ customerId }: { customerId: string
                    </td>
                    <td className="px-6 py-5">
                      <span className={`px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-[0.2em] ${getStatusStyles(order.order_status)}`}>
-                       {getStatusBadgeLabel(order.order_status, language)}
+                       {getOrderStatusLabel(order.order_status, language)}
                      </span>
                    </td>
                    <td className="px-6 py-5">
                      <span className={order.amount_paid >= order.total_amount ? "text-emerald-600 font-bold" : "text-amber-600 font-bold"}>
-                        {order.amount_paid.toLocaleString()} {t('common.currency')}
+                        {order.amount_paid.toLocaleString()} {t('common.dzd')}
                      </span>
                    </td>
-                   <td className="px-6 py-5 font-bold text-lg">{order.total_amount.toLocaleString()} <span className="text-[10px] font-normal uppercase tracking-widest text-emerald-950/40">DZD</span></td>
+                   <td className="px-6 py-5 font-bold text-lg">{order.total_amount.toLocaleString()} <span className="text-[10px] font-normal uppercase tracking-widest text-emerald-950/40">{t('common.dzd')}</span></td>
                    <td className="px-6 py-5 text-right">
                      <Link href={`/account/orders/${order.id}`}>
                        <Button variant="outline" size="sm" className="rounded-xl border-emerald-950/10 text-emerald-900 hover:bg-emerald-900 hover:text-white uppercase tracking-widest text-[10px] font-black h-8">
-                         {t('product.details')}
+                         {t('account.view_details')}
                        </Button>
                      </Link>
                    </td>
@@ -78,7 +79,7 @@ export default function AccountOrdersClient({ customerId }: { customerId: string
                        <Package className="text-emerald-900/20" size={24} />
                      </div>
                      <p className="font-serif italic text-emerald-950/40 text-lg">
-                        {language === 'ar' ? 'لا توجد طلبات سابقة بعد' : 'Aucune commande passée pour le moment'}
+                        {t('account.no_orders')}
                      </p>
                    </td>
                 </tr>
@@ -89,18 +90,6 @@ export default function AccountOrdersClient({ customerId }: { customerId: string
       </div>
     </div>
   );
-}
-
-function getStatusBadgeLabel(status: string, lang: 'ar' | 'fr') {
-  const labels: Record<string, { ar: string; fr: string }> = {
-    pending: { ar: 'قيد الانتظار', fr: 'En attente' },
-    confirmed: { ar: 'مؤكد', fr: 'Confirmé' },
-    preparing: { ar: 'قيد التحضير', fr: 'En préparation' },
-    shipped: { ar: 'تم الشحن', fr: 'Expédié' },
-    delivered: { ar: 'تم التوصيل', fr: 'Livré' },
-    cancelled: { ar: 'ملغى', fr: 'Annulé' },
-  };
-  return labels[status]?.[lang] || status;
 }
 
 function getStatusStyles(status: string) {

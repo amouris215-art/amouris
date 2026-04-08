@@ -18,10 +18,10 @@ const CartDrawer = dynamic(() => import('./CartDrawer'), {
 });
 
 export function Header() {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const pathname = usePathname();
   const cartCount = useCartStore((state) => state.getCount());
-  const { customer: user } = useCustomerAuth();
+  const { customer: user, logout } = useCustomerAuth();
   
   const [mounted, setMounted] = useState(false);
   const [visible, setVisible] = useState(true);
@@ -31,6 +31,8 @@ export function Header() {
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  const isAr = language === 'ar';
 
   useEffect(() => {
     const handleScroll = () => {
@@ -47,9 +49,9 @@ export function Header() {
     <>
       <MobileHeader />
       
-      {/* Desktop/Tablet Header */}
+      {/* Desktop/Tablet Header — hidden on mobile */}
       <header 
-        className={`sticky top-0 z-50 w-full transition-all duration-700 ${visible ? 'translate-y-0' : '-translate-y-full'} ${lastScroll > 60 ? 'bg-white/80 backdrop-blur-xl border-b border-emerald-950/5 shadow-luxury py-2' : 'bg-transparent py-4'}`}
+        className={`hidden md:block sticky top-0 z-50 w-full transition-all duration-700 ${visible ? 'translate-y-0' : '-translate-y-full'} ${lastScroll > 60 ? 'bg-white/80 backdrop-blur-xl border-b border-emerald-950/5 shadow-luxury py-2' : 'bg-transparent py-4'}`}
       >
         <div className="max-w-[1600px] mx-auto px-6 h-16 flex items-center justify-between">
           {/* Logo */}
@@ -114,10 +116,19 @@ export function Header() {
               )}
             </Button>
             
+            {mounted && user && (
+              <button 
+                onClick={logout}
+                className="text-[10px] font-black uppercase tracking-widest text-emerald-950/40 hover:text-rose-600 transition-colors ml-2"
+              >
+                {isAr ? 'تسجيل الخروج' : 'Déconnexion'}
+              </button>
+            )}
+
             <Link 
               href="/admin" 
               className="ml-2 p-2 text-emerald-950/10 hover:text-emerald-950 transition-colors"
-              title="Portail Client"
+              title={t('nav.admin_access')}
             >
               <Shield size={16} />
             </Link>

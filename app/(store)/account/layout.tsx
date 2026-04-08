@@ -22,7 +22,7 @@ export default function AccountLayout({
 }) {
   const router = useRouter();
   const pathname = usePathname();
-  const { language } = useI18n();
+  const { t, language } = useI18n();
   const { customer, logout, isAuthenticated } = useCustomerAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -45,13 +45,13 @@ export default function AccountLayout({
   };
 
   const navItems = [
-    { href: '/account', label: language === 'ar' ? 'لوحة التحكم' : 'Tableau de bord', icon: LayoutDashboard },
-    { href: '/account/orders', label: language === 'ar' ? 'طلباتي' : 'Mes commandes', icon: ShoppingBag },
-    { href: '/account/favorites', label: language === 'ar' ? 'المفضلة' : 'Favoris', icon: Heart },
-    { href: '/account/settings', label: language === 'ar' ? 'الإعدادات' : 'Paramètres', icon: Settings },
+    { href: '/account', label: t('account.nav.dashboard'), icon: LayoutDashboard },
+    { href: '/account/orders', label: t('account.nav.orders'), icon: ShoppingBag },
+    { href: '/account/favorites', label: t('account.nav.favorites'), icon: Heart },
+    { href: '/account/settings', label: t('account.nav.settings'), icon: Settings },
   ];
 
-  const logoutText = language === 'ar' ? 'تسجيل الخروج' : 'Déconnexion';
+  const isAr = language === 'ar';
 
   return (
     <div className="min-h-screen bg-neutral-50/50 flex flex-col md:flex-row">
@@ -88,7 +88,7 @@ export default function AccountLayout({
             {customer.first_name} {customer.last_name}
           </h2>
           <p className="text-[10px] font-black uppercase tracking-widest text-[#C9A84C] mt-1 opacity-80">
-            {customer.shop_name || 'Amouris Partner'}
+            {customer.shop_name || t('common.partner')}
           </p>
         </div>
 
@@ -119,13 +119,13 @@ export default function AccountLayout({
             className="w-full flex items-center gap-4 px-6 py-4 rounded-2xl text-[11px] font-black uppercase tracking-widest text-rose-500 hover:bg-rose-50 transition-all font-bold"
           >
             <LogOut size={18} strokeWidth={2.5} />
-            {logoutText}
+            {isAr ? 'تسجيل الخروج' : 'Déconnexion'}
           </button>
         </div>
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 w-full max-w-7xl mx-auto p-4 md:p-12 overflow-x-hidden">
+      <main className="flex-1 w-full max-max-7xl mx-auto p-4 md:p-12 overflow-x-hidden">
         {children}
       </main>
     </div>

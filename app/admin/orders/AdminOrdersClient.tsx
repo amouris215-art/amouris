@@ -13,15 +13,10 @@ import {
 } from 'lucide-react';
 import { generateInvoicePDF } from '@/lib/utils/invoice-generator';
 import Link from 'next/link';
+import { useI18n } from '@/i18n/i18n-context';
+import { getOrderStatusLabel, getPaymentStatusLabel } from '@/lib/status-helpers';
 
-const STATUS_LABELS: Record<OrderStatus, string> = {
-  pending: 'En attente',
-  confirmed: 'Confirmé',
-  preparing: 'En préparation',
-  shipped: 'Expédié',
-  delivered: 'Livré',
-  cancelled: 'Annulé',
-};
+const STATUS_ORDER: OrderStatus[] = ['pending', 'confirmed', 'preparing', 'shipped', 'delivered', 'cancelled'];
 
 const STATUS_COLORS: Record<OrderStatus, string> = {
   pending: 'bg-amber-50 text-amber-700 border-amber-200',
@@ -39,6 +34,7 @@ const PAYMENT_COLORS: Record<PaymentStatus, string> = {
 };
 
 export default function AdminOrdersClient() {
+  const { t, language } = useI18n();
   const { orders, fetchOrders, updateStatus, updatePayment, updateNotes } = useOrdersStore();
   const settings = useSettingsStore();
 
@@ -54,7 +50,7 @@ export default function AdminOrdersClient() {
 
   const filtered = useMemo(() => {
     return orders.filter(o => {
-      const customerName = o.guest_first_name ? `${o.guest_first_name} ${o.guest_last_name}` : 'Client Enregistré';
+      const customerName = o.guest_first_name ? `${o.guest_first_name} ${o.guest_last_name}` : t('admin.orders.customer_unknown');
       const matchSearch = o.order_number.toLowerCase().includes(search.toLowerCase()) || 
                           customerName.toLowerCase().includes(search.toLowerCase());
       const matchStatus = statusFilter === 'all' || o.order_status === statusFilter;
@@ -63,7 +59,7 @@ export default function AdminOrdersClient() {
       
       return matchSearch && matchStatus && matchPayment && matchWilaya;
     });
-  }, [orders, search, statusFilter, paymentFilter, wilayaFilter]);
+  }, [orders, search, statusFilter, paymentFilter, wilayaFilter, t]);
 
   const handlePrint = (order: Order) => {
     const doc = generateInvoicePDF(order, settings)
@@ -79,8 +75,8 @@ export default function AdminOrdersClient() {
     <div className="space-y-12 pb-20">
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-8">
         <div>
-           <h1 className="font-serif text-4xl text-emerald-950 mb-2 font-bolditalic">Carnet de Commandes</h1>
-           <p className="text-[10px] font-black uppercase tracking-[0.4em] text-[#C9A84C]">Suivi des ventes et règlements</p>
+           <h1 className="font-serif text-4xl text-emerald-950 mb-2 font-bolditalic">{t('admin.orders.title')}</h1>
+           <p className="text-[10px] font-black uppercase tracking-[0.4em] text-[#C9A84C]">{t('admin.orders.subtitle')}</p>
         </div>
       </header>
 
@@ -90,7 +86,7 @@ export default function AdminOrdersClient() {
              <Search size={18} className="absolute left-6 top-1/2 -translate-y-1/2 text-emerald-950/20 group-focus-within:text-[#C9A84C] transition-colors" />
              <input 
                type="text"
-               placeholder="Numéro de commande ou nom client..."
+               placeholder={t('admin.orders.search_placeholder')}
                value={search}
                onChange={e => setSearch(e.target.value)}
                className="w-full h-16 pl-16 pr-8 bg-white border border-emerald-950/5 rounded-2xl outline-none focus:border-[#C9A84C] shadow-sm font-medium text-emerald-950 transition-all font-sans"
@@ -100,7 +96,7 @@ export default function AdminOrdersClient() {
             onClick={() => setShowFilters(!showFilters)}
             className={`h-16 px-8 rounded-2xl border flex items-center gap-3 text-[10px] font-black uppercase tracking-widest transition-all ${showFilters ? 'bg-emerald-50 border-emerald-200 text-emerald-900' : 'bg-white border-emerald-950/5 text-emerald-950/40 hover:text-emerald-950'}`}
           >
-            <Filter size={16} /> {showFilters ? 'Réduire' : 'Filtres'}
+            <Filter size={16} /> {showFilters ? t('admin.orders.reduce') : t('admin.orders.filters')}
           </button>
         </div>
 
@@ -113,25 +109,25 @@ export default function AdminOrdersClient() {
               className="grid grid-cols-1 md:grid-cols-3 gap-6 p-8 bg-neutral-100 rounded-3xl"
             >
               <div className="space-y-2">
-                <label className="text-[9px] font-black uppercase text-emerald-950/30 px-1">État Commande</label>
+                <label className="text-[9px] font-black uppercase text-emerald-950/30 px-1">{t('admin.orders.filter_status')}</label>
                 <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="w-full h-12 px-4 rounded-xl bg-white border border-emerald-950/5 text-[10px] font-bold uppercase outline-none">
-                  <option value="all">Tous les statuts</option>
-                  {Object.entries(STATUS_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                  <option value="all">{t('admin.orders.status_all')}</option>
+                  {STATUS_ORDER.map((k) => <option key={k} value={k}>{getOrderStatusLabel(k, language)}</option>)}
                 </select>
               </div>
               <div className="space-y-2">
-                <label className="text-[9px] font-black uppercase text-emerald-950/30 px-1">Règlement</label>
+                <label className="text-[9px] font-black uppercase text-emerald-950/30 px-1">{t('admin.orders.filter_payment')}</label>
                 <select value={paymentFilter} onChange={e => setPaymentFilter(e.target.value)} className="w-full h-12 px-4 rounded-xl bg-white border border-emerald-950/5 text-[10px] font-bold uppercase outline-none">
-                  <option value="all">Tous les paiements</option>
-                  <option value="unpaid">Non payé</option>
-                  <option value="partial">Partiel</option>
-                  <option value="paid">Payé</option>
+                  <option value="all">{t('admin.orders.payment_all')}</option>
+                  <option value="unpaid">{t('admin.orders.payment_unpaid')}</option>
+                  <option value="partial">{t('admin.orders.payment_partial')}</option>
+                  <option value="paid">{t('admin.orders.payment_paid')}</option>
                 </select>
               </div>
               <div className="space-y-2">
-                <label className="text-[9px] font-black uppercase text-emerald-950/30 px-1">Wilaya</label>
+                <label className="text-[9px] font-black uppercase text-emerald-950/30 px-1">{t('admin.orders.filter_wilaya')}</label>
                 <select value={wilayaFilter} onChange={e => setWilayaFilter(e.target.value)} className="w-full h-12 px-4 rounded-xl bg-white border border-emerald-950/5 text-[10px] font-bold uppercase outline-none">
-                  <option value="all">Toutes les wilayas</option>
+                  <option value="all">{t('admin.orders.wilaya_all')}</option>
                   {Array.from(new Set(orders.map(o => o.guest_wilaya).filter(Boolean))).map(w => <option key={w} value={w!}>{w}</option>)}
                 </select>
               </div>
@@ -145,17 +141,17 @@ export default function AdminOrdersClient() {
           <table className="w-full border-collapse">
             <thead>
               <tr className="border-b border-emerald-950/5 bg-neutral-50/50">
-                <th className="px-10 py-6 text-left text-[9px] font-black uppercase tracking-[0.3em] text-emerald-950/30">ID / Date</th>
-                <th className="px-10 py-6 text-left text-[9px] font-black uppercase tracking-[0.3em] text-emerald-950/30">Client</th>
-                <th className="px-10 py-6 text-left text-[9px] font-black uppercase tracking-[0.3em] text-emerald-950/30">Montant / Paiement</th>
-                <th className="px-10 py-6 text-left text-[9px] font-black uppercase tracking-[0.3em] text-emerald-950/30">Progression</th>
-                <th className="px-10 py-6 text-right text-[9px] font-black uppercase tracking-[0.3em] text-emerald-950/30">Actions</th>
+                <th className="px-10 py-6 text-left text-[9px] font-black uppercase tracking-[0.3em] text-emerald-950/30">{t('admin.orders.table.id_date')}</th>
+                <th className="px-10 py-6 text-left text-[9px] font-black uppercase tracking-[0.3em] text-emerald-950/30">{t('admin.orders.table.customer')}</th>
+                <th className="px-10 py-6 text-left text-[9px] font-black uppercase tracking-[0.3em] text-emerald-950/30">{t('admin.orders.table.amount_payment')}</th>
+                <th className="px-10 py-6 text-left text-[9px] font-black uppercase tracking-[0.3em] text-emerald-950/30">{t('admin.orders.table.progress')}</th>
+                <th className="px-10 py-6 text-right text-[9px] font-black uppercase tracking-[0.3em] text-emerald-950/30">{t('admin.orders.table.actions')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-emerald-950/5">
               <AnimatePresence mode="popLayout">
                 {filtered.map((order) => {
-                  const name = order.guest_first_name ? `${order.guest_first_name} ${order.guest_last_name}` : `Client ID: ${order.customer_id?.slice(0, 8)}`;
+                  const name = order.guest_first_name ? `${order.guest_first_name} ${order.guest_last_name}` : `ID: ${order.customer_id?.slice(0, 8)}`;
                   const reste = order.total_amount - order.amount_paid;
                   
                   return (
@@ -171,27 +167,27 @@ export default function AdminOrdersClient() {
                         <div>
                           <p className="font-serif text-xl text-emerald-950 font-bold">{order.order_number}</p>
                           <p className="text-[10px] font-black tracking-widest text-emerald-950/20 uppercase mt-1">
-                            {new Date(order.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })}
+                            {new Date(order.created_at).toLocaleDateString(language === 'ar' ? 'ar-DZ' : 'fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })}
                           </p>
                         </div>
                       </td>
                       <td className="px-10 py-8">
                         <div>
                           <p className="text-sm font-bold text-emerald-950">{name}</p>
-                          <p className="text-[9px] font-black text-[#C9A84C] uppercase tracking-widest mt-0.5">{order.guest_wilaya || 'Sans Wilaya'}</p>
+                          <p className="text-[9px] font-black text-[#C9A84C] uppercase tracking-widest mt-0.5">{order.guest_wilaya || t('admin.orders.no_wilaya')}</p>
                         </div>
                       </td>
                       <td className="px-10 py-8">
                         <div className="space-y-3">
                            <div className="flex items-center gap-3">
-                              <span className="text-lg font-black text-emerald-950">{order.total_amount.toLocaleString()} <span className="text-[10px] font-normal opacity-50">DZD</span></span>
-                              <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase border ${PAYMENT_COLORS[order.payment_status]}`}>{order.payment_status === 'paid' ? 'Payé' : order.payment_status === 'partial' ? 'Partiel' : 'Non Payé'}</span>
+                              <span className="text-lg font-black text-emerald-950">{order.total_amount.toLocaleString()} <span className="text-[10px] font-normal opacity-50">{t('common.dzd')}</span></span>
+                              <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase border ${PAYMENT_COLORS[order.payment_status]}`}>{getPaymentStatusLabel(order.payment_status, language)}</span>
                            </div>
                            <div className="flex items-center gap-2">
                               <Banknote size={14} className="text-emerald-900/20" />
                               <input 
                                 type="number"
-                                placeholder="Montant payé"
+                                placeholder={t('admin.orders.table.amount_payment')}
                                 defaultValue={order.amount_paid}
                                 onBlur={(e) => handleUpdatePayment(order.id, e.target.value)}
                                 className="w-24 h-8 px-2 bg-neutral-50 border border-emerald-950/5 rounded text-[10px] font-bold outline-none focus:border-amber-500 transition-colors"
@@ -206,8 +202,8 @@ export default function AdminOrdersClient() {
                            onChange={e => updateStatus(order.id, e.target.value as OrderStatus)}
                            className={`h-10 px-4 rounded-xl text-[9px] font-black uppercase tracking-widest border transition-all cursor-pointer ${STATUS_COLORS[order.order_status]}`}
                          >
-                           {Object.entries(STATUS_LABELS).map(([k, v]) => (
-                             <option key={k} value={k}>{v.toUpperCase()}</option>
+                           {STATUS_ORDER.map((k) => (
+                             <option key={k} value={k}>{getOrderStatusLabel(k, language).toUpperCase()}</option>
                            ))}
                          </select>
                       </td>
@@ -216,12 +212,14 @@ export default function AdminOrdersClient() {
                             <Link 
                               href={`/admin/orders/${order.id}`}
                               className="w-12 h-12 rounded-2xl bg-white border border-emerald-950/5 flex items-center justify-center text-emerald-950/40 hover:text-emerald-950 hover:border-emerald-950/20 transition-all shadow-sm"
+                              title={t('admin.orders.view_details')}
                             >
                                <Eye size={18} />
                             </Link>
                             <button 
                               onClick={() => handlePrint(order)}
                               className="w-12 h-12 rounded-2xl bg-[#0a3d2e] flex items-center justify-center text-white shadow-xl shadow-emerald-950/10 hover:scale-[1.05] active:scale-95 transition-all"
+                              title={t('admin.orders.print_invoice')}
                             >
                                <Printer size={18} />
                             </button>
@@ -240,7 +238,7 @@ export default function AdminOrdersClient() {
              <div className="w-24 h-24 bg-neutral-50 rounded-[2.5rem] flex items-center justify-center mx-auto mb-6 text-emerald-100 border border-emerald-950/5">
                 <FileText size={40} />
              </div>
-             <p className="font-serif text-3xl text-emerald-950/10 italic">Aucune commande trouvée.</p>
+             <p className="font-serif text-3xl text-emerald-950/10 italic">{t('admin.orders.none_found')}</p>
           </div>
         )}
       </div>

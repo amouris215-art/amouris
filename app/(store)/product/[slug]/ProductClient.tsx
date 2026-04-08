@@ -83,9 +83,9 @@ export default function ProductClient({ slug }: ProductClientProps) {
   };
 
   return (
-    <div className="min-h-screen bg-neutral-50/50 pb-32">
-      {/* Breadcrumb */}
-      <div className="container mx-auto px-6 py-8">
+    <div className="min-h-screen bg-neutral-50/50 pb-8 md:pb-32">
+      {/* Breadcrumb — hidden on mobile */}
+      <div className="container mx-auto px-4 md:px-6 py-4 md:py-8 hidden md:block">
         <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-emerald-950/20">
           <Link href="/shop" className="hover:text-emerald-950 transition-colors">Boutique</Link>
           <ChevronRight size={12} />
@@ -101,109 +101,109 @@ export default function ProductClient({ slug }: ProductClientProps) {
         </div>
       </div>
 
-      <div className="container mx-auto px-6">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
+      <div className="container mx-auto px-0 md:px-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-16 items-start">
           
-          {/* Left: Gallery (Placeholder for now) */}
+          {/* Left: Gallery — Full width on mobile, no rounded corners */}
           <div className="space-y-6">
             <motion.div 
                initial={{ opacity: 0, scale: 0.95 }}
                animate={{ opacity: 1, scale: 1 }}
-               className="aspect-[4/5] bg-white rounded-[3rem] shadow-2xl shadow-emerald-950/5 border border-emerald-950/5 flex items-center justify-center relative overflow-hidden group"
+               className="aspect-[4/5] bg-white md:rounded-[3rem] shadow-none md:shadow-2xl md:shadow-emerald-950/5 border-0 md:border border-emerald-950/5 flex items-center justify-center relative overflow-hidden group"
             >
-              <span className="text-emerald-950/5 font-serif text-[15rem] select-none group-hover:scale-110 transition-transform duration-1000">
+              <span className="text-emerald-950/5 font-serif text-[10rem] md:text-[15rem] select-none group-hover:scale-110 transition-transform duration-1000">
                 {product.name_fr.charAt(0)}
               </span>
-              <div className="absolute top-8 right-8">
-                 {brand && <div className="bg-white/80 backdrop-blur px-6 py-3 rounded-2xl shadow-sm border border-emerald-950/5">
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#C9A84C]">{isAr ? brand.name_ar : brand.name_fr}</p>
+              <div className="absolute top-4 right-4 md:top-8 md:right-8">
+                 {brand && <div className="bg-white/80 backdrop-blur px-4 py-2 md:px-6 md:py-3 rounded-xl md:rounded-2xl shadow-sm border border-emerald-950/5">
+                    <p className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] text-[#C9A84C]">{isAr ? brand.name_ar : brand.name_fr}</p>
                  </div>}
               </div>
             </motion.div>
           </div>
 
           {/* Right: Info & Purchase */}
-          <div className="flex flex-col">
-            <div className="mb-10">
-              <div className="flex items-center gap-4 mb-4">
-                 <span className="bg-emerald-50 text-[#0a3d2e] px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-emerald-100">
+          <div className="flex flex-col px-4 md:px-0">
+            <div className="mb-6 md:mb-10">
+              <div className="flex items-center gap-3 md:gap-4 mb-3 md:mb-4">
+                 <span className="bg-emerald-50 text-[#0a3d2e] px-3 py-1 md:px-4 md:py-1.5 rounded-full text-[9px] md:text-[10px] font-black uppercase tracking-widest border border-emerald-100">
                     {isPerfume ? (isAr ? 'مجموعة الزيوت' : 'Huile de Parfum') : (isAr ? 'عبوة فاخرة' : 'Packaging Elite')}
                  </span>
-                 {product.status === 'draft' && <span className="bg-amber-50 text-amber-700 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-amber-100">Brouillon</span>}
+                 {product.status === 'draft' && <span className="bg-amber-50 text-amber-700 px-3 py-1 md:px-4 md:py-1.5 rounded-full text-[9px] md:text-[10px] font-black uppercase tracking-widest border border-amber-100">Brouillon</span>}
               </div>
 
-              <h1 className="font-serif text-5xl md:text-6xl text-emerald-950 mb-3 tracking-tight">
+              <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-emerald-950 mb-2 md:mb-3 tracking-tight">
                 {product.name_fr}
               </h1>
-              <p className="text-emerald-950/30 text-2xl font-arabic mb-8" dir="rtl">
+              <p className="text-emerald-950/30 text-lg md:text-2xl font-arabic mb-4 md:mb-8" dir="rtl">
                 {product.name_ar}
               </p>
 
               <div className="prose prose-emerald max-w-none">
-                <p className="text-emerald-950/60 leading-relaxed text-lg">
+                <p className="text-emerald-950/60 leading-relaxed text-base md:text-lg">
                   {product.description_fr}
                 </p>
                 {product.description_ar && <p className="text-emerald-950/40 text-sm mt-4 italic font-arabic" dir="rtl">{product.description_ar}</p>}
               </div>
             </div>
 
-            <div className="h-px bg-emerald-950/5 mb-12" />
+            <div className="h-px bg-emerald-950/5 mb-8 md:mb-12" />
 
             {/* Selection Logic */}
-            <div className="space-y-12 mb-12">
+            <div className="space-y-8 md:space-y-12 mb-8 md:mb-12">
               {isPerfume ? (
                 /* Perfume: Grams Selector */
-                <div className="space-y-8">
-                   <div className="flex justify-between items-center">
+                <div className="space-y-6 md:space-y-8">
+                   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                       <h3 className="text-[10px] uppercase font-black tracking-[0.3em] text-emerald-950/20">Quantité en grammes</h3>
                       <span className="text-[10px] font-bold text-[#C9A84C]">Min. 100g — Stock: {product.stock_grams?.toLocaleString()}g</span>
                    </div>
                    
-                   <div className="flex items-center gap-6">
-                      <div className="flex items-center bg-white border border-emerald-950/5 rounded-2xl p-2 shadow-sm">
+                   <div className="flex items-center gap-4 md:gap-6">
+                      <div className="flex items-center bg-white border border-emerald-950/5 rounded-2xl p-1.5 md:p-2 shadow-sm">
                         <button 
                           onClick={() => setGrams(Math.max(100, grams - 50))} 
-                          className="w-14 h-14 rounded-xl hover:bg-emerald-50 text-emerald-950 transition-colors flex items-center justify-center"
+                          className="w-11 h-11 md:w-14 md:h-14 rounded-xl hover:bg-emerald-50 text-emerald-950 transition-colors flex items-center justify-center"
                         >
-                          <Minus size={20} />
+                          <Minus size={18} />
                         </button>
                         <input 
                            type="number" 
                            value={grams}
                            onChange={(e) => setGrams(Math.max(100, +e.target.value))}
-                           className="w-24 text-center font-serif text-2xl text-emerald-950 bg-transparent outline-none"
+                           className="w-16 md:w-24 text-center font-serif text-xl md:text-2xl text-emerald-950 bg-transparent outline-none"
                         />
                         <button 
                            onClick={() => setGrams(grams + 50)} 
-                           className="w-14 h-14 rounded-xl hover:bg-emerald-50 text-emerald-950 transition-colors flex items-center justify-center"
+                           className="w-11 h-11 md:w-14 md:h-14 rounded-xl hover:bg-emerald-50 text-emerald-950 transition-colors flex items-center justify-center"
                         >
-                          <Plus size={20} />
+                          <Plus size={18} />
                         </button>
                       </div>
-                      <span className="text-emerald-950/20 font-serif text-2xl italic">grammes</span>
+                      <span className="text-emerald-950/20 font-serif text-lg md:text-2xl italic">grammes</span>
                    </div>
                 </div>
               ) : (
                 /* Flacon: Variant Selector */
-                <div className="space-y-12">
-                  <div className="space-y-6">
+                <div className="space-y-8 md:space-y-12">
+                  <div className="space-y-4 md:space-y-6">
                     <h3 className="text-[10px] uppercase font-black tracking-[0.3em] text-emerald-950/20 shadow-none border-b border-emerald-950/5 pb-4">Choix du modèle</h3>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 md:gap-4">
                       {product.variants?.map(v => (
                         <button 
                           key={v.id}
                           onClick={() => setSelectedVariantId(v.id)}
-                          className={`relative p-5 rounded-3xl border-2 transition-all text-left ${selectedVariantId === v.id ? 'border-[#C9A84C] bg-white shadow-xl shadow-amber-900/5' : 'border-emerald-950/5 bg-transparent hover:border-emerald-950/10'}`}
+                          className={`relative p-3 md:p-5 rounded-2xl md:rounded-3xl border-2 transition-all text-left min-h-[44px] ${selectedVariantId === v.id ? 'border-[#C9A84C] bg-white shadow-xl shadow-amber-900/5' : 'border-emerald-950/5 bg-transparent hover:border-emerald-950/10'}`}
                         >
-                          <div className="flex items-center gap-3 mb-3">
-                             <div className="w-4 h-4 rounded-full border border-black/5" style={{ backgroundColor: v.color }} />
-                             <span className={`text-xs font-black tracking-widest ${selectedVariantId === v.id ? 'text-emerald-950' : 'text-emerald-950/40'}`}>{v.size}</span>
+                          <div className="flex items-center gap-2 md:gap-3 mb-2 md:mb-3">
+                             <div className="w-3.5 h-3.5 md:w-4 md:h-4 rounded-full border border-black/5" style={{ backgroundColor: v.color }} />
+                             <span className={`text-[10px] md:text-xs font-black tracking-widest ${selectedVariantId === v.id ? 'text-emerald-950' : 'text-emerald-950/40'}`}>{v.size}</span>
                           </div>
-                          <p className={`text-[10px] uppercase font-bold tracking-tight ${selectedVariantId === v.id ? 'text-[#C9A84C]' : 'text-emerald-950/20'}`}>
+                          <p className={`text-[9px] md:text-[10px] uppercase font-bold tracking-tight ${selectedVariantId === v.id ? 'text-[#C9A84C]' : 'text-emerald-950/20'}`}>
                              {v.color_name || v.color} — {v.shape}
                           </p>
                           {selectedVariantId === v.id && (
-                             <div className="absolute top-4 right-4 text-[#C9A84C]">
+                             <div className="absolute top-3 right-3 md:top-4 md:right-4 text-[#C9A84C]">
                                <CheckCircle size={14} />
                              </div>
                           )}
@@ -212,13 +212,13 @@ export default function ProductClient({ slug }: ProductClientProps) {
                     </div>
                   </div>
 
-                  <div className="space-y-8">
+                  <div className="space-y-6 md:space-y-8">
                     <h3 className="text-[10px] uppercase font-black tracking-[0.3em] text-emerald-950/20 border-b border-emerald-950/5 pb-4">Unités à commander</h3>
-                    <div className="flex items-center gap-6">
-                       <div className="flex items-center bg-white border border-emerald-950/5 rounded-2xl p-2 shadow-sm w-fit">
-                          <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="w-14 h-14 rounded-xl hover:bg-emerald-50 text-emerald-950 transition-colors flex items-center justify-center"><Minus size={20} /></button>
-                          <span className="w-20 text-center font-serif text-2xl text-emerald-950">{quantity}</span>
-                          <button onClick={() => setQuantity(quantity + 1)} className="w-14 h-14 rounded-xl hover:bg-emerald-50 text-emerald-950 transition-colors flex items-center justify-center"><Plus size={20} /></button>
+                    <div className="flex items-center gap-4 md:gap-6">
+                       <div className="flex items-center bg-white border border-emerald-950/5 rounded-2xl p-1.5 md:p-2 shadow-sm w-fit">
+                          <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="w-11 h-11 md:w-14 md:h-14 rounded-xl hover:bg-emerald-50 text-emerald-950 transition-colors flex items-center justify-center"><Minus size={18} /></button>
+                          <span className="w-14 md:w-20 text-center font-serif text-xl md:text-2xl text-emerald-950">{quantity}</span>
+                          <button onClick={() => setQuantity(quantity + 1)} className="w-11 h-11 md:w-14 md:h-14 rounded-xl hover:bg-emerald-50 text-emerald-950 transition-colors flex items-center justify-center"><Plus size={18} /></button>
                        </div>
                        <p className="text-[10px] font-bold text-emerald-950/30 uppercase tracking-widest">Stock: {selectedVariant?.stock_units || 0} pcs</p>
                     </div>
@@ -227,8 +227,8 @@ export default function ProductClient({ slug }: ProductClientProps) {
               )}
             </div>
 
-            {/* Total Display */}
-            <div className="p-8 rounded-[2.5rem] bg-white border border-emerald-950/5 shadow-2xl shadow-emerald-950/5 mb-10 flex justify-between items-center group">
+            {/* Total Display — visible on desktop, hidden on mobile (shown in sticky bar) */}
+            <div className="hidden md:flex p-8 rounded-[2.5rem] bg-white border border-emerald-950/5 shadow-2xl shadow-emerald-950/5 mb-10 justify-between items-center group">
                <div>
                   <p className="text-[10px] font-black uppercase tracking-[0.3em] text-emerald-950/20 mb-2">Total de votre sélection</p>
                   <p className="font-serif text-4xl text-emerald-950">
@@ -241,11 +241,11 @@ export default function ProductClient({ slug }: ProductClientProps) {
                </div>
             </div>
 
-            {/* Add to Cart Button */}
+            {/* Desktop Add to Cart Button */}
             <button 
                onClick={handleAddToCart}
                disabled={added}
-               className={`w-full py-6 rounded-2xl font-bold uppercase tracking-[0.3em] text-xs transition-all flex items-center justify-center gap-4 ${added ? 'bg-emerald-100 text-emerald-900 border border-emerald-200' : 'bg-[#0a3d2e] text-white shadow-2xl shadow-emerald-900/40 hover:scale-[1.02] active:scale-95'}`}
+               className={`hidden md:flex w-full py-6 rounded-2xl font-bold uppercase tracking-[0.3em] text-xs transition-all items-center justify-center gap-4 ${added ? 'bg-emerald-100 text-emerald-900 border border-emerald-200' : 'bg-[#0a3d2e] text-white shadow-2xl shadow-emerald-900/40 hover:scale-[1.02] active:scale-95'}`}
             >
               {added ? (
                 <>
@@ -260,7 +260,7 @@ export default function ProductClient({ slug }: ProductClientProps) {
               )}
             </button>
 
-            {isPerfume && <p className="text-center mt-6 text-[10px] uppercase font-black tracking-widest text-[#C9A84C] flex items-center justify-center gap-2">
+            {isPerfume && <p className="hidden md:flex text-center mt-6 text-[10px] uppercase font-black tracking-widest text-[#C9A84C] items-center justify-center gap-2">
                 <Info size={12} />
                 {isAr ? 'تعبئة يدوية بوزن دقيق جداً' : 'Conditionnement manuel avec précision de pesée'}
             </p>}
@@ -268,32 +268,67 @@ export default function ProductClient({ slug }: ProductClientProps) {
         </div>
 
         {/* Detailed Info Footer */}
-        <div className="mt-32 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 border-t border-emerald-950/5 pt-16">
+        <div className="mt-16 md:mt-32 grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-12 border-t border-emerald-950/5 pt-8 md:pt-16 px-4 md:px-0">
            <div>
-              <h4 className="text-[10px] uppercase font-black tracking-widest text-emerald-950/20 mb-6">Maison / Collection</h4>
-              <div className="space-y-4">
-                <p className="text-sm font-bold text-emerald-950">{brand?.name_fr || 'Amouris Selection'}</p>
-                <p className="text-xs text-emerald-950/40 italic">{collection?.name_fr || 'Collection Royale'}</p>
+              <h4 className="text-[10px] uppercase font-black tracking-widest text-emerald-950/20 mb-3 md:mb-6">Maison / Collection</h4>
+              <div className="space-y-2 md:space-y-4">
+                <p className="text-xs md:text-sm font-bold text-emerald-950">{brand?.name_fr || 'Amouris Selection'}</p>
+                <p className="text-[10px] md:text-xs text-emerald-950/40 italic">{collection?.name_fr || 'Collection Royale'}</p>
               </div>
            </div>
            <div>
-              <h4 className="text-[10px] uppercase font-black tracking-widest text-emerald-950/20 mb-6">Univers</h4>
-              <p className="text-sm font-bold text-emerald-950">{category?.name_fr || 'Inconnu'}</p>
+              <h4 className="text-[10px] uppercase font-black tracking-widest text-emerald-950/20 mb-3 md:mb-6">Univers</h4>
+              <p className="text-xs md:text-sm font-bold text-emerald-950">{category?.name_fr || 'Inconnu'}</p>
            </div>
            <div>
-              <h4 className="text-[10px] uppercase font-black tracking-widest text-emerald-950/20 mb-6">Signatures Olfactives</h4>
+              <h4 className="text-[10px] uppercase font-black tracking-widest text-emerald-950/20 mb-3 md:mb-6">Signatures Olfactives</h4>
               <div className="flex flex-wrap gap-2">
                 {productTags.map(tag => (
-                   <span key={tag.id} className="text-[9px] font-black uppercase tracking-widest px-3 py-1 bg-white border border-emerald-950/5 rounded-full text-emerald-900/60">
+                   <span key={tag.id} className="text-[8px] md:text-[9px] font-black uppercase tracking-widest px-2 md:px-3 py-1 bg-white border border-emerald-950/5 rounded-full text-emerald-900/60">
                       {isAr ? tag.name_ar : tag.name_fr}
                    </span>
                 ))}
               </div>
            </div>
            <div>
-              <h4 className="text-[10px] uppercase font-black tracking-widest text-emerald-950/20 mb-6">Service Client B2B</h4>
-              <p className="text-xs text-emerald-950/60 leading-relaxed font-medium">Pour toute assistance personnalisée ou demande de gros volume, contactez notre équipe sur WhatsApp.</p>
+              <h4 className="text-[10px] uppercase font-black tracking-widest text-emerald-950/20 mb-3 md:mb-6">Service Client B2B</h4>
+              <p className="text-[10px] md:text-xs text-emerald-950/60 leading-relaxed font-medium">Pour toute assistance personnalisée ou demande de gros volume, contactez notre équipe sur WhatsApp.</p>
            </div>
+        </div>
+      </div>
+
+      {/* === MOBILE: Fixed Bottom "Add to Cart" Bar === */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-emerald-950/10 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] safe-area-bottom">
+        <div className="px-4 pt-3 pb-3">
+          {/* Total row */}
+          <div className="flex items-center justify-between mb-2.5">
+            <span className="text-[10px] font-black uppercase tracking-widest text-emerald-950/30">Total</span>
+            <span className="font-serif text-xl text-emerald-950">
+              {total.toLocaleString()} <span className="text-[10px] font-normal text-emerald-950/40">DZD</span>
+            </span>
+          </div>
+          {/* Add to cart button */}
+          <button 
+            onClick={handleAddToCart}
+            disabled={added}
+            className={`w-full min-h-[48px] rounded-xl font-bold uppercase tracking-[0.2em] text-xs transition-all flex items-center justify-center gap-3 ${
+              added 
+                ? 'bg-emerald-100 text-emerald-900 border border-emerald-200' 
+                : 'bg-[#0a3d2e] text-white shadow-lg shadow-emerald-900/30 active:scale-[0.97]'
+            }`}
+          >
+            {added ? (
+              <>
+                <CheckCircle size={16} />
+                {isAr ? 'تمت الإضافة' : 'Ajouté !'}
+              </>
+            ) : (
+              <>
+                <ShoppingCart size={16} />
+                {isAr ? 'إضافة إلى السلة' : 'Ajouter au panier'} — {total.toLocaleString()} DZD
+              </>
+            )}
+          </button>
         </div>
       </div>
     </div>

@@ -74,7 +74,7 @@ export function TagSection({ tag, products }: TagSectionProps) {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: idx * 0.1 }}
-                className="flex-shrink-0 w-80 snap-start"
+                className="flex-shrink-0 w-[200px] sm:w-80 snap-start"
               >
                 <ProductCard product={product} />
               </motion.div>

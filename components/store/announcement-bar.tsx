@@ -1,39 +1,43 @@
 "use client";
 
 import { useI18n } from '@/i18n/i18n-context';
-import { useState, useEffect } from 'react';
-import { X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { X } from 'lucide-react';
 import Link from 'next/link';
 
 import { useSettingsStore } from '@/store/settings.store';
+import { useAnnouncementsStore } from '@/store/announcements.store';
 
 export function AnnouncementBar() {
   const { language } = useI18n();
   const settings = useSettingsStore();
+  const announcementsStore = useAnnouncementsStore();
+  
   const [isVisible, setIsVisible] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [headerVisible, setHeaderVisible] = useState(true);
   const [lastScroll, setLastScroll] = useState(0);
 
-  const announcements = [
-    {
-      fr: `Livraison gratuite pour les commandes de plus de ${settings.freeDeliveryThreshold.toLocaleString()} DZD`,
-      ar: `توصيل مجاني للطلبات التي تزيد عن ${settings.freeDeliveryThreshold.toLocaleString()} دج`,
-      link: "/shop"
-    },
-    {
-      fr: "Nouveaux arrivages de flacons de luxe disponible",
-      ar: "وصلت حديثا تشكيلة مميزة من القوارير الفاخرة",
-      link: "/shop/flacons"
-    },
-    {
-      fr: "Amouris Parfums - Excellence & Tradition",
-      ar: "أموريس للعطور - تميز وأصالة",
-      link: null
+  // 1. Get and process active announcements
+  const activeAnnouncements = useMemo(() => {
+    const raw = announcementsStore.getActive();
+    if (raw.length === 0) {
+      // Fallback if no announcements are configured
+      return [{
+        fr: `Livraison gratuite dès ${settings.freeDeliveryThreshold.toLocaleString()} DZD`,
+        ar: `توصيل مجاني ابتداءً من ${settings.freeDeliveryThreshold.toLocaleString()} دج`,
+        link: "/shop"
+      }];
     }
-  ];
 
-  // 1. Logic for dismissable
+    return raw.map(ann => ({
+      fr: ann.text_fr.replace('{{threshold}}', settings.freeDeliveryThreshold.toLocaleString()),
+      ar: ann.text_ar.replace('{{threshold}}', settings.freeDeliveryThreshold.toLocaleString()),
+      link: null // Can be enhanced later with an optional link field in store
+    }));
+  }, [announcementsStore.announcements, settings.freeDeliveryThreshold]);
+
+  // 2. Logic for dismissable
   useEffect(() => {
     const dismissed = sessionStorage.getItem('announcement-dismissed');
     if (dismissed === 'true') {
@@ -46,16 +50,21 @@ export function AnnouncementBar() {
     sessionStorage.setItem('announcement-dismissed', 'true');
   };
 
-  // 2. Auto-scroll logic
+  // 3. Auto-scroll logic
   useEffect(() => {
-    if (!isVisible) return;
+    if (!isVisible || activeAnnouncements.length <= 1) return;
     const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % announcements.length);
-    }, 4000);
+      setCurrentIndex((prev) => (prev + 1) % activeAnnouncements.length);
+    }, 5000);
     return () => clearInterval(interval);
-  }, [isVisible, announcements.length]);
+  }, [isVisible, activeAnnouncements.length]);
 
-  // 3. Scroll-aware logic (matches header)
+  // 4. Reset index if list changes
+  useEffect(() => {
+    setCurrentIndex(0);
+  }, [activeAnnouncements.length]);
+
+  // 5. Scroll-aware logic
   useEffect(() => {
     const handleScroll = () => {
       const current = window.scrollY;
@@ -66,9 +75,9 @@ export function AnnouncementBar() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [lastScroll]);
 
-  if (!isVisible) return null;
+  if (!isVisible || activeAnnouncements.length === 0) return null;
 
-  const currentMsg = announcements[currentIndex];
+  const currentMsg = activeAnnouncements[currentIndex];
   const text = language === 'ar' ? currentMsg.ar : currentMsg.fr;
 
   return (
@@ -76,17 +85,16 @@ export function AnnouncementBar() {
       className={`bg-emerald-900 text-white py-2 px-4 transition-transform duration-300 relative z-[60] overflow-hidden ${headerVisible ? 'translate-y-0' : '-translate-y-full'}`}
     >
       <div className="max-w-7xl mx-auto flex items-center justify-between min-h-[24px]">
-        {/* Helper for centering - only if needed or just use flex-1 */}
         <div className="w-8 hidden sm:block" /> 
 
         <div className="flex-1 text-center overflow-hidden">
           <div key={currentIndex} className="animate-in fade-in slide-in-from-bottom-1 duration-500">
             {currentMsg.link ? (
-              <Link href={currentMsg.link} className="text-[11px] md:text-sm font-light tracking-wide hover:underline decoration-amber-400 underline-offset-4">
+              <Link href={currentMsg.link} className="text-xs md:text-sm font-light tracking-wide hover:underline decoration-amber-400 underline-offset-4">
                 {text}
               </Link>
             ) : (
-              <span className="text-[11px] md:text-sm font-light tracking-wide">
+              <span className="text-xs md:text-sm font-light tracking-wide">
                 {text}
               </span>
             )}
@@ -95,7 +103,7 @@ export function AnnouncementBar() {
 
         <button 
           onClick={handleDismiss}
-          className="p-1 hover:bg-white/10 rounded-full transition-colors"
+          className="min-w-[44px] min-h-[44px] flex items-center justify-center hover:bg-white/10 rounded-full transition-colors"
           aria-label="Fermer l'annonce"
         >
           <X size={14} className="text-white/60" />

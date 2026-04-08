@@ -9,6 +9,8 @@ import { Product } from '@/store/products.store';
 import { Category } from '@/store/categories.store';
 import { Brand } from '@/store/brands.store';
 import { useSearchParams } from 'next/navigation';
+import { Drawer } from 'vaul';
+import { SlidersHorizontal, X } from 'lucide-react';
 
 interface ShopContentProps {
   initialProducts: Product[];
@@ -22,7 +24,7 @@ export function ShopContent({ initialProducts, categories, brands, initialType }
   const searchParams = useSearchParams();
   
   const [selectedType, setSelectedType] = useState<'all' | 'perfume' | 'flacon'>(
-    (searchParams.get('type') as any) || initialType || 'all'
+    (searchParams.get('type') as 'all' | 'perfume' | 'flacon') || initialType || 'all'
   );
   const [selectedCategory, setSelectedCategory] = useState<string>(
     searchParams.get('category') || 'all'
@@ -33,6 +35,7 @@ export function ShopContent({ initialProducts, categories, brands, initialType }
   const [selectedTag, setSelectedTag] = useState<string>(
     searchParams.get('tag') || 'all'
   );
+  const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
   
   // Filtering logic
   const filteredProducts = useMemo(() => {
@@ -44,6 +47,9 @@ export function ShopContent({ initialProducts, categories, brands, initialType }
       return true;
     });
   }, [initialProducts, selectedType, selectedCategory, selectedBrand, selectedTag]);
+
+  // Count active filters
+  const activeFilterCount = [selectedType !== 'all', selectedCategory !== 'all', selectedBrand !== 'all', selectedTag !== 'all'].filter(Boolean).length;
 
   const heroConfig = {
     all: {
@@ -74,26 +80,109 @@ export function ShopContent({ initialProducts, categories, brands, initialType }
 
   const currentHero = heroConfig[selectedType];
 
+  const clearAllFilters = () => {
+    setSelectedType('all');
+    setSelectedCategory('all');
+    setSelectedBrand('all');
+    setSelectedTag('all');
+  };
+
+  // Shared filter content used in both sidebar and drawer
+  const filterContent = (
+    <div className="space-y-10 lg:space-y-16">
+      {/* Filter Group: Category */}
+      <div className="space-y-4 lg:space-y-8">
+        <div className="flex items-center justify-between border-b border-emerald-950/5 pb-4">
+          <h3 className="text-[10px] uppercase font-black tracking-[0.3em] text-emerald-950/20">
+            {language === 'ar' ? 'الفئات' : 'Collection'}
+          </h3>
+        </div>
+        <div className="flex flex-col gap-2">
+          <FilterChip 
+            label={language === 'ar' ? 'جميع الفئات' : 'Toutes les catégories'} 
+            active={selectedCategory === 'all'} 
+            onClick={() => setSelectedCategory('all')} 
+          />
+          {categories.map(cat => (
+            <FilterChip 
+              key={cat.id}
+              label={language === 'ar' ? cat.name_ar : cat.name_fr} 
+              active={selectedCategory === cat.id} 
+              onClick={() => setSelectedCategory(cat.id)} 
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* Filter Group: Brands */}
+      <div className="space-y-4 lg:space-y-8">
+        <div className="flex items-center justify-between border-b border-emerald-950/5 pb-4">
+          <h3 className="text-[10px] uppercase font-black tracking-[0.3em] text-emerald-950/20">
+            {language === 'ar' ? 'العلامات التجارية' : 'Maisons'}
+          </h3>
+        </div>
+        <div className="flex flex-col gap-2">
+          <FilterChip 
+            label={language === 'ar' ? 'جميع الماركات' : 'Toutes les marques'} 
+            active={selectedBrand === 'all'} 
+            onClick={() => setSelectedBrand('all')} 
+          />
+          {brands.map(brand => (
+            <FilterChip 
+              key={brand.id}
+              label={language === 'ar' ? brand.name_ar : brand.name} 
+              active={selectedBrand === brand.id} 
+              onClick={() => setSelectedBrand(brand.id)} 
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* Filter Group: Type */}
+      <div className="space-y-4 lg:space-y-8">
+        <div className="flex items-center justify-between border-b border-emerald-950/5 pb-4">
+          <h3 className="text-[10px] uppercase font-black tracking-[0.3em] text-emerald-950/20">
+            {language === 'ar' ? 'النوع' : 'Univers'}
+          </h3>
+        </div>
+        <div className="flex flex-col gap-2">
+          {(['all', 'perfume', 'flacon'] as const).map(type => (
+            <FilterChip 
+              key={type}
+              label={
+                type === 'all' ? (language === 'ar' ? 'الكل' : 'Tout l\'univers') : 
+                type === 'perfume' ? (language === 'ar' ? 'زيوت عطرية' : 'Huiles de Parfums') : 
+                (language === 'ar' ? 'قوارير وتغليف' : 'Flacons & Packaging')
+              } 
+              active={selectedType === type} 
+              onClick={() => setSelectedType(type)} 
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="flex flex-col min-h-screen bg-neutral-50/50">
       {/* Premium Hero Banner */}
-      <section className={`relative py-24 overflow-hidden ${currentHero.bg} transition-colors duration-1000`}>
+      <section className={`relative py-12 md:py-24 overflow-hidden ${currentHero.bg} transition-colors duration-1000`}>
         <div className="absolute inset-0 opacity-10 pointer-events-none">
           <div className="absolute top-0 right-0 w-96 h-96 bg-amber-400 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2 opacity-30" />
           <div className="absolute bottom-0 left-0 w-64 h-64 bg-emerald-400 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/2 opacity-20" />
         </div>
         
-        <div className="container mx-auto px-6 relative z-10 text-center">
+        <div className="container mx-auto px-4 md:px-6 relative z-10 text-center">
            <motion.div
              key={selectedType}
              initial={{ opacity: 0, y: 30 }}
              animate={{ opacity: 1, y: 0 }}
              transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
            >
-              <span className={`text-[10px] uppercase tracking-[0.4em] font-black mb-6 block ${currentHero.accent}`}>
+              <span className={`text-[10px] uppercase tracking-[0.4em] font-black mb-4 md:mb-6 block ${currentHero.accent}`}>
                 Amouris L'Excellence
               </span>
-              <h1 className="font-serif text-5xl md:text-7xl text-white mb-8 tracking-tight">
+              <h1 className="font-serif text-3xl sm:text-5xl md:text-7xl text-white mb-4 md:mb-8 tracking-tight">
                 {language === 'ar' ? currentHero.titleAR : currentHero.titleFR}
               </h1>
               <p className="text-white/40 font-light text-sm md:text-xl max-w-2xl mx-auto leading-relaxed italic">
@@ -103,90 +192,44 @@ export function ShopContent({ initialProducts, categories, brands, initialType }
         </div>
       </section>
 
-      <div className="container mx-auto px-6 py-20">
-        <div className="flex flex-col lg:flex-row gap-16">
+      <div className="container mx-auto px-3 sm:px-6 py-8 md:py-20">
+        {/* Mobile: "Filtres" button + sort */}
+        <div className="lg:hidden flex items-center gap-3 mb-6">
+          <button
+            onClick={() => setFilterDrawerOpen(true)}
+            className="flex-1 flex items-center justify-center gap-2 min-h-[44px] bg-white border border-emerald-950/5 rounded-2xl text-[10px] font-black uppercase tracking-widest text-emerald-950/60 shadow-sm active:scale-95 transition-transform"
+          >
+            <SlidersHorizontal size={14} />
+            {language === 'ar' ? 'تصفية' : 'Filtres'}
+            {activeFilterCount > 0 && (
+              <span className="bg-[#0a3d2e] text-white text-[9px] w-5 h-5 rounded-full flex items-center justify-center">{activeFilterCount}</span>
+            )}
+          </button>
+          <Select>
+            <SelectTrigger className="flex-1 border-emerald-950/5 bg-white min-h-[44px] rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-sm">
+              <SelectValue placeholder={language === 'ar' ? 'ترتيب' : 'Trier'} />
+            </SelectTrigger>
+            <SelectContent className="rounded-2xl border-emerald-950/5">
+              <SelectItem value="newest" className="text-[10px] font-black uppercase tracking-widest py-3">Nouveautés</SelectItem>
+              <SelectItem value="price-asc" className="text-[10px] font-black uppercase tracking-widest py-3">Prix ↑</SelectItem>
+              <SelectItem value="price-desc" className="text-[10px] font-black uppercase tracking-widest py-3">Prix ↓</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="flex flex-col lg:flex-row gap-8 lg:gap-16">
           
-          {/* Redesigned Sidebar Filters - Premium Minimalist */}
-          <aside className="w-full lg:w-72 shrink-0">
-            <div className="sticky top-32 space-y-16">
-              
-              {/* Filter Group: Category */}
-              <div className="space-y-8">
-                <div className="flex items-center justify-between border-b border-emerald-950/5 pb-4">
-                  <h3 className="text-[10px] uppercase font-black tracking-[0.3em] text-emerald-950/20">
-                    {language === 'ar' ? 'الفئات' : 'Collection'}
-                  </h3>
-                </div>
-                <div className="flex flex-col gap-2">
-                  <FilterChip 
-                    label={language === 'ar' ? 'جميع الفئات' : 'Toutes les catégories'} 
-                    active={selectedCategory === 'all'} 
-                    onClick={() => setSelectedCategory('all')} 
-                  />
-                  {categories.map(cat => (
-                    <FilterChip 
-                      key={cat.id}
-                      label={language === 'ar' ? cat.name_ar : cat.name_fr} 
-                      active={selectedCategory === cat.id} 
-                      onClick={() => setSelectedCategory(cat.id)} 
-                    />
-                  ))}
-                </div>
-              </div>
-
-              {/* Filter Group: Brands */}
-              <div className="space-y-8">
-                <div className="flex items-center justify-between border-b border-emerald-950/5 pb-4">
-                  <h3 className="text-[10px] uppercase font-black tracking-[0.3em] text-emerald-950/20">
-                    {language === 'ar' ? 'العلامات التجارية' : 'Maisons'}
-                  </h3>
-                </div>
-                <div className="flex flex-col gap-2">
-                  <FilterChip 
-                    label={language === 'ar' ? 'جميع الماركات' : 'Toutes les marques'} 
-                    active={selectedBrand === 'all'} 
-                    onClick={() => setSelectedBrand('all')} 
-                  />
-                  {brands.map(brand => (
-                    <FilterChip 
-                      key={brand.id}
-                      label={language === 'ar' ? brand.name_ar : brand.name} 
-                      active={selectedBrand === brand.id} 
-                      onClick={() => setSelectedBrand(brand.id)} 
-                    />
-                  ))}
-                </div>
-              </div>
-
-              {/* Filter Group: Type */}
-              <div className="space-y-8">
-                <div className="flex items-center justify-between border-b border-emerald-950/5 pb-4">
-                  <h3 className="text-[10px] uppercase font-black tracking-[0.3em] text-emerald-950/20">
-                    {language === 'ar' ? 'النوع' : 'Univers'}
-                  </h3>
-                </div>
-                <div className="flex flex-col gap-2">
-                  {(['all', 'perfume', 'flacon'] as const).map(type => (
-                    <FilterChip 
-                      key={type}
-                      label={
-                        type === 'all' ? (language === 'ar' ? 'الكل' : 'Tout l\'univers') : 
-                        type === 'perfume' ? (language === 'ar' ? 'زيوت عطرية' : 'Huiles de Parfums') : 
-                        (language === 'ar' ? 'قوارير وتغليف' : 'Flacons & Packaging')
-                      } 
-                      active={selectedType === type} 
-                      onClick={() => setSelectedType(type)} 
-                    />
-                  ))}
-                </div>
-              </div>
-
+          {/* Desktop Sidebar Filters — hidden on mobile */}
+          <aside className="hidden lg:block w-72 shrink-0">
+            <div className="sticky top-32">
+              {filterContent}
             </div>
           </aside>
 
           {/* Main Content Area */}
           <div className="flex-1">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-16 gap-8">
+            {/* Desktop header row */}
+            <div className="hidden lg:flex flex-col sm:flex-row justify-between items-start sm:items-center mb-16 gap-8">
               <div>
                 <h2 className="text-3xl font-serif text-emerald-950 mb-2">
                   {filteredProducts.length} {language === 'ar' ? 'منتج متاح' : 'Créations disponibles'}
@@ -208,9 +251,17 @@ export function ShopContent({ initialProducts, categories, brands, initialType }
               </div>
             </div>
 
+            {/* Mobile result count */}
+            <div className="lg:hidden mb-4">
+              <p className="text-sm text-emerald-950/40 font-medium">
+                {filteredProducts.length} {language === 'ar' ? 'منتج' : 'résultats'}
+              </p>
+            </div>
+
+            {/* Product Grid: 2 cols on mobile, 2 on sm, 3 on xl */}
             <motion.div 
               layout
-              className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-10"
+              className="grid grid-cols-2 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-6 xl:gap-10"
             >
               <AnimatePresence mode="popLayout">
                 {filteredProducts.map((product, i) => (
@@ -229,22 +280,70 @@ export function ShopContent({ initialProducts, categories, brands, initialType }
             </motion.div>
             
             {filteredProducts.length === 0 && (
-              <div className="text-center py-40 bg-white border border-dashed border-emerald-950/10 rounded-[3rem]">
+              <div className="text-center py-20 md:py-40 bg-white border border-dashed border-emerald-950/10 rounded-2xl md:rounded-[3rem]">
                 <div className="mb-8 text-emerald-950/5">
-                  <svg className="w-24 h-24 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="w-16 h-16 md:w-24 md:h-24 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={0.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                   </svg>
                 </div>
-                <h3 className="font-serif text-2xl text-emerald-950/20 italic mb-2">
+                <h3 className="font-serif text-xl md:text-2xl text-emerald-950/20 italic mb-2">
                   Aucun trésor ne correspond à votre recherche.
                 </h3>
-                <p className="font-arabic text-emerald-950/10 text-xl" dir="rtl">لا توجد منتجات تطابق بحثكم.</p>
+                <p className="font-arabic text-emerald-950/10 text-lg md:text-xl" dir="rtl">لا توجد منتجات تطابق بحثكم.</p>
               </div>
             )}
           </div>
 
         </div>
       </div>
+
+      {/* Mobile Filter Bottom Sheet Drawer */}
+      <Drawer.Root open={filterDrawerOpen} onOpenChange={setFilterDrawerOpen}>
+        <Drawer.Portal>
+          <Drawer.Overlay className="fixed inset-0 z-[100] bg-emerald-950/40 backdrop-blur-sm" />
+          <Drawer.Content className="fixed bottom-0 left-0 right-0 z-[101] bg-white rounded-t-[2rem] max-h-[85vh] outline-none">
+            <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-emerald-950/10 mt-4 mb-2" />
+            
+            {/* Drawer Header */}
+            <div className="flex items-center justify-between px-6 pb-4 border-b border-emerald-950/5">
+              <Drawer.Title className="font-serif text-xl text-emerald-950">
+                {language === 'ar' ? 'تصفية المنتجات' : 'Filtrer les produits'}
+              </Drawer.Title>
+              <div className="flex items-center gap-3">
+                {activeFilterCount > 0 && (
+                  <button 
+                    onClick={clearAllFilters}
+                    className="text-[10px] font-black uppercase tracking-widest text-rose-500 min-h-[44px] flex items-center"
+                  >
+                    {language === 'ar' ? 'مسح الكل' : 'Tout effacer'}
+                  </button>
+                )}
+                <button 
+                  onClick={() => setFilterDrawerOpen(false)}
+                  className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full bg-neutral-100"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+            </div>
+
+            {/* Filter Content — scrollable */}
+            <div className="overflow-y-auto max-h-[60vh] px-6 py-6 no-scrollbar">
+              {filterContent}
+            </div>
+
+            {/* Apply button */}
+            <div className="px-6 py-4 border-t border-emerald-950/5 safe-area-bottom">
+              <button 
+                onClick={() => setFilterDrawerOpen(false)}
+                className="w-full min-h-[48px] bg-[#0a3d2e] text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.3em] active:scale-95 transition-transform"
+              >
+                {language === 'ar' ? `عرض ${filteredProducts.length} منتج` : `Voir ${filteredProducts.length} résultats`}
+              </button>
+            </div>
+          </Drawer.Content>
+        </Drawer.Portal>
+      </Drawer.Root>
     </div>
   );
 }
@@ -253,7 +352,7 @@ function FilterChip({ label, active, onClick }: { label: string, active: boolean
   return (
     <button
       onClick={onClick}
-      className={`w-full text-start px-6 py-5 rounded-[1.2rem] text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-700 border flex items-center justify-between group ${
+      className={`w-full text-start px-4 lg:px-6 py-3.5 lg:py-5 rounded-xl lg:rounded-[1.2rem] text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-700 border flex items-center justify-between group min-h-[44px] ${
         active 
           ? 'bg-[#0a3d2e] text-white border-[#0a3d2e] shadow-2xl shadow-emerald-900/20' 
           : 'bg-white text-emerald-950/30 border-emerald-950/5 hover:border-[#C9A84C] hover:text-emerald-950'
