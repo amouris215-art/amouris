@@ -10,8 +10,7 @@ export interface Collection {
   cover_url: string | null
 }
 
-interface CollectionsStore {
-  collections: Collection[]
+  _seeded: boolean
   isLoading: boolean
   error: string | null
   fetchCollections: () => Promise<void>
@@ -30,6 +29,7 @@ const supabase = createClient()
 
 export const useCollectionsStore = create<CollectionsStore>((set, get) => ({
   collections: [],
+  _seeded: false,
   isLoading: false,
   error: null,
 
@@ -107,5 +107,8 @@ export const useCollectionsStore = create<CollectionsStore>((set, get) => ({
   add: (c) => get().addCollection(c),
   update: (id, u) => get().updateCollection(id, u),
   remove: (id) => get().deleteCollection(id),
-  seed: (collections) => set({ collections })
+  seed: (collections) => {
+    if (get()._seeded) return
+    set({ collections, _seeded: true })
+  }
 }))

@@ -29,7 +29,7 @@ export default function LoginPage() {
     // Simulate slight delay for luxury feel
     await new Promise(r => setTimeout(r, 400))
     
-    const result = loginCustomer(phone, password)
+    const result = await loginCustomer(phone, password)
     
     if (result.ok && result.customer) {
       setCustomer(result.customer)
@@ -44,13 +44,13 @@ export default function LoginPage() {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div className="bg-white w-full max-w-sm p-8 rounded-2xl border border-gray-100 shadow-sm">
         <div className="text-center mb-10">
-          <h1 className="font-serif text-3xl text-emerald-950 uppercase tracking-[0.2em]">Connexion</h1>
-          <p className="text-gray-400 text-xs mt-3 uppercase tracking-widest font-bold">Espace Client B2B</p>
+          <h1 className="font-serif text-3xl text-gray-900 uppercase tracking-[0.2em]">Connexion</h1>
+          <p className="text-gray-500 text-xs mt-3 uppercase tracking-widest font-bold">Espace Client B2B</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6" noValidate>
           <div>
-            <label className="block text-xs uppercase tracking-widest font-bold text-emerald-900/50 mb-2 ml-1">Téléphone</label>
+            <label className="block text-xs uppercase tracking-widest font-bold text-gray-600 mb-2 ml-1">Téléphone</label>
             <input
               type="tel" value={phone} onChange={e => { setPhone(e.target.value); setError('') }}
               placeholder="0550 00 00 00"
@@ -60,7 +60,7 @@ export default function LoginPage() {
           </div>
 
           <div>
-            <label className="block text-xs uppercase tracking-widest font-bold text-emerald-900/50 mb-2 ml-1">Mot de passe</label>
+            <label className="block text-xs uppercase tracking-widest font-bold text-gray-600 mb-2 ml-1">Mot de passe</label>
             <input
               type="password" value={password} onChange={e => { setPassword(e.target.value); setError('') }}
               placeholder="••••••••"

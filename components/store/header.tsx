@@ -61,7 +61,7 @@ export function Header() {
         <div className="max-w-[1600px] mx-auto px-6 h-16 flex items-center justify-between">
           {/* Logo */}
           <Link href="/" className="group flex flex-col items-start">
-            <span className="font-serif text-2xl tracking-tighter text-emerald-950 leading-none group-hover:text-emerald-800 transition-colors">
+            <span className="font-serif text-2xl tracking-tighter text-emerald-800 leading-none group-hover:text-amber-600 transition-colors">
               Amouris
             </span>
             <span className="text-[10px] uppercase tracking-[0.4em] text-amber-500 font-black leading-none mt-1">
@@ -70,7 +70,7 @@ export function Header() {
           </Link>
 
           {/* Navigation - Desktop */}
-          <nav className="hidden lg:flex items-center gap-12 text-[10px] font-black uppercase tracking-[0.25em] text-emerald-950/60">
+          <nav className="hidden lg:flex items-center gap-12 text-[10px] font-black uppercase tracking-[0.25em] text-gray-700">
             {[
               { name: t('nav.shop'), href: '/shop' },
               { name: t('nav.perfumes'), href: '/shop/perfumes' },
@@ -82,7 +82,7 @@ export function Header() {
                 <Link 
                   key={item.href} 
                   href={item.href} 
-                  className={`relative group/nav py-2 transition-all duration-500 ${isActive ? 'text-emerald-950' : 'hover:text-emerald-950'}`}
+                  className={`relative group/nav py-2 transition-all duration-500 ${isActive ? 'text-emerald-800' : 'hover:text-emerald-800'}`}
                 >
                   {item.name}
                   <span className={`absolute -bottom-1 left-1/2 -translate-x-1/2 h-[2px] bg-amber-400 transition-all duration-500 ${isActive ? 'w-full' : 'w-0 group-hover/nav:w-full'}`} />
@@ -100,7 +100,7 @@ export function Header() {
                 onMouseEnter={() => setShowCatMenu(true)}
                 onMouseLeave={() => setShowCatMenu(false)}
               >
-                <div className="flex items-center gap-1 hover:text-emerald-950 transition-colors">
+                <div className="flex items-center gap-1 hover:text-emerald-800 transition-colors">
                   {isAr ? 'الكتالوجات' : 'Catalogues'}
                   <ChevronDown size={10} className={`transition-transform duration-300 ${showCatMenu ? 'rotate-180' : ''}`} />
                 </div>
@@ -117,7 +117,7 @@ export function Header() {
                           <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center text-emerald-600 group-hover/item:bg-emerald-600 group-hover/item:text-white transition-colors">
                              <Download size={14} />
                           </div>
-                          <span className="normal-case font-bold text-emerald-950/60 group-hover/item:text-emerald-950 transition-colors">
+                          <span className="normal-case font-bold text-gray-700 group-hover:item:text-emerald-800 transition-colors">
                             {cat.type === 'parfums' ? (isAr ? 'عطور' : 'Parfums') : (isAr ? 'قنينات' : 'Flacons')}
                           </span>
                         </a>
@@ -133,7 +133,7 @@ export function Header() {
             <LanguageToggle />
             
             <Link href={mounted && user ? "/account" : "/login"}>
-              <div className="w-10 h-10 rounded-full border border-emerald-950/10 flex items-center justify-center hover:bg-emerald-950 hover:text-white transition-all duration-500">
+              <div className="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center hover:bg-emerald-800 hover:text-white transition-all duration-500">
                 <User className="h-4 w-4" />
               </div>
             </Link>
@@ -141,7 +141,7 @@ export function Header() {
             <Button 
               variant="ghost" 
               size="icon" 
-              className="relative w-10 h-10 rounded-full border border-emerald-950/10 flex items-center justify-center hover:bg-emerald-950 hover:text-white transition-all duration-500"
+              className="relative w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center hover:bg-emerald-800 hover:text-white transition-all duration-500"
               onClick={() => setIsCartOpen(true)}
             >
               <ShoppingBag className="h-4 w-4" />
@@ -156,7 +156,7 @@ export function Header() {
             {mounted && user && (
               <button 
                 onClick={logout}
-                className="text-[10px] font-black uppercase tracking-widest text-emerald-950/40 hover:text-rose-600 transition-colors ml-2"
+                className="text-[10px] font-black uppercase tracking-widest text-gray-500 hover:text-rose-600 transition-colors ml-2"
               >
                 {isAr ? 'تسجيل الخروج' : 'Déconnexion'}
               </button>

@@ -41,14 +41,19 @@ export default function SettingsClient() {
     e.preventDefault();
     setIsLoading(true);
     
-    const res = update(customer.id, profileData);
-    if (res.ok && res.customer) {
-      setCustomer(res.customer);
-      toast.success(isAr ? 'تم تحديث البيانات بنجاح' : 'Profil mis à jour avec succès');
-    } else {
-      toast.error(res.error || (isAr ? 'خطأ في التحديث' : 'Erreur lors de la mise à jour'));
+    try {
+      const res = await update(customer.id, profileData);
+      if (res.ok && res.customer) {
+        setCustomer(res.customer);
+        toast.success(isAr ? 'تم تحديث البيانات بنجاح' : 'Profil mis à jour avec succès');
+      } else {
+        toast.error(res.error || (isAr ? 'خطأ في التحديث' : 'Erreur lors de la mise à jour'));
+      }
+    } catch (err) {
+      toast.error(isAr ? 'خطأ في الاتصال' : 'Erreur de connexion');
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
   const handlePasswordSubmit = async (e: React.FormEvent) => {

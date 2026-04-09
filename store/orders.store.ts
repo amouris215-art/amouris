@@ -2,6 +2,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { createClient } from '@/lib/supabase/client'
+import { ordersApi } from '@/lib/api/orders.api'
 import { useProductsStore } from './products.store'
 import { useSettingsStore } from './settings.store'
 
@@ -81,112 +82,124 @@ export interface Order {
 
 interface OrdersStore {
   orders: Order[]
-  invoiceCounter: number
   isLoading: boolean
   error: string | null
-  createOrder: (data: Partial<Order>) => Order
-  updateStatus: (id: string, status: OrderStatus, note?: string) => void
-  updatePayment: (id: string, amountPaid: number) => void
-  updateNotes: (id: string, notes: string) => void
-  updateInvoiceData: (id: string, data: InvoiceData) => void
-  generateInvoiceNumber: () => string
-  generateInvoice: (id: string) => void
+  lastUpdated: number | null
+  fetchOrders: (force?: boolean) => Promise<void>
+  createOrder: (data: Partial<Order>) => Promise<Order>
+  updateStatus: (id: string, status: OrderStatus, note?: string) => Promise<void>
+  updatePayment: (id: string, amountPaid: number) => Promise<void>
+  updateNotes: (id: string, notes: string) => Promise<void>
+  generateInvoice: (id: string) => Promise<void>
   getByCustomer: (customerId: string) => Order[]
+  getAll: () => Order[]
 }
+
+const CACHE_DURATION = 5 * 60 * 1000
 
 export const useOrdersStore = create<OrdersStore>()(
   persist(
     (set, get) => ({
       orders: [],
-      invoiceCounter: 1,
       isLoading: false,
       error: null,
+      lastUpdated: null,
 
-      createOrder: (data) => {
-        const order_number = `AM-${Math.floor(100000 + Math.random() * 900000)}` // Simplistic for client-only
-        const newOrder: Order = {
-          id: crypto.randomUUID(),
-          order_number,
-          customer_id: data.customer_id || null,
-          is_registered_customer: !!data.customer_id,
-          guest_first_name: data.guest_first_name || null,
-          guest_last_name: data.guest_last_name || null,
-          guest_phone: data.guest_phone || null,
-          guest_wilaya: data.guest_wilaya || null,
-          guest_commune: data.guest_commune || null,
-          items: data.items || [],
-          total_amount: data.total_amount || 0,
-          amount_paid: 0,
-          payment_status: 'unpaid',
-          order_status: 'pending',
-          status_history: [{ status: 'pending', changed_at: new Date().toISOString() }],
-          admin_notes: '',
-          invoice_generated: false,
-          invoice_data: null,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
+      fetchOrders: async (force = false) => {
+        const { lastUpdated, orders } = get()
+        const now = Date.now()
+
+        if (!force && lastUpdated && now - lastUpdated < CACHE_DURATION && orders.length > 0) {
+          return
         }
 
-        set((state) => ({ orders: [newOrder, ...state.orders] }))
-        return newOrder
+        set({ isLoading: true, error: null })
+        try {
+          const fetchedOrders = await ordersApi.fetchAllOrders()
+          set({ orders: fetchedOrders, lastUpdated: now, isLoading: false })
+        } catch (err: any) {
+          set({ error: err.message, isLoading: false })
+        }
       },
 
-      updateStatus: (id, status, note) => {
-        set((state) => ({
-          orders: state.orders.map((o) =>
-            o.id === id
-              ? {
-                  ...o,
-                  order_status: status,
-                  status_history: [
-                    ...o.status_history,
-                    { status, changed_at: new Date().toISOString(), note },
-                  ],
-                  updated_at: new Date().toISOString(),
-                }
-              : o
-          ),
-        }))
+      createOrder: async (data) => {
+        set({ isLoading: true, error: null })
+        try {
+          const newOrder = await ordersApi.createOrder(data)
+          set((state) => ({ 
+            orders: [newOrder, ...state.orders],
+            isLoading: false
+          }))
+          return newOrder
+        } catch (err: any) {
+          set({ error: err.message, isLoading: false })
+          throw err
+        }
       },
 
-      updatePayment: (id, amountPaid) => {
-        set((state) => ({
-          orders: state.orders.map((o) => {
-            if (o.id !== id) return o
-            const ps: PaymentStatus =
-              amountPaid <= 0 ? 'unpaid' : amountPaid >= o.total_amount ? 'paid' : 'partial'
-            return {
-              ...o,
-              amount_paid: amountPaid,
-              payment_status: ps,
-              updated_at: new Date().toISOString(),
-            }
-          }),
-        }))
+      updateStatus: async (id, status, note) => {
+        try {
+          await ordersApi.updateOrderStatus(id, status, note)
+          set((state) => ({
+            orders: state.orders.map((o) =>
+              o.id === id
+                ? {
+                    ...o,
+                    order_status: status,
+                    status_history: [
+                      ...o.status_history,
+                      { status, changed_at: new Date().toISOString(), note } as StatusHistoryEntry,
+                    ],
+                    updated_at: new Date().toISOString(),
+                  }
+                : o
+            ),
+          }))
+        } catch (err: any) {
+          console.error('Failed to update status:', err)
+        }
       },
 
-      updateNotes: (id, notes) => {
-        set((state) => ({
-          orders: state.orders.map((o) =>
-            o.id === id ? { ...o, admin_notes: notes, updated_at: new Date().toISOString() } : o
-          ),
-        }))
+      updatePayment: async (id, amountPaid) => {
+        try {
+          await ordersApi.updateOrderPayment(id, amountPaid)
+          set((state) => ({
+            orders: state.orders.map((o) => {
+              if (o.id !== id) return o
+              const ps: PaymentStatus =
+                amountPaid <= 0 ? 'unpaid' : amountPaid >= o.total_amount ? 'paid' : 'partial'
+              return {
+                ...o,
+                amount_paid: amountPaid,
+                payment_status: ps,
+                updated_at: new Date().toISOString(),
+              }
+            }),
+          }))
+        } catch (err: any) {
+          console.error('Failed to update payment:', err)
+        }
       },
 
-      updateInvoiceData: (id, data) => {
-        set((state) => ({
-          orders: state.orders.map((o) =>
-            o.id === id ? { ...o, invoice_data: data, invoice_generated: true, updated_at: new Date().toISOString() } : o
-          ),
-        }))
+      updateNotes: async (id, notes) => {
+        try {
+          await ordersApi.updateAdminNotes(id, notes)
+          set((state) => ({
+            orders: state.orders.map((o) =>
+              o.id === id ? { ...o, admin_notes: notes, updated_at: new Date().toISOString() } : o
+            ),
+          }))
+        } catch (err: any) {
+          console.error('Failed to update notes:', err)
+        }
       },
 
-      generateInvoice: (id) => {
+      generateInvoice: async (id) => {
         const order = get().orders.find((o) => o.id === id)
         if (!order) return
 
         const settings = useSettingsStore.getState()
-        const invoice_number = get().generateInvoiceNumber()
+        const invoice_number = `FAC-${Math.floor(Math.random() * 900000) + 100000}`
 
         const invoice_data: InvoiceData = {
           invoice_number,
@@ -198,7 +211,7 @@ export const useOrdersStore = create<OrdersStore>()(
           order_number: order.order_number,
           order_date: new Date(order.created_at).toLocaleDateString(),
           client_name: order.is_registered_customer ? 'Client Enregistré' : `${order.guest_first_name} ${order.guest_last_name}`,
-          client_shop: '', // Could be fetched if registered
+          client_shop: '',
           client_phone: order.guest_phone || '',
           client_wilaya: order.guest_wilaya || '',
           client_commune: order.guest_commune || '',
@@ -216,13 +229,24 @@ export const useOrdersStore = create<OrdersStore>()(
           payment_status: order.payment_status,
         }
 
-        get().updateInvoiceData(id, invoice_data)
+        try {
+          await ordersApi.generateInvoice(id, invoice_data)
+          set((state) => ({
+            orders: state.orders.map((o) =>
+              o.id === id ? { ...o, invoice_data: invoice_data, invoice_generated: true, updated_at: new Date().toISOString() } : o
+            ),
+          }))
+        } catch (err: any) {
+          console.error('Failed to generate invoice:', err)
+        }
       },
 
       getByCustomer: (customerId: string) => {
         return get().orders.filter((o) => o.customer_id === customerId)
       },
+
+      getAll: () => {
+        return [...get().orders].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      },
     }),
-    { name: 'amouris-orders' }
-)
 )

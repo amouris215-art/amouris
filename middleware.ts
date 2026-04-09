@@ -6,8 +6,6 @@ export async function updateSession(request: NextRequest) {
     request,
   });
 
-  // For Phase 1 (Mock Data), we skip complex middleware checks to prevent build crashes.
-  // We only initialize the client if we absolutely need to (which we don't for Phase 1).
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
@@ -36,7 +34,27 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  // Still bypass logic for Phase 1
+  // Refresh session
+  const { data: { user } } = await supabase.auth.getUser();
+
+  // Protect /admin/*
+  if (request.nextUrl.pathname.startsWith('/admin')) {
+    if (!user || user.user_metadata?.role !== 'admin') {
+      const url = request.nextUrl.clone();
+      url.pathname = '/admin/login';
+      return NextResponse.redirect(url);
+    }
+  }
+
+  // Protect /account/*
+  if (request.nextUrl.pathname.startsWith('/account')) {
+    if (!user) {
+      const url = request.nextUrl.clone();
+      url.pathname = '/login'; // Assuming /login is the path for customer login
+      return NextResponse.redirect(url);
+    }
+  }
+
   return supabaseResponse;
 }
 

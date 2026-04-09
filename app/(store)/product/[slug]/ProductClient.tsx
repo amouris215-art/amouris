@@ -9,8 +9,8 @@ import { useCollectionsStore } from '@/store/collections.store';
 import { useTagsStore } from '@/store/tags.store';
 import { useCartStore } from '@/store/cart.store';
 import { motion } from 'framer-motion';
-import { ChevronRight, Minus, Plus, ShoppingCart, Info, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
+import { ProductImage } from '@/components/store/ProductImage';
 
 interface ProductClientProps {
   slug: string;
@@ -88,7 +88,7 @@ export default function ProductClient({ slug }: ProductClientProps) {
     <div className="min-h-screen bg-neutral-50/50 pb-8 md:pb-32">
       {/* Breadcrumb — hidden on mobile */}
       <div className="container mx-auto px-4 md:px-6 py-4 md:py-8 hidden md:block">
-        <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-emerald-950/20">
+        <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-gray-400">
           <Link href="/shop" className="hover:text-emerald-950 transition-colors">Boutique</Link>
           <ChevronRight size={12} />
           <Link href={isPerfume ? '/shop/parfums' : '/shop/flacons'} className="hover:text-emerald-950 transition-colors">
@@ -111,12 +111,17 @@ export default function ProductClient({ slug }: ProductClientProps) {
             <motion.div 
                initial={{ opacity: 0, scale: 0.95 }}
                animate={{ opacity: 1, scale: 1 }}
-               className="aspect-[4/5] bg-white md:rounded-[3rem] shadow-none md:shadow-2xl md:shadow-emerald-950/5 border-0 md:border border-emerald-950/5 flex items-center justify-center relative overflow-hidden group"
+               className="aspect-[4/5] bg-white md:rounded-[3rem] shadow-none md:shadow-2xl md:shadow-emerald-950/5 border-0 md:border border-emerald-950/5 rounded-b-[2rem] overflow-hidden relative group"
             >
-              <span className="text-emerald-950/5 font-serif text-[10rem] md:text-[15rem] select-none group-hover:scale-110 transition-transform duration-1000">
-                {product.name_fr.charAt(0)}
-              </span>
-              <div className="absolute top-4 right-4 md:top-8 md:right-8">
+              <ProductImage 
+                images={product.images} 
+                productName={product.name_fr} 
+                categoryId={product.category_id} 
+                productType={product.product_type}
+                className="w-full h-full"
+                priority
+              />
+              <div className="absolute top-4 right-4 md:top-8 md:right-8 z-10">
                  {brand && <div className="bg-white/80 backdrop-blur px-4 py-2 md:px-6 md:py-3 rounded-xl md:rounded-2xl shadow-sm border border-emerald-950/5">
                     <p className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] text-[#C9A84C]">{isAr ? brand.name_ar : brand.name_fr}</p>
                  </div>}
@@ -134,18 +139,18 @@ export default function ProductClient({ slug }: ProductClientProps) {
                  {product.status === 'draft' && <span className="bg-amber-50 text-amber-700 px-3 py-1 md:px-4 md:py-1.5 rounded-full text-[9px] md:text-[10px] font-black uppercase tracking-widest border border-amber-100">Brouillon</span>}
               </div>
 
-              <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-emerald-950 mb-2 md:mb-3 tracking-tight">
+              <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl lg:text-3xl text-gray-900 mb-2 md:mb-3 tracking-tight">
                 {product.name_fr}
               </h1>
-              <p className="text-emerald-950/30 text-lg md:text-2xl font-arabic mb-4 md:mb-8" dir="rtl">
+              <p className="text-gray-500 text-lg md:text-xl font-arabic mb-4 md:mb-8" dir="rtl">
                 {product.name_ar}
               </p>
 
               <div className="prose prose-emerald max-w-none">
-                <p className="text-emerald-950/60 leading-relaxed text-base md:text-lg">
+                <p className="text-gray-700 leading-relaxed text-base md:text-lg">
                   {product.description_fr}
                 </p>
-                {product.description_ar && <p className="text-emerald-950/40 text-sm mt-4 italic font-arabic" dir="rtl">{product.description_ar}</p>}
+                {product.description_ar && <p className="text-gray-500 text-sm mt-4 italic font-arabic" dir="rtl">{product.description_ar}</p>}
               </div>
             </div>
 
@@ -220,7 +225,12 @@ export default function ProductClient({ slug }: ProductClientProps) {
                        <div className="flex items-center bg-white border border-emerald-950/5 rounded-2xl p-1.5 md:p-2 shadow-sm w-fit">
                           <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="w-11 h-11 md:w-14 md:h-14 rounded-xl hover:bg-emerald-50 text-emerald-950 transition-colors flex items-center justify-center"><Minus size={18} /></button>
                           <span className="w-14 md:w-20 text-center font-serif text-xl md:text-2xl text-emerald-950">{quantity}</span>
-                          <button onClick={() => setQuantity(quantity + 1)} className="w-11 h-11 md:w-14 md:h-14 rounded-xl hover:bg-emerald-50 text-emerald-950 transition-colors flex items-center justify-center"><Plus size={18} /></button>
+                          <button 
+                            onClick={() => setQuantity(Math.min(selectedVariant?.stock_units || 0, quantity + 1))} 
+                            className="w-11 h-11 md:w-14 md:h-14 rounded-xl hover:bg-emerald-50 text-emerald-950 transition-colors flex items-center justify-center"
+                          >
+                            <Plus size={18} />
+                          </button>
                        </div>
                        <p className="text-[10px] font-bold text-emerald-950/30 uppercase tracking-widest">Stock: {selectedVariant?.stock_units || 0} pcs</p>
                     </div>
@@ -286,7 +296,7 @@ export default function ProductClient({ slug }: ProductClientProps) {
               <h4 className="text-[10px] uppercase font-black tracking-widest text-emerald-950/20 mb-3 md:mb-6">Signatures Olfactives</h4>
               <div className="flex flex-wrap gap-2">
                 {productTags.map(tag => (
-                   <span key={tag.id} className="text-[8px] md:text-[9px] font-black uppercase tracking-widest px-2 md:px-3 py-1 bg-white border border-emerald-950/5 rounded-full text-emerald-900/60">
+                   <span key={tag.id} className="text-[8px] md:text-[9px] font-black uppercase tracking-widest px-2 md:px-3 py-1 bg-white border border-emerald-950/5 rounded-full text-gray-700">
                       {isAr ? tag.name_ar : tag.name_fr}
                    </span>
                 ))}
@@ -304,9 +314,9 @@ export default function ProductClient({ slug }: ProductClientProps) {
         <div className="px-4 pt-3 pb-3">
           {/* Total row */}
           <div className="flex items-center justify-between mb-2.5">
-            <span className="text-[10px] font-black uppercase tracking-widest text-emerald-950/30">Total</span>
+            <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Total</span>
             <span className="font-serif text-xl text-emerald-950">
-              {total.toLocaleString()} <span className="text-[10px] font-normal text-emerald-950/40">DZD</span>
+              {total.toLocaleString()} <span className="text-[10px] font-normal text-gray-500">DZD</span>
             </span>
           </div>
           {/* Add to cart button */}

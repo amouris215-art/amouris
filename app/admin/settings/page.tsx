@@ -7,7 +7,7 @@ import {
   AlertTriangle, CreditCard, Loader2, 
   CheckCircle2, Plus, Trash2, Megaphone,
   LogOut, User, ExternalLink, GripVertical,
-  ChevronUp, ChevronDown, Check, X
+  ChevronUp, ChevronDown, Check, X, Instagram
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useSettingsStore, StoreSettings } from '@/store/settings.store'

@@ -71,7 +71,7 @@ export default function RegisterPage() {
     // Simulate slight delay for luxury feel
     await new Promise(r => setTimeout(r, 400))
 
-    const result = registerCustomer({
+    const result = await registerCustomer({
       first_name: form.firstName.trim(),
       last_name: form.lastName.trim(),
       phone: form.phone.trim(),
@@ -94,10 +94,10 @@ export default function RegisterPage() {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4 py-12">
       <div className="bg-white w-full max-w-lg p-8 rounded-2xl border border-gray-100 shadow-sm">
         <div className="text-center mb-8">
-          <h1 className="font-serif text-2xl text-emerald-900 uppercase tracking-widest">
+          <h1 className="font-serif text-2xl text-gray-900 uppercase tracking-widest">
             Créer un compte
           </h1>
-          <p className="text-gray-400 text-sm mt-2">Rejoignez Amouris Parfums — B2B Marketplace</p>
+          <p className="text-gray-500 text-sm mt-2">Rejoignez Amouris Parfums — B2B Marketplace</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4" noValidate>
@@ -134,7 +134,7 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label className="block text-xs uppercase tracking-widest font-bold text-emerald-900/50 mb-1.5 ml-1">
+            <label className="block text-xs uppercase tracking-widest font-bold text-gray-600 mb-1.5 ml-1">
               Nom du magasin <span className="opacity-50">(optionnel)</span>
             </label>
             <input
@@ -157,7 +157,7 @@ export default function RegisterPage() {
               {errors.wilaya && <p className="text-[10px] text-red-500 mt-1 ml-1 font-medium">{errors.wilaya}</p>}
             </div>
             <div>
-              <label className="block text-xs uppercase tracking-widest font-bold text-emerald-900/50 mb-1.5 ml-1">
+              <label className="block text-xs uppercase tracking-widest font-bold text-gray-600 mb-1.5 ml-1">
                 Commune <span className="opacity-50">(optionnel)</span>
               </label>
               <input

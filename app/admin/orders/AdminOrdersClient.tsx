@@ -19,18 +19,18 @@ import { getOrderStatusLabel, getPaymentStatusLabel } from '@/lib/status-helpers
 const STATUS_ORDER: OrderStatus[] = ['pending', 'confirmed', 'preparing', 'shipped', 'delivered', 'cancelled'];
 
 const STATUS_COLORS: Record<OrderStatus, string> = {
-  pending: 'bg-amber-50 text-amber-700 border-amber-200',
-  confirmed: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-  preparing: 'bg-indigo-50 text-indigo-700 border-indigo-200',
-  shipped: 'bg-blue-50 text-blue-700 border-blue-200',
-  delivered: 'bg-emerald-900 text-white border-emerald-800',
-  cancelled: 'bg-rose-50 text-rose-700 border-rose-200',
+  pending: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+  confirmed: 'bg-blue-100 text-blue-800 border-blue-200',
+  preparing: 'bg-purple-100 text-purple-800 border-purple-200',
+  shipped: 'bg-indigo-100 text-indigo-800 border-indigo-200',
+  delivered: 'bg-green-100 text-green-800 border-green-200',
+  cancelled: 'bg-red-100 text-red-800 border-red-200',
 };
 
 const PAYMENT_COLORS: Record<PaymentStatus, string> = {
-  unpaid: 'bg-rose-50 text-rose-600 border-rose-100',
-  partial: 'bg-amber-50 text-amber-600 border-amber-100',
-  paid: 'bg-emerald-50 text-emerald-600 border-emerald-100',
+  unpaid: 'bg-red-100 text-red-800 border-red-200',
+  partial: 'bg-orange-100 text-orange-800 border-orange-200',
+  paid: 'bg-green-100 text-green-800 border-green-200',
 };
 
 export default function AdminOrdersClient() {
@@ -83,7 +83,7 @@ export default function AdminOrdersClient() {
       <section className="space-y-6">
         <div className="flex flex-col md:flex-row gap-6">
           <div className="relative flex-1 group">
-             <Search size={18} className="absolute left-6 top-1/2 -translate-y-1/2 text-emerald-950/20 group-focus-within:text-[#C9A84C] transition-colors" />
+             <Search size={18} className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#C9A84C] transition-colors" />
              <input 
                type="text"
                placeholder={t('admin.orders.search_placeholder')}
@@ -94,7 +94,7 @@ export default function AdminOrdersClient() {
           </div>
           <button 
             onClick={() => setShowFilters(!showFilters)}
-            className={`h-16 px-8 rounded-2xl border flex items-center gap-3 text-[10px] font-black uppercase tracking-widest transition-all ${showFilters ? 'bg-emerald-50 border-emerald-200 text-emerald-900' : 'bg-white border-emerald-950/5 text-emerald-950/40 hover:text-emerald-950'}`}
+            className={`h-16 px-8 rounded-2xl border flex items-center gap-3 text-[10px] font-black uppercase tracking-widest transition-all ${showFilters ? 'bg-emerald-50 border-emerald-200 text-emerald-900' : 'bg-white border-emerald-950/5 text-gray-500 hover:text-emerald-950'}`}
           >
             <Filter size={16} /> {showFilters ? t('admin.orders.reduce') : t('admin.orders.filters')}
           </button>
@@ -109,7 +109,7 @@ export default function AdminOrdersClient() {
               className="grid grid-cols-1 md:grid-cols-3 gap-6 p-8 bg-neutral-100 rounded-3xl"
             >
               <div className="space-y-2">
-                <label className="text-[9px] font-black uppercase text-emerald-950/30 px-1">{t('admin.orders.filter_status')}</label>
+                <label className="text-[9px] font-black uppercase text-gray-500 px-1">{t('admin.orders.filter_status')}</label>
                 <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="w-full h-12 px-4 rounded-xl bg-white border border-emerald-950/5 text-[10px] font-bold uppercase outline-none">
                   <option value="all">{t('admin.orders.status_all')}</option>
                   {STATUS_ORDER.map((k) => <option key={k} value={k}>{getOrderStatusLabel(k, language)}</option>)}
@@ -141,7 +141,7 @@ export default function AdminOrdersClient() {
           <table className="w-full border-collapse">
             <thead>
               <tr className="border-b border-emerald-950/5 bg-neutral-50/50">
-                <th className="px-10 py-6 text-left text-[9px] font-black uppercase tracking-[0.3em] text-emerald-950/30">{t('admin.orders.table.id_date')}</th>
+                <th className="px-10 py-6 text-left text-[9px] font-black uppercase tracking-[0.3em] text-gray-500">{t('admin.orders.table.id_date')}</th>
                 <th className="px-10 py-6 text-left text-[9px] font-black uppercase tracking-[0.3em] text-emerald-950/30">{t('admin.orders.table.customer')}</th>
                 <th className="px-10 py-6 text-left text-[9px] font-black uppercase tracking-[0.3em] text-emerald-950/30">{t('admin.orders.table.amount_payment')}</th>
                 <th className="px-10 py-6 text-left text-[9px] font-black uppercase tracking-[0.3em] text-emerald-950/30">{t('admin.orders.table.progress')}</th>

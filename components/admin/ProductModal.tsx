@@ -7,8 +7,7 @@ import { useCategoriesStore } from '@/store/categories.store';
 import { useBrandsStore } from '@/store/brands.store';
 import { useTagsStore } from '@/store/tags.store';
 import { useCollectionsStore } from '@/store/collections.store';
-import { Upload, X, Plus, Trash2, Loader2, Sparkles, Box, Droplets, Image as ImageIcon, Eye, EyeOff } from 'lucide-react';
-import { createClient } from '@/lib/supabase/client';
+import { Upload, X, Plus, Trash2, Loader2, Sparkles, Box, Droplets, Image as ImageIcon, Eye, EyeOff, AlertCircle } from 'lucide-react';
 
 interface ProductModalProps {
   product?: Product | null;
@@ -16,7 +15,14 @@ interface ProductModalProps {
   onClose: () => void;
 }
 
-const supabase = createClient();
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(reader.result as string)
+    reader.onerror = reject
+    reader.readAsDataURL(file)
+  })
+}
 
 export function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
   const { addProduct, updateProduct } = useProductsStore();
@@ -111,29 +117,25 @@ export function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
     const newImages = [...(formData.images || [])];
 
     for (let i = 0; i < files.length; i++) {
+      if (newImages.length >= 3) break;
       const file = files[i];
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random()}.${fileExt}`;
-      const filePath = `products/${fileName}`;
-
-      const { data, error } = await supabase.storage
-        .from('products')
-        .upload(filePath, file);
-
-      if (error) {
-        console.error('Error uploading image:', error);
+      
+      if (file.size > 2 * 1024 * 1024) {
+        alert(`L'image ${file.name} est trop lourde. Réduire à moins de 2MB.`);
         continue;
       }
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('products')
-        .getPublicUrl(filePath);
-
-      newImages.push(publicUrl);
+      try {
+        const base64 = await fileToBase64(file);
+        newImages.push(base64);
+      } catch (err) {
+        console.error('Error converting image:', err);
+      }
     }
 
     setFormData({ ...formData, images: newImages });
     setIsUploading(false);
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const handleAddVariant = () => {
@@ -269,13 +271,13 @@ export function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
 
                     <button 
                       type="button"
-                      disabled={isUploading}
+                      disabled={isUploading || (formData.images?.length || 0) >= 3}
                       onClick={() => fileInputRef.current?.click()}
-                      className="aspect-square rounded-2xl border-2 border-dashed border-emerald-950/10 flex flex-col items-center justify-center gap-3 bg-neutral-50/50 hover:bg-neutral-50 transition-colors relative overflow-hidden"
+                      className="aspect-square rounded-2xl border-2 border-dashed border-emerald-950/10 flex flex-col items-center justify-center gap-3 bg-neutral-50/50 hover:bg-neutral-50 transition-colors relative overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                        {isUploading ? <Loader2 className="animate-spin text-emerald-950/20" size={20} /> : <Upload size={20} className="text-emerald-950/20" />}
                        <span className="text-[8px] font-black uppercase tracking-widest text-emerald-950/20">
-                         {isUploading ? 'Téléchargement...' : 'Ajouter'}
+                         {isUploading ? 'Chargement...' : (formData.images?.length || 0) >= 3 ? 'Limite atteinte' : 'Ajouter'}
                        </span>
                     </button>
 

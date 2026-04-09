@@ -53,21 +53,21 @@ export function AdminHeader() {
 
   return (
     <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b bg-background px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8">
-      <Button variant="ghost" size="icon" className="-m-2.5 p-2.5 min-w-[44px] min-h-[44px] text-muted-foreground lg:hidden" onClick={toggleSidebar}>
+      <Button variant="ghost" size="icon" className="-m-2.5 p-2.5 min-w-[44px] min-h-[44px] text-gray-500 lg:hidden" onClick={toggleSidebar}>
         <span className="sr-only">{t('admin.common.open_sidebar')}</span>
         <Menu className="h-6 w-6" aria-hidden="true" />
       </Button>
 
       <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
         <div className="flex flex-1 items-center">
-           <div className="text-sm font-medium text-muted-foreground">
+           <div className="text-sm font-medium text-gray-500">
              {t('admin.common.portal_title')}
            </div>
         </div>
         <div className="flex items-center gap-x-4 lg:gap-x-6">
           <LanguageToggle />
           
-          <Button variant="ghost" size="icon" className="-m-2.5 p-2.5 min-w-[44px] min-h-[44px] text-muted-foreground relative">
+          <Button variant="ghost" size="icon" className="-m-2.5 p-2.5 min-w-[44px] min-h-[44px] text-gray-500 relative">
             <span className="sr-only">{t('admin.common.view_notifications')}</span>
             <Bell className="h-6 w-6" aria-hidden="true" />
             {pendingCount > 0 && (

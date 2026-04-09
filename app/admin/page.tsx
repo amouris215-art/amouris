@@ -66,8 +66,8 @@ export default function AdminDashboard() {
     <div className="space-y-8 pb-20">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
         <div>
-          <h1 className="text-4xl font-black text-emerald-950 font-serif tracking-tight">Vue d&apos;ensemble</h1>
-          <p className="text-emerald-950/40 text-sm mt-2 font-medium">B2B Dashboard — {email}</p>
+          <h1 className="text-4xl font-black text-gray-900 font-serif tracking-tight">Vue d&apos;ensemble</h1>
+          <p className="text-gray-500 text-sm mt-2 font-medium">B2B Dashboard — {email}</p>
         </div>
         <div className="flex gap-4 w-full md:w-auto">
             <Link href="/admin/orders" className="flex-1 md:flex-none text-center text-[10px] font-black bg-white px-6 py-4 border border-emerald-50 rounded-2xl shadow-sm hover:bg-emerald-50 transition-all uppercase tracking-widest">Commandes</Link>
@@ -85,8 +85,8 @@ export default function AdminDashboard() {
             <div className={`inline-flex p-4 rounded-2xl ${color} mb-6 transition-transform group-hover:scale-110 relative z-10`}>
               <Icon size={24} />
             </div>
-            <div className="text-3xl font-black text-emerald-950 font-sans tracking-tight relative z-10">{value}</div>
-            <div className="text-[10px] uppercase font-black tracking-[0.2em] text-emerald-950/20 mt-2 relative z-10">{label}</div>
+            <div className="text-2xl font-semibold text-gray-900 font-sans tracking-tight relative z-10">{value}</div>
+            <div className="text-sm font-medium text-gray-500 mt-2 relative z-10">{label}</div>
           </div>
         ))}
       </div>
@@ -224,19 +224,19 @@ export default function AdminDashboard() {
 
 function StatusBadge({ status }: { status: string }) {
   const map: Record<string, string> = {
-    pending: 'bg-amber-100 text-amber-700',
-    confirmed: 'bg-emerald-100 text-emerald-700',
-    preparing: 'bg-purple-100 text-purple-700',
-    shipped: 'bg-blue-100 text-blue-700',
-    delivered: 'bg-emerald-950 text-white',
-    cancelled: 'bg-rose-100 text-rose-700',
+    pending: 'bg-yellow-100 text-yellow-800',
+    confirmed: 'bg-blue-100 text-blue-800',
+    preparing: 'bg-purple-100 text-purple-800',
+    shipped: 'bg-indigo-100 text-indigo-800',
+    delivered: 'bg-green-100 text-green-800',
+    cancelled: 'bg-red-100 text-red-800',
   }
   const labels: Record<string, string> = {
     pending: 'En attente', confirmed: 'Confirmé', preparing: 'En préparation',
     shipped: 'Expédié', delivered: 'Livré', cancelled: 'Annulé',
   }
   return (
-    <span className={`text-[10px] px-3 py-1 rounded-full font-black uppercase tracking-widest ${map[status] || 'bg-gray-100 text-gray-600'}`}>
+    <span className={`text-[10px] px-3 py-1 rounded-full font-black uppercase tracking-widest ${map[status] || 'bg-gray-100 text-gray-800'}`}>
       {labels[status] || status}
     </span>
   )

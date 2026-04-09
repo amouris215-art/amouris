@@ -74,7 +74,7 @@ export default function CheckoutClient() {
         total_amount: totalAmount,
       };
 
-      const order = createOrder(orderData);
+      const order = await createOrder(orderData);
 
       // Deduct stock
       for (const item of orderItems) {
@@ -102,12 +102,12 @@ export default function CheckoutClient() {
       <div className="container mx-auto px-6 max-w-7xl">
         
         <header className="mb-16">
-          <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-emerald-950/20 mb-4">
+          <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 mb-4">
             <Link href="/shop" className="hover:text-emerald-950 transition-colors">Boutique</Link>
             <ChevronRight size={12} />
-            <span className="text-emerald-950 font-black">Finaliser la commande</span>
+            <span className="text-gray-900 font-black">Finaliser la commande</span>
           </div>
-          <h1 className="font-serif text-4xl md:text-6xl text-emerald-950">Confirmation</h1>
+          <h1 className="font-serif text-4xl md:text-6xl text-gray-900">Confirmation</h1>
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-start">
@@ -120,8 +120,8 @@ export default function CheckoutClient() {
                    <Truck size={24} />
                 </div>
                 <div>
-                   <h2 className="font-serif text-2xl text-emerald-950">{isAr ? 'معلومات التوصيل' : 'Informations de livraison'}</h2>
-                   <p className="text-[10px] font-black uppercase tracking-widest text-emerald-950/20">Où devons-nous envoyer vos trésors ?</p>
+                   <h2 className="font-serif text-2xl text-gray-900">{isAr ? 'معلومات التوصيل' : 'Informations de livraison'}</h2>
+                   <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Où devons-nous envoyer vos trésors ?</p>
                 </div>
               </div>
 
@@ -207,7 +207,7 @@ export default function CheckoutClient() {
                       <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-emerald-600">
                         <UserPlus size={20} />
                       </div>
-                      <p className="text-xs text-emerald-950/60 font-medium">
+                      <p className="text-xs text-emerald-900/70 font-medium">
                         {isAr ? 'أنشئ حساباً لتتبع طلباتك بسهولة' : 'Créez un compte pour suivre vos commandes facilement'}
                       </p>
                     </div>
@@ -225,7 +225,7 @@ export default function CheckoutClient() {
                <ShieldCheck className="text-[#C9A84C] shrink-0" size={24} />
                <div>
                   <h4 className="font-bold text-amber-900 text-sm mb-1">{isAr ? 'دفع آمن عند الاستلام' : 'Livraison à domicile — Paiement à la livraison'}</h4>
-                  <p className="text-amber-900/40 text-xs leading-relaxed">
+                  <p className="text-amber-900/60 text-xs leading-relaxed">
                     {isAr ? 'في أموريس، تدفع فقط عند استلام منتجاتك. تحقق من طردك عند الاستلام لضمان الرضا التام.' : 'Chez Amouris, vous payez uniquement lorsque vous recevez vos produits. Vérifiez votre colis à la réception pour une satisfaction totale.'}
                   </p>
                </div>
@@ -246,10 +246,10 @@ export default function CheckoutClient() {
                      <div key={item.id} className="flex justify-between gap-4">
                        <div className="flex-1">
                           <p className="text-sm font-bold block truncate">{isAr ? item.name_ar : item.name_fr}</p>
-                          <p className="text-[10px] text-emerald-100/40 uppercase tracking-widest mt-1">
+                          <p className="text-[10px] text-emerald-100/60 uppercase tracking-widest mt-1">
                             {item.product_type === 'perfume' ? `${item.quantity_grams}g` : `${item.quantity_units}x ${item.variant_label}`}
                           </p>
-                          <p className="text-[10px] text-emerald-100/20 mt-1">
+                          <p className="text-[10px] text-emerald-100/40 mt-1">
                              {item.unit_price.toLocaleString()} DZD / unit
                           </p>
                        </div>
@@ -259,7 +259,7 @@ export default function CheckoutClient() {
                  </div>
 
                  <div className="space-y-4 pt-8 border-t border-white/10">
-                   <div className="flex justify-between items-center text-xs text-emerald-100/40 uppercase tracking-widest font-black">
+                   <div className="flex justify-between items-center text-xs text-emerald-100/60 uppercase tracking-widest font-black">
                       <span>{isAr ? 'المجموع الفرعي' : 'Sous-total'}</span>
                       <span>{totalAmount.toLocaleString()} DZD</span>
                    </div>
@@ -291,10 +291,10 @@ export default function CheckoutClient() {
                    )}
                  </button>
 
-                 <p className="mt-8 text-center text-[9px] font-black uppercase tracking-[0.2em] text-white/20 leading-relaxed">
+                  <p className="mt-8 text-center text-[9px] font-black uppercase tracking-[0.2em] text-white/40 leading-relaxed">
                     {isAr ? 'بالضغط، أنت توافق على شروطنا وأحكامنا.' : 'En cliquant, vous acceptez nos CGV.'}<br />
                     {isAr ? 'سيتواصل معك مستشار أموريس لتأكيد التوصيل.' : 'Un conseiller Amouris vous recontactera pour confirmer la livraison.'}
-                 </p>
+                  </p>
                </div>
             </div>
           </div>

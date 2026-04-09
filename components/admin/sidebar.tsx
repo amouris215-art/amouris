@@ -58,10 +58,9 @@ export function AdminSidebar() {
         />
       )}
 
-      {/* Sidebar */}
       <div 
         className={`
-          fixed inset-y-0 z-50 w-72 bg-card border-slate-200 shadow-2xl transform transition-transform duration-300 ease-in-out lg:translate-x-0
+          fixed inset-y-0 z-50 w-72 bg-white border-emerald-950/5 shadow-2xl transform transition-transform duration-300 ease-in-out lg:translate-x-0
           ${dir === 'rtl' ? 'right-0 border-l' : 'left-0 border-r'}
           ${sidebarOpen 
             ? 'translate-x-0' 
@@ -69,9 +68,9 @@ export function AdminSidebar() {
           }
         `}
       >
-        <div className="flex h-16 items-center border-b px-6 justify-between">
-          <Link href="/admin" className="font-heading text-2xl font-bold text-primary">
-            Amouris<span className="text-accent ml-1">Admin</span>
+        <div className="flex h-16 items-center border-b border-emerald-950/5 px-6 justify-between">
+          <Link href="/admin" className="font-serif text-2xl font-bold text-emerald-950">
+            Amouris<span className="text-amber-500 ml-1">Admin</span>
           </Link>
           <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setSidebarOpen(false)}>
              <Menu className="w-5 h-5" />
@@ -82,7 +81,7 @@ export function AdminSidebar() {
           <Link href="/admin" className="block mb-6">
                 <Button 
                     variant={pathname === '/admin' ? 'secondary' : 'ghost'} 
-                    className={`w-full justify-start min-h-[44px] ${pathname === '/admin' ? 'font-bold text-primary' : ''}`}
+                    className={`w-full justify-start min-h-[44px] ${pathname === '/admin' ? 'font-bold text-emerald-900 bg-emerald-50' : 'text-gray-700'}`}
                   >
                 <LayoutDashboard className="mr-3 w-5 h-5 rtl:mr-0 rtl:ml-3" />
                 {language === 'ar' ? 'نظرة عامة' : 'Vue d\'ensemble'}
@@ -92,7 +91,7 @@ export function AdminSidebar() {
           <div className="space-y-8">
             {navGroups.map((group, i) => (
               <div key={i}>
-                <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 px-4">
+                <div className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2 px-4">
                   {group.title}
                 </div>
                 <div className="space-y-1">
@@ -102,7 +101,7 @@ export function AdminSidebar() {
                       <Link key={item.name} href={item.href}>
                         <Button 
                           variant={isActive ? 'secondary' : 'ghost'} 
-                          className={`w-full justify-start min-h-[44px] ${isActive ? 'font-bold text-primary' : 'text-foreground/80'}`}
+                          className={`w-full justify-start min-h-[44px] ${isActive ? 'font-bold text-emerald-900 bg-emerald-50' : 'text-gray-600 hover:text-emerald-900'}`}
                         >
                           <item.icon className="mr-3 w-5 h-5 rtl:mr-0 rtl:ml-3" />
                           {item.name}

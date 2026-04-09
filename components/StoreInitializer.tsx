@@ -6,6 +6,7 @@ import { useCategoriesStore } from '@/store/categories.store';
 import { useBrandsStore } from '@/store/brands.store';
 import { useCollectionsStore } from '@/store/collections.store';
 import { useTagsStore } from '@/store/tags.store';
+import { useSettingsStore } from '@/store/settings.store';
 import { 
   INITIAL_PRODUCTS, 
   INITIAL_CATEGORIES, 
@@ -15,19 +16,28 @@ import {
 } from '@/lib/initial-data';
 
 export function StoreInitializer() {
-  const { products, seed: seedProducts } = useProductsStore();
-  const { categories, seed: seedCategories } = useCategoriesStore();
-  const { brands, seed: seedBrands } = useBrandsStore();
-  const { collections, seed: seedCollections } = useCollectionsStore();
-  const { tags, seed: seedTags } = useTagsStore();
+  const { categories, seed: seedCategories, fetchCategories } = useCategoriesStore();
+  const { brands, seed: seedBrands, fetchBrands } = useBrandsStore();
+  const { collections, seed: seedCollections, fetchCollections } = useCollectionsStore();
+  const { tags, seed: seedTags, fetchTags } = useTagsStore();
+  const { fetchSettings } = useSettingsStore();
+  const { fetchProducts, seed: seedProducts } = useProductsStore();
 
   useEffect(() => {
-    // Seed stores if they are empty
-    if (products.length === 0) seedProducts(INITIAL_PRODUCTS);
-    if (categories.length === 0) seedCategories(INITIAL_CATEGORIES);
-    if (brands.length === 0) seedBrands(INITIAL_BRANDS);
-    if (collections.length === 0) seedCollections(INITIAL_COLLECTIONS);
-    if (tags.length === 0) seedTags(INITIAL_TAGS);
+    // Initial data synchronization from Supabase
+    fetchSettings();
+    fetchCategories();
+    fetchBrands();
+    fetchCollections();
+    fetchTags();
+    fetchProducts();
+
+    // Fallback: Seed stores if they are empty
+    seedProducts(INITIAL_PRODUCTS);
+    seedCategories(INITIAL_CATEGORIES);
+    seedBrands(INITIAL_BRANDS);
+    seedCollections(INITIAL_COLLECTIONS);
+    seedTags(INITIAL_TAGS);
   }, []);
 
   return null;

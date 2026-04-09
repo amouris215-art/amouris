@@ -33,7 +33,7 @@ export function TagSection({ tag, products }: TagSectionProps) {
                 {subtitle}
               </span>
             </div>
-            <h2 className="font-serif text-4xl md:text-5xl text-emerald-950">
+            <h2 className="font-serif text-4xl md:text-5xl text-gray-900">
               {title}
             </h2>
           </motion.div>
@@ -53,10 +53,10 @@ export function TagSection({ tag, products }: TagSectionProps) {
               return (
                 <Link 
                   href={`${baseUrl}?tag=${tag.id}`}
-                  className="group flex items-center gap-3 text-emerald-950 font-bold uppercase tracking-widest text-[10px] hover:text-amber-600 transition-colors underline-offset-8 decoration-amber-400/30"
+                  className="group flex items-center gap-3 text-gray-900 font-bold uppercase tracking-widest text-[10px] hover:text-amber-600 transition-colors underline-offset-8 decoration-amber-400/30"
                 >
                   {language === 'ar' ? 'اكتشف المجموعة' : 'Découvrir la collection'}
-                  <div className="w-10 h-10 rounded-full border border-emerald-950/10 flex items-center justify-center group-hover:bg-emerald-950 group-hover:text-white transition-all duration-500">
+                  <div className="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center group-hover:bg-emerald-800 group-hover:text-white transition-all duration-500">
                     <ArrowRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
                   </div>
                 </Link>

@@ -46,7 +46,7 @@ export function CategoriesGrid({ categories }: { categories: any[] }) {
             <Sparkles className="text-amber-500 w-4 h-4" />
             <span className="text-amber-600 text-[10px] font-black uppercase tracking-[0.4em]">Univers Olfactifs</span>
           </div>
-          <h2 className="font-serif text-4xl md:text-6xl text-emerald-950 mb-6">{t('home.categories')}</h2>
+          <h2 className="font-serif text-4xl md:text-6xl text-gray-900 mb-6">{t('home.categories')}</h2>
           <div className="w-20 h-1 bg-gradient-to-r from-transparent via-amber-400 to-transparent mx-auto rounded-full" />
         </motion.div>
 
@@ -70,7 +70,7 @@ export function CategoriesGrid({ categories }: { categories: any[] }) {
                 <div className="relative z-10 h-full flex flex-col justify-between">
                   <div className="flex justify-between items-start">
                     <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-sm group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 border border-emerald-50">
-                      <span className="text-3xl font-serif text-emerald-950">{(cat.nameFR || cat.id).charAt(0)}</span>
+                      <span className="text-3xl font-serif text-gray-900">{(cat.nameFR || cat.id).charAt(0)}</span>
                     </div>
                     <motion.div 
                       whileHover={{ scale: 1.2, rotate: 45 }}
@@ -81,12 +81,12 @@ export function CategoriesGrid({ categories }: { categories: any[] }) {
                   </div>
 
                   <div>
-                    <h3 className="font-serif text-2xl md:text-3xl text-emerald-950 mb-2 group-hover:text-amber-600 transition-colors">
+                    <h3 className="font-serif text-2xl md:text-3xl text-gray-900 mb-2 group-hover:text-amber-600 transition-colors">
                       {language === 'ar' ? cat.nameAR : cat.nameFR}
                     </h3>
                     <div className="flex items-center gap-3">
                         <div className="h-px w-8 bg-amber-400 group-hover:w-16 transition-all duration-500" />
-                        <span className="text-[10px] uppercase tracking-[0.2em] text-emerald-900/40 font-black">
+                        <span className="text-[10px] uppercase tracking-[0.2em] text-gray-500 font-black">
                             {language === 'ar' ? cat.nameFR : cat.nameAR}
                         </span>
                     </div>

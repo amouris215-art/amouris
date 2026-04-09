@@ -64,7 +64,7 @@ export function HeroSection() {
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-md mb-8"
           >
             <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-            <span className="text-white/60 text-[10px] uppercase tracking-[0.4em] font-bold">
+            <span className="text-emerald-100/80 text-[10px] uppercase tracking-[0.4em] font-bold">
               Amouris L'Excellence
             </span>
           </motion.div>
@@ -93,7 +93,7 @@ export function HeroSection() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 1.2, duration: 1 }}
-            className="max-w-2xl mx-auto text-emerald-100/40 text-lg md:text-xl mb-12 font-light leading-relaxed tracking-wide"
+            className="max-w-2xl mx-auto text-emerald-100/60 text-lg md:text-xl mb-12 font-light leading-relaxed tracking-wide"
           >
             {t('home.hero_subtitle')}
           </motion.p>
@@ -139,7 +139,7 @@ export function HeroSection() {
                   <stat.icon className="w-5 h-5 text-amber-500/30 group-hover:text-amber-500 transition-all duration-500 group-hover:scale-125" />
                 </div>
                 <div className="text-2xl md:text-4xl font-serif text-white mb-1 tracking-tighter">{stat.label}</div>
-                <div className="text-[9px] uppercase tracking-[0.3em] text-emerald-100/20 font-black transition-colors group-hover:text-emerald-100/40">
+                <div className="text-[9px] uppercase tracking-[0.3em] text-emerald-100/40 font-black transition-colors group-hover:text-emerald-100/60">
                   {stat.sub}
                 </div>
               </div>
@@ -153,7 +153,7 @@ export function HeroSection() {
         style={{ opacity }}
         animate={{ y: [0, 10, 0] }}
         transition={{ repeat: Infinity, duration: 2 }}
-        className="absolute bottom-10 left-1/2 -translate-x-1/2 text-white/20 hidden md:block"
+        className="absolute bottom-10 left-1/2 -translate-x-1/2 text-white/40 hidden md:block"
       >
         <ChevronDown size={24} />
       </motion.div>

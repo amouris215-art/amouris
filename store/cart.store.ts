@@ -81,7 +81,7 @@ export const useCartStore = create<CartStore>()(
       
       getTotal: () => get().items.reduce((sum, i) => sum + i.total_price, 0),
       
-      getCount: () => get().items.length,
+      getCount: () => get().items.reduce((sum, i) => sum + (i.quantity_grams ? 1 : (i.quantity_units || 0)), 0),
     }),
     { name: 'amouris_cart' }
   )

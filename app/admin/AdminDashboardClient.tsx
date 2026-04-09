@@ -70,18 +70,20 @@ export default function AdminDashboardClient({ orders, customers, products, admi
                                     <ShoppingBag size={20} />
                                 </div>
                                 <div>
-                                    <p className="font-black text-emerald-950 font-mono text-sm tracking-tight">{order.orderNumber}</p>
+                                    <p className="font-black text-emerald-950 font-mono text-sm tracking-tight">{order.order_number}</p>
                                     <p className="text-xs text-emerald-950/30 font-medium whitespace-nowrap overflow-hidden text-ellipsis max-w-[150px]">
-                                      {order.guestInfo ? `${order.guestInfo.firstName} ${order.guestInfo.lastName}` : t('admin.orders.customer_unknown')}
+                                      {order.is_registered_customer 
+                                        ? customers.find(c => c.id === order.customer_id)?.first_name || 'Client'
+                                        : `${order.guest_first_name || ''} ${order.guest_last_name || ''}`.trim() || 'Invité'}
                                     </p>
                                 </div>
                             </div>
                             <div className="flex items-center gap-6">
                                 <div className="text-right">
-                                    <p className="text-sm font-black text-emerald-900">{order.total.toLocaleString()} <span className="text-[10px] font-normal">{t('common.dzd')}</span></p>
-                                    <p className="text-[10px] text-emerald-950/20 font-medium">{new Date(order.createdAt).toLocaleDateString()}</p>
+                                    <p className="text-sm font-black text-emerald-900">{order.total_amount.toLocaleString()} <span className="text-[10px] font-normal">{t('common.dzd')}</span></p>
+                                    <p className="text-[10px] text-emerald-950/20 font-medium">{new Date(order.created_at).toLocaleDateString()}</p>
                                 </div>
-                                <StatusBadge status={order.status} locale={language} />
+                                <StatusBadge status={order.order_status} locale={language} />
                             </div>
                         </div>
                     ))

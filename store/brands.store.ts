@@ -1,6 +1,8 @@
 'use client'
 import { create } from 'zustand'
 import { createClient } from '@/lib/supabase/client'
+import { persist } from 'zustand/middleware'
+import { productsApi } from '@/lib/api/products.api'
 
 export interface Brand {
   id: string
@@ -14,84 +16,85 @@ interface BrandsStore {
   brands: Brand[]
   isLoading: boolean
   error: string | null
-  fetchBrands: () => Promise<void>
+  lastUpdated: number | null
+  fetchBrands: (force?: boolean) => Promise<void>
   addBrand: (b: Omit<Brand, 'id'>) => Promise<void>
-  updateBrand: (id: string, updates: Partial<Brand>) => Promise<void>
-  deleteBrand: (id: string) => Promise<void>
-  
-  // Aliases for compatibility
-  add: (b: Omit<Brand, 'id'>) => Promise<void>
   update: (id: string, updates: Partial<Brand>) => Promise<void>
-  remove: (id: string) => Promise<void>
+  deleteBrand: (id: string) => Promise<void>
   seed: (brands: Brand[]) => void
 }
 
-const supabase = createClient()
+const CACHE_DURATION = 5 * 60 * 1000
 
-export const useBrandsStore = create<BrandsStore>((set, get) => ({
-  brands: [],
-  isLoading: false,
-  error: null,
+export const useBrandsStore = create<BrandsStore>()(
+  persist(
+    (set, get) => ({
+      brands: [],
+      isLoading: false,
+      error: null,
+      lastUpdated: null,
 
-  fetchBrands: async () => {
-    set({ isLoading: true })
-    const { data, error } = await supabase
-      .from('brands')
-      .select('*')
-      .order('name')
-    
-    if (error) set({ error: error.message, isLoading: false })
-    else set({ brands: data || [], isLoading: false })
-  },
+      fetchBrands: async (force = false) => {
+        const { lastUpdated, brands } = get()
+        const now = Date.now()
 
-  addBrand: async (brand) => {
-    set({ isLoading: true })
-    const { data, error } = await supabase
-      .from('brands')
-      .insert([brand])
-      .select()
-      .single()
-    
-    if (error) {
-      set({ error: error.message, isLoading: false })
-      throw error
-    }
-    set(s => ({ brands: [...s.brands, data], isLoading: false }))
-  },
+        if (!force && lastUpdated && now - lastUpdated < CACHE_DURATION && brands.length > 0) {
+          return
+        }
 
-  updateBrand: async (id, updates) => {
-    set({ isLoading: true })
-    const { error } = await supabase
-      .from('brands')
-      .update(updates)
-      .eq('id', id)
-    
-    if (error) {
-      set({ error: error.message, isLoading: false })
-      throw error
-    }
-    set(s => ({
-      brands: s.brands.map(b => b.id === id ? { ...b, ...updates } : b),
-      isLoading: false
-    }))
-  },
+        set({ isLoading: true, error: null })
+        try {
+          const data = await productsApi.fetchBrands()
+          set({ brands: data || [], lastUpdated: now, isLoading: false })
+        } catch (err: any) {
+          set({ error: err.message, isLoading: false })
+        }
+      },
 
-  deleteBrand: async (id) => {
-    set({ isLoading: true })
-    const { error } = await supabase
-      .from('brands')
-      .delete()
-      .eq('id', id)
-    
-    if (error) {
-      set({ error: error.message, isLoading: false })
-      throw error
-    }
-    set(s => ({ brands: s.brands.filter(b => b.id !== id), isLoading: false }))
-  },
+      addBrand: async (brand) => {
+        set({ isLoading: true })
+        try {
+          const supabase = createClient()
+          const { data, error } = await supabase.from('brands').insert([brand]).select().single()
+          if (error) throw error
+          set(s => ({ brands: [...s.brands, data], isLoading: false }))
+        } catch (err: any) {
+          set({ error: err.message, isLoading: false })
+          throw err
+        }
+      },
 
-  add: (b) => get().addBrand(b),
-  update: (id, u) => get().updateBrand(id, u),
-  remove: (id) => get().deleteBrand(id),
-  seed: (brands) => set({ brands })
-}))
+      update: async (id, updates) => {
+        set({ isLoading: true })
+        try {
+          const supabase = createClient()
+          const { error } = await supabase.from('brands').update(updates).eq('id', id)
+          if (error) throw error
+          set(s => ({
+            brands: s.brands.map(b => b.id === id ? { ...b, ...updates } : b),
+            isLoading: false
+          }))
+        } catch (err: any) {
+          set({ error: err.message, isLoading: false })
+          throw err
+        }
+      },
+
+      deleteBrand: async (id) => {
+        set({ isLoading: true })
+        try {
+          const supabase = createClient()
+          const { error } = await supabase.from('brands').delete().eq('id', id)
+          if (error) throw error
+          set(s => ({ brands: s.brands.filter(b => b.id !== id), isLoading: false }))
+        } catch (err: any) {
+          set({ error: err.message, isLoading: false })
+          throw err
+        }
+      },
+
+      seed: (brands) => set({ brands, lastUpdated: Date.now() })
+    }),
+    { name: 'amouris_brands_cache' }
+  )
+)

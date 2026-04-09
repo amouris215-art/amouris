@@ -1,10 +1,6 @@
 'use client'
 import Link from 'next/link'
-import Image from 'next/image'
-import { motion } from 'framer-motion'
-import { useI18n } from '@/i18n/i18n-context'
-import { useTagsStore } from '@/store/tags.store'
-import { Product } from '@/store/products.store'
+import { ProductImage } from './ProductImage'
 
 interface ProductCardProps {
   product: Product
@@ -28,6 +24,12 @@ export function ProductCard({ product, index = 0, compact = false }: ProductCard
     ? product.price_per_gram
     : Math.min(...(product.variants?.map(v => v.price) || [0]))
 
+  // Color swatches for flacons
+  const colors = !isPerfume ? Array.from(new Set(product.variants?.map(v => v.color))).filter(Boolean) : []
+  const maxColors = 4
+  const visibleColors = colors.slice(0, maxColors)
+  const remainingColors = colors.length - maxColors
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 30 }}
@@ -42,21 +44,13 @@ export function ProductCard({ product, index = 0, compact = false }: ProductCard
           {/* Subtle overlay */}
           <div className="absolute inset-0 bg-emerald-950/0 group-hover:bg-emerald-950/20 transition-all duration-1000 z-10" />
           
-          {product.images?.[0] ? (
-            <Image 
-              src={product.images[0]} 
-              alt={name} 
-              fill 
-              sizes="(max-width: 768px) 50vw, 25vw"
-              className="object-cover transition-transform duration-1000 ease-out group-hover:scale-110"
-            />
-          ) : (
-            <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-emerald-50/30 to-amber-50/30">
-                <span className="text-emerald-900/5 font-serif text-8xl md:text-9xl select-none group-hover:scale-110 transition-transform duration-1000">
-                    {(product.name_fr || 'P').charAt(0)}
-                </span>
-            </div>
-          )}
+          <ProductImage 
+            images={product.images} 
+            productName={name} 
+            categoryId={product.category_id} 
+            productType={product.product_type}
+            className="w-full h-full"
+          />
           
           {/* Badge Tag */}
           {tagName && (
@@ -78,19 +72,34 @@ export function ProductCard({ product, index = 0, compact = false }: ProductCard
         {/* Content */}
         <div className="p-3 sm:p-6 flex-1 flex flex-col items-center text-center">
           <div className="space-y-0.5 sm:space-y-1 mb-3 sm:mb-6">
-            <h3 className="font-serif text-sm sm:text-xl text-emerald-950 group-hover:text-emerald-700 transition-colors duration-500 line-clamp-2">
+            <h3 className="font-serif text-sm sm:text-xl text-gray-900 group-hover:text-emerald-800 transition-colors duration-500 line-clamp-2">
               {name}
             </h3>
-            <p className="text-emerald-950/30 text-[8px] sm:text-[10px] uppercase font-black tracking-[0.1em] sm:tracking-[0.2em] rtl:font-arabic hidden sm:block" dir={language === 'ar' ? 'ltr' : 'rtl'}>
+            <p className="text-gray-500 text-[8px] sm:text-[10px] uppercase font-black tracking-[0.1em] sm:tracking-[0.2em] rtl:font-arabic hidden sm:block" dir={language === 'ar' ? 'ltr' : 'rtl'}>
               {subName}
             </p>
           </div>
+
+          {!isPerfume && colors.length > 0 && (
+            <div className="flex items-center justify-center gap-1.5 mb-4">
+              {visibleColors.map((color, i) => (
+                <div 
+                  key={i} 
+                  className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full border border-black/5" 
+                  style={{ backgroundColor: color as string }} 
+                />
+              ))}
+              {remainingColors > 0 && (
+                <span className="text-[7px] sm:text-[8px] font-black text-emerald-950/20">+{remainingColors}</span>
+              )}
+            </div>
+          )}
           
           <div className="mt-auto w-full pt-2 sm:pt-4 border-t border-emerald-50 flex items-center justify-center gap-1 sm:gap-2">
-            <span className="text-emerald-950 font-serif text-base sm:text-2xl tracking-tighter">
+            <span className="text-emerald-800 font-serif text-base sm:text-2xl tracking-tighter">
               {displayPrice?.toLocaleString()}
             </span>
-            <span className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest text-emerald-950/20">
+            <span className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest text-gray-400">
               DZD {isPerfume ? '/ G' : ''}
             </span>
           </div>

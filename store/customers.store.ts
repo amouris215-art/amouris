@@ -1,6 +1,8 @@
 'use client'
 import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
 import { createClient } from '@/lib/supabase/client'
+import { authApi } from '@/lib/api/auth.api'
 
 export interface Customer {
   id: string
@@ -10,8 +12,9 @@ export interface Customer {
   shop_name?: string
   wilaya: string
   commune?: string
-  password?: string // We'll store it in profiles for this demo/B2B context
+  password?: string
   is_frozen: boolean
+  role?: string
   created_at: string
 }
 
@@ -19,126 +22,152 @@ interface CustomersStore {
   customers: Customer[]
   isLoading: boolean
   error: string | null
-  fetchCustomers: () => Promise<void>
+  lastUpdated: number | null
+  fetchCustomers: (force?: boolean) => Promise<void>
   register: (data: any) => Promise<{ ok: boolean; customer?: Customer; error?: string }>
-  login: (phone: string, password: string) => Promise<{ ok: boolean; customer?: Customer; error?: string }>
   freeze: (id: string) => Promise<void>
   unfreeze: (id: string) => Promise<void>
   remove: (id: string) => Promise<void>
   resetPassword: (id: string, newPassword: string) => Promise<void>
+  update: (id: string, updates: Partial<Customer>) => Promise<{ ok: boolean; customer?: Customer; error?: string }>
   getById: (id: string) => Customer | undefined
 }
 
-const supabase = createClient()
+const CACHE_DURATION = 5 * 60 * 1000
 
-function normalizePhone(p: string) {
-  return p.replace(/[\s\-\.]/g, '').trim()
-}
+export const useCustomersStore = create<CustomersStore>()(
+  persist(
+    (set, get) => ({
+      customers: [],
+      isLoading: false,
+      error: null,
+      lastUpdated: null,
 
-export const useCustomersStore = create<CustomersStore>((set, get) => ({
-  customers: [],
-  isLoading: false,
-  error: null,
+      fetchCustomers: async (force = false) => {
+        const { lastUpdated, customers } = get()
+        const now = Date.now()
 
-  fetchCustomers: async () => {
-    set({ isLoading: true })
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .order('created_at', { ascending: false })
-    
-    if (error) set({ error: error.message, isLoading: false })
-    else set({ customers: data || [], isLoading: false })
-  },
+        if (!force && lastUpdated && now - lastUpdated < CACHE_DURATION && customers.length > 0) {
+          return
+        }
 
-  register: async (data) => {
-    set({ isLoading: true })
-    const phone = normalizePhone(data.phone)
-    
-    // Check if exists
-    const { data: existing } = await supabase.from('profiles').select('id').eq('phone', phone).single()
-    if (existing) {
-      set({ isLoading: false })
-      return { ok: false, error: 'Un compte avec ce numéro existe déjà' }
+        set({ isLoading: true, error: null })
+        try {
+          const supabase = createClient()
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('role', 'customer')
+            .order('created_at', { ascending: false })
+          
+          if (error) throw error
+          set({ customers: data || [], lastUpdated: now, isLoading: false })
+        } catch (err: any) {
+          set({ error: err.message, isLoading: false })
+        }
+      },
+
+      register: async (data) => {
+        set({ isLoading: true, error: null })
+        try {
+          const user = await authApi.registerCustomer(data)
+          // Fetch the newly created profile
+          const supabase = createClient()
+          const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', user.id)
+            .single()
+
+          if (error) throw error
+
+          set(s => ({ 
+            customers: [profile as Customer, ...s.customers], 
+            isLoading: false 
+          }))
+          return { ok: true, customer: profile as Customer }
+        } catch (err: any) {
+          set({ error: err.message, isLoading: false })
+          return { ok: false, error: err.message }
+        }
+      },
+
+      freeze: async (id) => {
+        set({ isLoading: true })
+        const supabase = createClient()
+        const { error } = await supabase.from('profiles').update({ is_frozen: true }).eq('id', id)
+        if (error) {
+          set({ error: error.message, isLoading: false })
+          return
+        }
+        set(s => ({
+          customers: s.customers.map(c => c.id === id ? { ...c, is_frozen: true } : c),
+          isLoading: false
+        }))
+      },
+
+      unfreeze: async (id) => {
+        set({ isLoading: true })
+        const supabase = createClient()
+        const { error } = await supabase.from('profiles').update({ is_frozen: false }).eq('id', id)
+        if (error) {
+          set({ error: error.message, isLoading: false })
+          return
+        }
+        set(s => ({
+          customers: s.customers.map(c => c.id === id ? { ...c, is_frozen: false } : c),
+          isLoading: false
+        }))
+      },
+
+      remove: async (id) => {
+        set({ isLoading: true })
+        const supabase = createClient()
+        const { error } = await supabase.from('profiles').delete().eq('id', id)
+        if (error) {
+          set({ error: error.message, isLoading: false })
+          return
+        }
+        set(s => ({ customers: s.customers.filter(c => c.id !== id), isLoading: false }))
+      },
+
+      resetPassword: async (id, pwd) => {
+        // Note: Resetting password for Supabase Auth users should be done via Auth API
+        // For this B2B context, we can use the service role client if needed, 
+        // but for now we'll just log an error or implement a placeholder.
+        console.warn('Reset password not implemented with Supabase Auth yet')
+      },
+
+      update: async (id, updates) => {
+        set({ isLoading: true, error: null })
+        try {
+          const supabase = createClient()
+          const { data, error } = await supabase
+            .from('profiles')
+            .update(updates)
+            .eq('id', id)
+            .select()
+            .single()
+
+          if (error) throw error
+
+          set(s => ({
+            customers: s.customers.map(c => c.id === id ? { ...c, ...data } : c),
+            isLoading: false
+          }))
+          
+          return { ok: true, customer: data as Customer }
+        } catch (err: any) {
+          console.error('Error updating customer:', err)
+          set({ error: err.message, isLoading: false })
+          return { ok: false, error: err.message }
+        }
+      },
+
+      getById: (id) => get().customers.find(c => c.id === id),
+    }),
+    {
+      name: 'amouris_customers_cache',
     }
-
-    const customerData = {
-      first_name: data.first_name,
-      last_name: data.last_name,
-      phone,
-      shop_name: data.shop_name,
-      wilaya: data.wilaya,
-      commune: data.commune,
-      // In a real app, we'd use Supabase Auth. 
-      // For this "pure store" approach, we store it in profiles if needed or just handle it here.
-      // We'll follow the user's lead from the previous persistent store.
-      // Note: This requires a 'password' or 'password_hash' column in 'profiles'.
-      password: data.password, 
-      is_frozen: false,
-    }
-
-    const { data: newCust, error } = await supabase
-      .from('profiles')
-      .insert([customerData])
-      .select()
-      .single()
-
-    if (error) {
-      set({ error: error.message, isLoading: false })
-      return { ok: false, error: error.message }
-    }
-
-    set(s => ({ customers: [newCust, ...s.customers], isLoading: false }))
-    return { ok: true, customer: newCust }
-  },
-
-  login: async (phone, password) => {
-    const p = normalizePhone(phone)
-    const { data: found, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('phone', p)
-      .eq('password', password)
-      .single()
-    
-    if (error || !found) return { ok: false, error: 'Numéro ou mot de passe incorrect' }
-    if (found.is_frozen) return { ok: false, error: 'Ce compte est suspendu' }
-    
-    return { ok: true, customer: found }
-  },
-
-  freeze: async (id) => {
-    set({ isLoading: true })
-    await supabase.from('profiles').update({ is_frozen: true }).eq('id', id)
-    set(s => ({
-      customers: s.customers.map(c => c.id === id ? { ...c, is_frozen: true } : c),
-      isLoading: false
-    }))
-  },
-
-  unfreeze: async (id) => {
-    set({ isLoading: true })
-    await supabase.from('profiles').update({ is_frozen: false }).eq('id', id)
-    set(s => ({
-      customers: s.customers.map(c => c.id === id ? { ...c, is_frozen: false } : c),
-      isLoading: false
-    }))
-  },
-
-  remove: async (id) => {
-    set({ isLoading: true })
-    await supabase.from('profiles').delete().eq('id', id)
-    set(s => ({ customers: s.customers.filter(c => c.id !== id), isLoading: false }))
-  },
-
-  resetPassword: async (id, pwd) => {
-    set({ isLoading: true })
-    await supabase.from('profiles').update({ password: pwd }).eq('id', id)
-    set(s => ({
-      customers: s.customers.map(c => c.id === id ? { ...c, password: pwd } : c),
-      isLoading: false
-    }))
-  },
-
-  getById: (id) => get().customers.find(c => c.id === id),
-}))
+  )
+)

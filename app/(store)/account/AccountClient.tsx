@@ -56,10 +56,10 @@ export default function AccountClient() {
     <div className="space-y-12">
       {/* Greeting */}
       <header>
-        <h1 className="font-serif text-4xl md:text-5xl text-emerald-950 mb-2">
+        <h1 className="font-serif text-4xl md:text-5xl text-gray-900 mb-2">
           {isAr ? `مرحباً بك، ${customer.first_name}` : `Bonjour, ${customer.first_name}`}
         </h1>
-        <p className="text-emerald-950/40 font-medium flex items-center gap-2">
+        <p className="text-gray-500 font-medium flex items-center gap-2">
           {customer.shop_name}
           <span className="w-1.5 h-1.5 bg-emerald-300 rounded-full" />
           {isAr ? 'عضو بريميوم' : 'Membre Premium B2B'}
@@ -81,8 +81,8 @@ export default function AccountClient() {
               <div className={`w-12 h-12 ${stat.color} rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform`}>
                 <Icon size={24} />
               </div>
-              <p className="text-[10px] font-black uppercase tracking-widest text-emerald-950/30 mb-2">{stat.label}</p>
-              <p className="font-serif text-2xl text-emerald-950 capitalize">{stat.value}</p>
+              <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">{stat.label}</p>
+              <p className="font-serif text-2xl text-gray-900 capitalize">{stat.value}</p>
             </motion.div>
           );
         })}
@@ -91,7 +91,7 @@ export default function AccountClient() {
       {/* Recent Orders */}
       <section className="space-y-6">
         <div className="flex items-center justify-between px-2">
-          <h2 className="font-serif text-2xl text-emerald-950">{isAr ? 'أحدث الطلبات' : 'Dernières commandes'}</h2>
+          <h2 className="font-serif text-2xl text-gray-900">{isAr ? 'أحدث الطلبات' : 'Dernières commandes'}</h2>
           <Link href="/account/orders" className="text-[10px] font-black uppercase tracking-widest text-[#C9A84C] hover:text-[#b09340] transition-colors flex items-center gap-2">
             {isAr ? 'عرض الكل' : 'Voir tout'}
             <ChevronRight size={14} />
@@ -102,7 +102,7 @@ export default function AccountClient() {
           {recentOrders.length === 0 ? (
             <div className="bg-white p-12 rounded-[3rem] text-center border border-emerald-950/5">
               <ShoppingBag className="mx-auto text-emerald-100 mb-4" size={48} />
-              <p className="text-emerald-950/40">{isAr ? 'لا توجد طلبات بعد' : 'Aucune commande pour le moment'}</p>
+              <p className="text-gray-500">{isAr ? 'لا توجد طلبات بعد' : 'Aucune commande pour le moment'}</p>
             </div>
           ) : (
             recentOrders.map((order, idx) => (
@@ -119,7 +119,7 @@ export default function AccountClient() {
                   </div>
                   <div>
                     <p className="text-[10px] font-black uppercase tracking-widest text-[#C9A84C] mb-0.5">{order.order_number}</p>
-                    <p className="font-serif text-lg text-emerald-950">
+                    <p className="font-serif text-lg text-gray-900">
                       {new Date(order.created_at).toLocaleDateString(isAr ? 'ar-DZ' : 'fr-FR', { day: 'numeric', month: 'long' })}
                     </p>
                   </div>
@@ -127,8 +127,8 @@ export default function AccountClient() {
 
                 <div className="flex items-center gap-8">
                   <div className="text-right">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-emerald-950/20 mb-0.5">{isAr ? 'المجموع' : 'Total'}</p>
-                    <p className="font-bold text-emerald-950">{order.total_amount.toLocaleString()} <span className="text-[10px] opacity-40">DZD</span></p>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-0.5">{isAr ? 'المجموع' : 'Total'}</p>
+                    <p className="font-bold text-gray-900">{order.total_amount.toLocaleString()} <span className="text-[10px] opacity-40">DZD</span></p>
                   </div>
                   <div className={`px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-widest flex items-center gap-2 ${
                     order.order_status === 'delivered' ? 'bg-emerald-50 text-emerald-600' : 

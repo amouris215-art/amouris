@@ -22,6 +22,7 @@ import {
   X 
 } from 'lucide-react';
 import { ProductModal } from '@/components/admin/ProductModal';
+import { ProductImage } from '@/components/store/ProductImage';
 
 export default function AdminProductsPage() {
   const { products, fetchProducts, deleteProduct, updateProduct } = useProductsStore();
@@ -85,7 +86,7 @@ export default function AdminProductsPage() {
     <div className="space-y-12 pb-20">
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-8">
         <div>
-           <h1 className="font-serif text-4xl text-emerald-950 mb-2">Catalogue Maître</h1>
+           <h1 className="font-serif text-4xl text-gray-900 mb-2">Catalogue Maître</h1>
            <p className="text-[10px] font-black uppercase tracking-[0.4em] text-[#C9A84C]">Gestion de l&apos;inventaire Amouris</p>
         </div>
         <button 
@@ -100,7 +101,7 @@ export default function AdminProductsPage() {
       <section className="space-y-6">
         <div className="flex flex-col md:flex-row gap-6">
           <div className="relative flex-1 group">
-             <Search size={18} className="absolute left-6 top-1/2 -translate-y-1/2 text-emerald-950/20 group-focus-within:text-[#C9A84C] transition-colors" />
+             <Search size={18} className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#C9A84C] transition-colors" />
              <input 
                type="text"
                placeholder="Rechercher par nom (FR/AR)..."
@@ -111,7 +112,7 @@ export default function AdminProductsPage() {
           </div>
           <button 
             onClick={() => setShowFilters(!showFilters)}
-            className={`h-16 px-8 rounded-2xl border flex items-center gap-3 text-[10px] font-black uppercase tracking-widest transition-all ${showFilters ? 'bg-emerald-50 border-emerald-200 text-emerald-900' : 'bg-white border-emerald-950/5 text-emerald-950/40 hover:text-emerald-950'}`}
+            className={`h-16 px-8 rounded-2xl border flex items-center gap-3 text-[10px] font-black uppercase tracking-widest transition-all ${showFilters ? 'bg-emerald-50 border-emerald-200 text-emerald-900' : 'bg-white border-emerald-950/5 text-gray-500 hover:text-emerald-950'}`}
           >
             <Filter size={16} /> {showFilters ? 'Fermer Filtres' : 'Filtres Avancés'}
           </button>
@@ -167,12 +168,12 @@ export default function AdminProductsPage() {
           <table className="w-full border-collapse">
             <thead>
               <tr className="border-b border-emerald-950/5 bg-neutral-50/50">
-                <th className="px-10 py-6 text-left text-[9px] font-black uppercase tracking-[0.3em] text-emerald-950/30">Réf / Visuel</th>
-                <th className="px-10 py-6 text-left text-[9px] font-black uppercase tracking-[0.3em] text-emerald-950/30">Classification</th>
-                <th className="px-10 py-6 text-left text-[9px] font-black uppercase tracking-[0.3em] text-emerald-950/30">Inventaire</th>
-                <th className="px-10 py-6 text-left text-[9px] font-black uppercase tracking-[0.3em] text-emerald-950/30">Prix</th>
-                <th className="px-10 py-6 text-left text-[9px] font-black uppercase tracking-[0.3em] text-emerald-950/30">Statut</th>
-                <th className="px-10 py-6 text-right text-[9px] font-black uppercase tracking-[0.3em] text-emerald-950/30">Contrôles</th>
+                <th className="px-10 py-6 text-left text-[9px] font-black uppercase tracking-[0.3em] text-gray-500">Réf / Visuel</th>
+                <th className="px-10 py-6 text-left text-[9px] font-black uppercase tracking-[0.3em] text-gray-500">Classification</th>
+                <th className="px-10 py-6 text-left text-[9px] font-black uppercase tracking-[0.3em] text-gray-500">Inventaire</th>
+                <th className="px-10 py-6 text-left text-[9px] font-black uppercase tracking-[0.3em] text-gray-500">Prix</th>
+                <th className="px-10 py-6 text-left text-[9px] font-black uppercase tracking-[0.3em] text-gray-500">Statut</th>
+                <th className="px-10 py-6 text-right text-[9px] font-black uppercase tracking-[0.3em] text-gray-500">Contrôles</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-emerald-950/5">
@@ -194,10 +195,16 @@ export default function AdminProductsPage() {
                       <td className="px-10 py-6">
                         <div className="flex items-center gap-6">
                           <div className="w-16 h-16 bg-neutral-100 rounded-2xl flex items-center justify-center text-emerald-950/20 group-hover:bg-emerald-50 group-hover:text-[#0a3d2e] transition-all overflow-hidden border border-emerald-950/5 shadow-inner">
-                             {product.images?.[0] ? <img src={product.images[0]} className="w-full h-full object-cover" /> : <Package size={24} />}
+                             <ProductImage 
+                               images={product.images} 
+                               productName={product.name_fr} 
+                               categoryId={product.category_id} 
+                               productType={product.product_type}
+                               className="w-full h-full"
+                             />
                           </div>
                           <div>
-                            <p className="font-serif text-xl text-emerald-950 mb-0.5">{product.name_fr}</p>
+                            <p className="font-serif text-xl text-gray-900 mb-0.5">{product.name_fr}</p>
                             <p className="text-[10px] uppercase font-black tracking-widest text-[#C9A84C]/60 italic">/{product.slug}</p>
                           </div>
                         </div>
@@ -208,7 +215,7 @@ export default function AdminProductsPage() {
                              {isPerfume ? <Droplets size={10} /> : <Box size={10} />}
                              {isPerfume ? 'Huile' : 'Flacon'}
                            </span>
-                           <p className="text-[10px] font-bold text-emerald-950/40 uppercase tracking-widest">{cat?.name_fr || 'Sans catégorie'} / {brand?.name_fr || 'Sans marque'}</p>
+                           <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">{cat?.name_fr || 'Sans catégorie'} / {brand?.name_fr || 'Sans marque'}</p>
                         </div>
                       </td>
                       <td className="px-10 py-6 font-mono">
