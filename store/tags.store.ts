@@ -1,7 +1,7 @@
 'use client'
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { createClient } from '@/lib/supabase/client'
+import { fetchTags, tagApi } from '@/lib/api/catalogue'
 
 export interface Tag {
   id: string
@@ -11,8 +11,6 @@ export interface Tag {
   show_on_homepage: boolean
   homepage_order: number
 }
-
-import { productsApi } from '@/lib/api/products.api'
 
 interface TagsStore {
   tags: Tag[]
@@ -47,7 +45,7 @@ export const useTagsStore = create<TagsStore>()(
 
         set({ isLoading: true, error: null })
         try {
-          const data = await productsApi.fetchTags()
+          const data = await fetchTags()
           set({ tags: data || [], lastUpdated: now, isLoading: false })
         } catch (err: any) {
           set({ error: err.message, isLoading: false })
@@ -57,14 +55,7 @@ export const useTagsStore = create<TagsStore>()(
       addTag: async (tag) => {
         set({ isLoading: true })
         try {
-          const supabase = createClient()
-          const { data, error } = await supabase
-            .from('tags')
-            .insert([tag])
-            .select()
-            .single()
-          
-          if (error) throw error
+          const data = await tagApi.create(tag)
           set(s => ({ tags: [...s.tags, data], isLoading: false }))
         } catch (err: any) {
           set({ error: err.message, isLoading: false })
@@ -75,15 +66,9 @@ export const useTagsStore = create<TagsStore>()(
       update: async (id, updates) => {
         set({ isLoading: true })
         try {
-          const supabase = createClient()
-          const { error } = await supabase
-            .from('tags')
-            .update(updates)
-            .eq('id', id)
-          
-          if (error) throw error
+          const data = await tagApi.update(id, updates)
           set(s => ({
-            tags: s.tags.map(t => t.id === id ? { ...t, ...updates } : t),
+            tags: s.tags.map(t => t.id === id ? { ...t, ...data } : t),
             isLoading: false
           }))
         } catch (err: any) {
@@ -95,13 +80,7 @@ export const useTagsStore = create<TagsStore>()(
       deleteTag: async (id) => {
         set({ isLoading: true })
         try {
-          const supabase = createClient()
-          const { error } = await supabase
-            .from('tags')
-            .delete()
-            .eq('id', id)
-          
-          if (error) throw error
+          await tagApi.remove(id)
           set(s => ({ tags: s.tags.filter(t => t.id !== id), isLoading: false }))
         } catch (err: any) {
           set({ error: err.message, isLoading: false })

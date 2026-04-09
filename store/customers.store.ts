@@ -1,8 +1,8 @@
 'use client'
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { createClient } from '@/lib/supabase/client'
-import { authApi } from '@/lib/api/auth.api'
+import { fetchAllCustomers, freezeCustomer, deleteCustomer, resetCustomerPassword } from '@/lib/api/customers'
+import { registerCustomer } from '@/lib/api/auth'
 
 export interface Customer {
   id: string
@@ -17,6 +17,8 @@ export interface Customer {
   is_frozen: boolean
   status: 'active' | 'frozen' // alias for UI
   role?: string
+  order_count?: number
+  total_spent?: number
   created_at: string
 }
 
@@ -56,14 +58,7 @@ export const useCustomersStore = create<CustomersStore>()(
 
         set({ isLoading: true, error: null })
         try {
-          const supabase = createClient()
-          const { data, error } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('role', 'customer')
-            .order('created_at', { ascending: false })
-          
-          if (error) throw error
+          const data = await fetchAllCustomers()
           
           const transformed = (data || []).map(c => ({
             ...c,
@@ -80,22 +75,14 @@ export const useCustomersStore = create<CustomersStore>()(
       register: async (data) => {
         set({ isLoading: true, error: null })
         try {
-          const user = await authApi.registerCustomer(data)
-          // Fetch the newly created profile
-          const supabase = createClient()
-          const { data: profile, error } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', user.id)
-            .single()
+          const { ok, user, error } = await registerCustomer(data)
+          if (!ok) throw new Error(error)
 
-          if (error) throw error
-
-          set(s => ({ 
-            customers: [profile as Customer, ...s.customers], 
-            isLoading: false 
-          }))
-          return { ok: true, customer: profile as Customer }
+          // Fetch customers again to get the new profile and stats
+          await get().fetchCustomers(true)
+          
+          const customer = get().customers.find(c => c.id === user?.id)
+          return { ok: true, customer }
         } catch (err: any) {
           set({ error: err.message, isLoading: false })
           return { ok: false, error: err.message }
@@ -104,30 +91,28 @@ export const useCustomersStore = create<CustomersStore>()(
 
       freeze: async (id) => {
         set({ isLoading: true })
-        const supabase = createClient()
-        const { error } = await supabase.from('profiles').update({ is_frozen: true }).eq('id', id)
-        if (error) {
-          set({ error: error.message, isLoading: false })
-          return
+        try {
+          await freezeCustomer(id, true)
+          set(s => ({
+            customers: s.customers.map(c => c.id === id ? { ...c, is_frozen: true, status: 'frozen' } : c),
+            isLoading: false
+          }))
+        } catch (err: any) {
+          set({ error: err.message, isLoading: false })
         }
-        set(s => ({
-          customers: s.customers.map(c => c.id === id ? { ...c, is_frozen: true, status: 'frozen' } : c),
-          isLoading: false
-        }))
       },
 
       unfreeze: async (id) => {
         set({ isLoading: true })
-        const supabase = createClient()
-        const { error } = await supabase.from('profiles').update({ is_frozen: false }).eq('id', id)
-        if (error) {
-          set({ error: error.message, isLoading: false })
-          return
+        try {
+          await freezeCustomer(id, false)
+          set(s => ({
+            customers: s.customers.map(c => c.id === id ? { ...c, is_frozen: false, status: 'active' } : c),
+            isLoading: false
+          }))
+        } catch (err: any) {
+          set({ error: err.message, isLoading: false })
         }
-        set(s => ({
-          customers: s.customers.map(c => c.id === id ? { ...c, is_frozen: false, status: 'active' } : c),
-          isLoading: false
-        }))
       },
 
       toggleFreeze: async (id) => {
@@ -142,27 +127,32 @@ export const useCustomersStore = create<CustomersStore>()(
 
       remove: async (id) => {
         set({ isLoading: true })
-        const supabase = createClient()
-        const { error } = await supabase.from('profiles').delete().eq('id', id)
-        if (error) {
-          set({ error: error.message, isLoading: false })
-          return
+        try {
+          await deleteCustomer(id)
+          set(s => ({ customers: s.customers.filter(c => c.id !== id), isLoading: false }))
+        } catch (err: any) {
+          set({ error: err.message, isLoading: false })
         }
-        set(s => ({ customers: s.customers.filter(c => c.id !== id), isLoading: false }))
       },
 
       resetPassword: async (id, pwd) => {
-        // Note: Resetting password for Supabase Auth users should be done via Auth API
-        // For this B2B context, we can use the service role client if needed, 
-        // but for now we'll just log an error or implement a placeholder.
-        console.warn('Reset password not implemented with Supabase Auth yet')
+        set({ isLoading: true })
+        try {
+          await resetCustomerPassword(id, pwd)
+          set({ isLoading: false })
+        } catch (err: any) {
+          set({ error: err.message, isLoading: false })
+        }
       },
 
       update: async (id, updates) => {
         set({ isLoading: true, error: null })
         try {
-          const supabase = createClient()
-          const { data, error } = await supabase
+          // Note: profile updates should be done via a profile API in customers.ts if needed
+          // For now, using admin client to update profile
+          const { createAdminClient } = await import('@/lib/supabase/admin')
+          const admin = createAdminClient()
+          const { data, error } = await admin
             .from('profiles')
             .update(updates)
             .eq('id', id)
@@ -171,14 +161,19 @@ export const useCustomersStore = create<CustomersStore>()(
 
           if (error) throw error
 
+          const updated = {
+            ...data,
+            phone_number: data.phone,
+            status: data.is_frozen ? 'frozen' : 'active'
+          }
+
           set(s => ({
-            customers: s.customers.map(c => c.id === id ? { ...c, ...data } : c),
+            customers: s.customers.map(c => c.id === id ? { ...c, ...updated } : c),
             isLoading: false
           }))
           
-          return { ok: true, customer: data as Customer }
+          return { ok: true, customer: updated as Customer }
         } catch (err: any) {
-          console.error('Error updating customer:', err)
           set({ error: err.message, isLoading: false })
           return { ok: false, error: err.message }
         }

@@ -115,21 +115,36 @@ export function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
 
     setIsUploading(true);
     const newImages = [...(formData.images || [])];
+    const supabase = createClient();
 
     for (let i = 0; i < files.length; i++) {
       if (newImages.length >= 3) break;
       const file = files[i];
       
-      if (file.size > 2 * 1024 * 1024) {
-        alert(`L'image ${file.name} est trop lourde. Réduire à moins de 2MB.`);
+      if (file.size > 5 * 1024 * 1024) {
+        alert(`L'image ${file.name} est trop lourde. Réduire à moins de 5MB.`);
         continue;
       }
 
       try {
-        const base64 = await fileToBase64(file);
-        newImages.push(base64);
-      } catch (err) {
-        console.error('Error converting image:', err);
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+        const filePath = product ? `${product.id}/${fileName}` : `temp/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('products')
+          .upload(filePath, file);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('products')
+          .getPublicUrl(filePath);
+
+        newImages.push(publicUrl);
+      } catch (err: any) {
+        console.error('Error uploading image:', err);
+        alert(`Erreur d'upload: ${err.message}`);
       }
     }
 

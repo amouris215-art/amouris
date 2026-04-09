@@ -1,9 +1,7 @@
 'use client'
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { createClient } from '@/lib/supabase/client'
-import { productsApi } from '@/lib/api/products.api'
-
+import { fetchAllProducts, createProduct, updateProduct, deleteProduct, updateStockGrams as apiUpdateStockGrams, updateVariantStock as apiUpdateVariantStock } from '@/lib/api/products'
 
 export interface FlaconVariant {
   id: string
@@ -56,6 +54,11 @@ interface ProductsStore {
 
 const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes
 
+const mapProductFromDb = (p: any): Product => ({
+  ...p,
+  tag_ids: p.tags?.map((t: any) => t.tag_id) || []
+})
+
 export const useProductsStore = create<ProductsStore>()(
   persist(
     (set, get) => ({
@@ -74,8 +77,9 @@ export const useProductsStore = create<ProductsStore>()(
 
         set({ isLoading: true, error: null })
         try {
-          const fetchedProducts = await productsApi.fetchProducts()
-          set({ products: fetchedProducts, lastUpdated: now, isLoading: false })
+          const fetchedProducts = await fetchAllProducts({ status: 'admin' }) // Fetch all for admin/store sync
+          const mapped = fetchedProducts.map(mapProductFromDb)
+          set({ products: mapped, lastUpdated: now, isLoading: false })
         } catch (err: any) {
           set({ error: err.message, isLoading: false })
         }
@@ -84,9 +88,8 @@ export const useProductsStore = create<ProductsStore>()(
       addProduct: async (data) => {
         set({ isLoading: true, error: null })
         try {
-          const newProduct = await productsApi.createProduct(data)
-          // Transform for UI if needed
-          const product = { ...newProduct, tag_ids: data.tag_ids || [] } as Product
+          const newProduct = await createProduct(data)
+          const product = mapProductFromDb(newProduct)
           set((s) => ({ 
             products: [product, ...s.products],
             isLoading: false 
@@ -101,7 +104,7 @@ export const useProductsStore = create<ProductsStore>()(
       updateProduct: async (id, updates) => {
         set({ isLoading: true, error: null })
         try {
-          const updatedProduct = await productsApi.updateProduct(id, updates)
+          await updateProduct(id, updates)
           set((s) => ({
             products: s.products.map((p) => (p.id === id ? { ...p, ...updates } : p)),
             isLoading: false
@@ -115,7 +118,7 @@ export const useProductsStore = create<ProductsStore>()(
       deleteProduct: async (id) => {
         set({ isLoading: true, error: null })
         try {
-          await productsApi.deleteProduct(id)
+          await deleteProduct(id)
           set((s) => ({
             products: s.products.filter((p) => p.id !== id),
             isLoading: false
@@ -128,7 +131,7 @@ export const useProductsStore = create<ProductsStore>()(
 
       updateStockGrams: async (id, delta) => {
         try {
-          await productsApi.updateStock(id, delta)
+          await apiUpdateStockGrams(id, delta)
           set((s) => ({
             products: s.products.map((p) =>
               p.id === id ? { ...p, stock_grams: Math.max(0, (p.stock_grams || 0) + delta) } : p
@@ -141,7 +144,7 @@ export const useProductsStore = create<ProductsStore>()(
 
       updateVariantStock: async (productId, variantId, delta) => {
         try {
-          await productsApi.updateStock(productId, delta, variantId)
+          await apiUpdateVariantStock(variantId, delta)
           set((s) => ({
             products: s.products.map((p) =>
               p.id === productId

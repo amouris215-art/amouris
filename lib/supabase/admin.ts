@@ -1,31 +1,21 @@
-import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
+import { createClient } from '@supabase/supabase-js';
 
-// Admin client using Service Role key. Bypasses RLS.
-// USE WITH EXTREME CAUTION. NEVER EXPOSE TO CLIENT.
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+/**
+ * Admin client for server-side operations that need to bypass RLS.
+ * NEVER import this file in 'use client' components.
+ */
 export const createAdminClient = () => {
-  const cookieStore = cookies();
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://placeholder-url.supabase.co";
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "placeholder-key";
+  if (!supabaseUrl || !serviceKey) {
+    throw new Error('Missing Supabase environment variables for admin client');
+  }
 
-  return createServerClient(
-    supabaseUrl,
-    serviceKey,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll();
-        },
-        setAll(cookiesToSet) {
-          try {
-            cookiesToSet.forEach(({ name, value, options }) => {
-              cookieStore.set(name, value, options);
-            });
-          } catch {
-            // Ignore in Server Components
-          }
-        },
-      },
+  return createClient(supabaseUrl, serviceKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
     }
-  );
+  });
 };

@@ -1,9 +1,7 @@
 'use client'
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { createClient } from '@/lib/supabase/client'
-import { ordersApi } from '@/lib/api/orders.api'
-import { useProductsStore } from './products.store'
+import { fetchAllOrders, createOrder as apiCreateOrder, updateOrderStatus, updateOrderPayment as apiUpdateOrderPayment, updateOrderNotes, generateInvoice as apiGenerateInvoice } from '@/lib/api/orders'
 import { useSettingsStore } from './settings.store'
 
 export type OrderStatus = 'pending' | 'confirmed' | 'preparing' | 'shipped' | 'delivered' | 'cancelled'
@@ -115,8 +113,16 @@ export const useOrdersStore = create<OrdersStore>()(
 
         set({ isLoading: true, error: null })
         try {
-          const fetchedOrders = await ordersApi.fetchAllOrders()
-          set({ orders: fetchedOrders, lastUpdated: now, isLoading: false })
+          const fetchedOrders = await fetchAllOrders()
+          // Map historical data if needed, assuming API returns it in correct format
+          set({ 
+            orders: fetchedOrders.map((o: any) => ({
+              ...o,
+              status_history: o.history || []
+            })), 
+            lastUpdated: now, 
+            isLoading: false 
+          })
         } catch (err: any) {
           set({ error: err.message, isLoading: false })
         }
@@ -125,7 +131,7 @@ export const useOrdersStore = create<OrdersStore>()(
       createOrder: async (data) => {
         set({ isLoading: true, error: null })
         try {
-          const newOrder = await ordersApi.createOrder(data)
+          const newOrder = await apiCreateOrder(data)
           set((state) => ({ 
             orders: [newOrder, ...state.orders],
             isLoading: false
@@ -139,7 +145,7 @@ export const useOrdersStore = create<OrdersStore>()(
 
       updateStatus: async (id, status, note) => {
         try {
-          await ordersApi.updateOrderStatus(id, status, note)
+          await updateOrderStatus(id, status)
           set((state) => ({
             orders: state.orders.map((o) =>
               o.id === id
@@ -162,7 +168,7 @@ export const useOrdersStore = create<OrdersStore>()(
 
       updatePayment: async (id, amountPaid) => {
         try {
-          await ordersApi.updateOrderPayment(id, amountPaid)
+          await apiUpdateOrderPayment(id, amountPaid)
           set((state) => ({
             orders: state.orders.map((o) => {
               if (o.id !== id) return o
@@ -183,7 +189,7 @@ export const useOrdersStore = create<OrdersStore>()(
 
       updateNotes: async (id, notes) => {
         try {
-          await ordersApi.updateAdminNotes(id, notes)
+          await updateOrderNotes(id, notes)
           set((state) => ({
             orders: state.orders.map((o) =>
               o.id === id ? { ...o, admin_notes: notes, updated_at: new Date().toISOString() } : o
@@ -199,14 +205,13 @@ export const useOrdersStore = create<OrdersStore>()(
         if (!order) return
 
         const settings = useSettingsStore.getState()
-        const invoice_number = `FAC-${Math.floor(Math.random() * 900000) + 100000}`
-
+        
         const invoice_data: InvoiceData = {
-          invoice_number,
+          invoice_number: '', // Will be updated from API
           generated_at: new Date().toISOString(),
-          shop_name: settings.shopName || 'AMOURIS PARFUMS',
+          shop_name: settings.storeNameFR || 'AMOURIS PARFUMS',
           shop_address: settings.address || 'Alger, Algérie',
-          shop_phone: settings.phoneNumber || '',
+          shop_phone: settings.phone || '',
           shop_email: settings.email || '',
           order_number: order.order_number,
           order_date: new Date(order.created_at).toLocaleDateString(),
@@ -230,7 +235,9 @@ export const useOrdersStore = create<OrdersStore>()(
         }
 
         try {
-          await ordersApi.generateInvoice(id, invoice_data)
+          const invoiceNumber = await apiGenerateInvoice(id, invoice_data)
+          invoice_data.invoice_number = invoiceNumber
+          
           set((state) => ({
             orders: state.orders.map((o) =>
               o.id === id ? { ...o, invoice_data: invoice_data, invoice_generated: true, updated_at: new Date().toISOString() } : o

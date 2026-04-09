@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 };
 
 import { DynamicHtmlAttributes } from '@/components/store/DynamicHtmlAttributes';
-import { StoreInitializer } from '@/components/StoreInitializer';
+import AppProvider from '@/components/AppProvider';
 
 export default function RootLayout({
   children,
@@ -24,9 +24,10 @@ export default function RootLayout({
     <html lang="fr" dir="ltr" suppressHydrationWarning className="scroll-smooth">
       <body className={`${inter.variable} ${playfair.variable} font-sans antialiased text-foreground bg-background selection:bg-amber-100 selection:text-emerald-950`}>
         <I18nProvider>
-          <StoreInitializer />
-          <DynamicHtmlAttributes />
-          {children}
+          <AppProvider>
+            <DynamicHtmlAttributes />
+            {children}
+          </AppProvider>
           <Toaster 
             position="top-center" 
             richColors 

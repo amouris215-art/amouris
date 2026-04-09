@@ -2,7 +2,7 @@
 
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { createClient } from '@/lib/supabase/client'
+import { fetchSettings, updateSettings } from '@/lib/api/settings'
 
 export interface StoreSettings {
   storeNameFR: string
@@ -26,43 +26,6 @@ interface SettingsStore extends StoreSettings {
   error: string | null
   fetchSettings: () => Promise<void>
   updateSettings: (updates: Partial<StoreSettings>) => Promise<void>
-}
-
-// Map database column names to store field names
-const mapToStore = (db: any): StoreSettings => ({
-  storeNameFR: db.store_name_fr,
-  storeNameAR: db.store_name_ar,
-  sloganFR: db.slogan_fr,
-  sloganAR: db.slogan_ar,
-  email: db.email,
-  phone: db.phone,
-  address: db.address,
-  wilaya: db.wilaya,
-  instagram: db.instagram,
-  facebook: db.facebook,
-  freeDeliveryThreshold: Number(db.free_delivery_threshold),
-  alertStockPerfume: Number(db.alert_stock_perfume),
-  alertStockFlacon: Number(db.alert_stock_flacon),
-  minOrderAmount: Number(db.min_order_amount),
-})
-
-const mapToDb = (store: Partial<StoreSettings>) => {
-  const mapping: any = {}
-  if (store.storeNameFR !== undefined) mapping.store_name_fr = store.storeNameFR
-  if (store.storeNameAR !== undefined) mapping.store_name_ar = store.storeNameAR
-  if (store.sloganFR !== undefined) mapping.slogan_fr = store.sloganFR
-  if (store.sloganAR !== undefined) mapping.slogan_ar = store.sloganAR
-  if (store.email !== undefined) mapping.email = store.email
-  if (store.phone !== undefined) mapping.phone = store.phone
-  if (store.address !== undefined) mapping.address = store.address
-  if (store.wilaya !== undefined) mapping.wilaya = store.wilaya
-  if (store.instagram !== undefined) mapping.instagram = store.instagram
-  if (store.facebook !== undefined) mapping.facebook = store.facebook
-  if (store.freeDeliveryThreshold !== undefined) mapping.free_delivery_threshold = store.freeDeliveryThreshold
-  if (store.alertStockPerfume !== undefined) mapping.alert_stock_perfume = store.alertStockPerfume
-  if (store.alertStockFlacon !== undefined) mapping.alert_stock_flacon = store.alertStockFlacon
-  if (store.minOrderAmount !== undefined) mapping.min_order_amount = store.minOrderAmount
-  return mapping
 }
 
 export const useSettingsStore = create<SettingsStore>()(
@@ -89,16 +52,8 @@ export const useSettingsStore = create<SettingsStore>()(
       fetchSettings: async () => {
         set({ isLoading: true, error: null })
         try {
-          const supabase = createClient()
-          const { data, error } = await supabase
-            .from('settings')
-            .select('value')
-            .eq('key', 'shop')
-            .single()
-
-          if (error) throw error
-          if (data && data.value) {
-            const val = data.value
+          const val = await fetchSettings()
+          if (val) {
             set({
               storeNameFR: val.name_fr || val.store_name_fr,
               storeNameAR: val.name_ar || val.store_name_ar,
@@ -116,6 +71,8 @@ export const useSettingsStore = create<SettingsStore>()(
               minOrderAmount: val.min_order_amount || 0,
               isLoading: false
             })
+          } else {
+            set({ isLoading: false })
           }
         } catch (err: any) {
           console.error('Error fetching settings:', err)
@@ -125,41 +82,35 @@ export const useSettingsStore = create<SettingsStore>()(
       
       updateSettings: async (updates) => {
         // Optimistic update
+        const previousState = get()
         set((state) => ({ ...state, ...updates }))
         
         try {
-          const supabase = createClient()
-          
-          // Fetch current full value first to preserve other fields
-          const { data } = await supabase.from('settings').select('value').eq('key', 'shop').single()
-          const currentValue = data?.value || {}
-          
+          // Get current full value (via API or local state mapped back)
+          // For simplicity, we map back the entire state to the DB format
+          const currentState = get()
           const newValue = {
-            ...currentValue,
-            name_fr: updates.storeNameFR ?? currentValue.name_fr,
-            name_ar: updates.storeNameAR ?? currentValue.name_ar,
-            slogan_fr: updates.sloganFR ?? currentValue.slogan_fr,
-            slogan_ar: updates.sloganAR ?? currentValue.slogan_ar,
-            email: updates.email ?? currentValue.email,
-            phone: updates.phone ?? currentValue.phone,
-            address: updates.address ?? currentValue.address,
-            wilaya: updates.wilaya ?? currentValue.wilaya,
-            instagram: updates.instagram ?? currentValue.instagram,
-            facebook: updates.facebook ?? currentValue.facebook,
-            free_shipping_threshold: updates.freeDeliveryThreshold ?? currentValue.free_shipping_threshold,
-            stock_alert_grams: updates.alertStockPerfume ?? currentValue.stock_alert_grams,
-            stock_alert_units: updates.alertStockFlacon ?? currentValue.stock_alert_units,
-            min_order_amount: updates.minOrderAmount ?? currentValue.min_order_amount,
+            name_fr: currentState.storeNameFR,
+            name_ar: currentState.storeNameAR,
+            slogan_fr: currentState.sloganFR,
+            slogan_ar: currentState.sloganAR,
+            email: currentState.email,
+            phone: currentState.phone,
+            address: currentState.address,
+            wilaya: currentState.wilaya,
+            instagram: currentState.instagram,
+            facebook: currentState.facebook,
+            free_shipping_threshold: currentState.freeDeliveryThreshold,
+            stock_alert_grams: currentState.alertStockPerfume,
+            stock_alert_units: currentState.alertStockFlacon,
+            min_order_amount: currentState.minOrderAmount,
           }
 
-          const { error } = await supabase
-            .from('settings')
-            .update({ value: newValue })
-            .eq('key', 'shop')
-
-          if (error) throw error
+          await updateSettings(newValue)
         } catch (err: any) {
           console.error('Error updating settings:', err)
+          // Rollback on error
+          set(previousState)
         }
       },
     }),

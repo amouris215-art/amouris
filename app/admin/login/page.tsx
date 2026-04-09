@@ -26,15 +26,19 @@ export default function AdminLoginPage() {
     e.preventDefault()
     setError('')
     setLoading(true)
-    await new Promise(r => setTimeout(r, 400))
 
-    const result = login(email, password)
-    if (result.ok) {
-      router.replace('/admin')
-    } else {
-      setError(result.error || 'Identifiants incorrects')
+    try {
+      const result = await login(email, password)
+      if (result.ok) {
+        router.replace('/admin')
+      } else {
+        setError(result.error || 'Identifiants incorrects')
+      }
+    } catch (err: any) {
+      setError(err.message || 'Erreur lors de la connexion')
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }
 
   return (
@@ -74,7 +78,7 @@ export default function AdminLoginPage() {
                 type="email"
                 value={email}
                 onChange={e => { setEmail(e.target.value); setError('') }}
-                placeholder="admin@gmail.com"
+                placeholder="admin@amouris-parfums.com"
                 required
                 autoComplete="email"
                 className="w-full bg-white/5 border border-white/10 text-white placeholder-white/20 px-4 py-3 rounded-lg focus:outline-none focus:border-emerald-500/50 focus:bg-white/8 transition-all text-sm"

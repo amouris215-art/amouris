@@ -1,8 +1,7 @@
 'use client'
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { createClient } from '@/lib/supabase/client'
-import { productsApi } from '@/lib/api/products.api'
+import { fetchCategories, categoryApi } from '@/lib/api/catalogue'
 
 export interface Category {
   id: string
@@ -44,7 +43,7 @@ export const useCategoriesStore = create<CategoriesStore>()(
 
         set({ isLoading: true, error: null })
         try {
-          const data = await productsApi.fetchCategories()
+          const data = await fetchCategories()
           set({ categories: data || [], lastUpdated: now, isLoading: false })
         } catch (err: any) {
           set({ error: err.message, isLoading: false })
@@ -54,9 +53,7 @@ export const useCategoriesStore = create<CategoriesStore>()(
       addCategory: async (category) => {
         set({ isLoading: true })
         try {
-          const supabase = createClient()
-          const { data, error } = await supabase.from('categories').insert([category]).select().single()
-          if (error) throw error
+          const data = await categoryApi.create(category)
           set(s => ({ categories: [...s.categories, data], isLoading: false }))
         } catch (err: any) {
           set({ error: err.message, isLoading: false })
@@ -67,11 +64,9 @@ export const useCategoriesStore = create<CategoriesStore>()(
       update: async (id, updates) => {
         set({ isLoading: true })
         try {
-          const supabase = createClient()
-          const { error } = await supabase.from('categories').update(updates).eq('id', id)
-          if (error) throw error
+          const data = await categoryApi.update(id, updates)
           set(s => ({
-            categories: s.categories.map(c => c.id === id ? { ...c, ...updates } : c),
+            categories: s.categories.map(c => c.id === id ? { ...c, ...data } : c),
             isLoading: false
           }))
         } catch (err: any) {
@@ -83,9 +78,7 @@ export const useCategoriesStore = create<CategoriesStore>()(
       deleteCategory: async (id) => {
         set({ isLoading: true })
         try {
-          const supabase = createClient()
-          const { error } = await supabase.from('categories').delete().eq('id', id)
-          if (error) throw error
+          await categoryApi.remove(id)
           set(s => ({ categories: s.categories.filter(c => c.id !== id), isLoading: false }))
         } catch (err: any) {
           set({ error: err.message, isLoading: false })
