@@ -10,8 +10,8 @@ import { useAnnouncementsStore } from '@/store/announcements.store';
 
 export function AnnouncementBar() {
   const { language } = useI18n();
-  const settings = useSettingsStore();
-  const announcementsStore = useAnnouncementsStore();
+  const freeDeliveryThreshold = useSettingsStore(s => s.freeDeliveryThreshold);
+  const announcements = useAnnouncementsStore(s => s.announcements);
   
   const [isVisible, setIsVisible] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -20,22 +20,22 @@ export function AnnouncementBar() {
 
   // 1. Get and process active announcements
   const activeAnnouncements = useMemo(() => {
-    const raw = announcementsStore.getActive();
+    const raw = announcements.filter(a => a.is_active).sort((a, b) => a.display_order - b.display_order);
     if (raw.length === 0) {
       // Fallback if no announcements are configured
       return [{
-        fr: `Livraison gratuite dès ${settings.freeDeliveryThreshold.toLocaleString()} DZD`,
-        ar: `توصيل مجاني ابتداءً من ${settings.freeDeliveryThreshold.toLocaleString()} دج`,
+        fr: `Livraison gratuite dès ${freeDeliveryThreshold.toLocaleString()} DZD`,
+        ar: `توصيل مجاني ابتداءً من ${freeDeliveryThreshold.toLocaleString()} دج`,
         link: "/shop"
       }];
     }
 
     return raw.map(ann => ({
-      fr: ann.text_fr.replace('{{threshold}}', settings.freeDeliveryThreshold.toLocaleString()),
-      ar: ann.text_ar.replace('{{threshold}}', settings.freeDeliveryThreshold.toLocaleString()),
+      fr: ann.text_fr.replace('{{threshold}}', freeDeliveryThreshold.toLocaleString()),
+      ar: ann.text_ar.replace('{{threshold}}', freeDeliveryThreshold.toLocaleString()),
       link: null // Can be enhanced later with an optional link field in store
     }));
-  }, [announcementsStore.announcements, settings.freeDeliveryThreshold]);
+  }, [announcements, freeDeliveryThreshold]);
 
   // 2. Logic for dismissable
   useEffect(() => {
