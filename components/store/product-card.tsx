@@ -1,6 +1,10 @@
 'use client'
 import Link from 'next/link'
 import { ProductImage } from './ProductImage'
+import { useI18n } from '@/i18n/i18n-context'
+import { useTagsStore } from '@/store/tags.store'
+import { motion } from 'framer-motion'
+import { Product } from '@/lib/types'
 
 interface ProductCardProps {
   product: Product
