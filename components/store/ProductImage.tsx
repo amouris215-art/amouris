@@ -54,7 +54,7 @@ export function ProductImage({
   }
 
   // Placeholder logic
-  const initial = productType === 'perfume' ? projectName.charAt(0) : 'F'
+  const initial = productType === 'perfume' ? productName.charAt(0) : 'F'
 
   return (
     <div className={cn(
