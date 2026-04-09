@@ -7,6 +7,9 @@ import { usePathname } from 'next/navigation';
 import { LanguageToggle } from './language-toggle';
 import { MobileHeader } from './MobileHeader';
 import { useCataloguesStore } from '@/store/catalogues.store';
+import { useCartStore } from '@/store/cart.store';
+import { useCustomerAuth } from '@/store/customer-auth.store';
+import { Button } from '@/components/ui/button';
 import { Download, FileText, ChevronDown, ShoppingBag, User, Shield } from 'lucide-react';
 import dynamic from 'next/dynamic';
 
