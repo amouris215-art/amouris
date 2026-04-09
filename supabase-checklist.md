@@ -23,15 +23,15 @@ The SQL script defines policies, but the buckets themselves must be created:
 
 ## 4. Admin Account Setup
 - [ ] Go to **Authentication** -> **Add User** -> **Create new user**.
-- [ ] Enter the email: `admin@amouris-parfums.com` (or your preferred admin email).
-- [ ] Set a strong password.
+- [ ] Enter the email: **`admin@gmail.com`**
+- [ ] Set the password: **`123456`**
 - [ ] **Crucial**: After creating the user, run this SQL command in the SQL Editor to grant admin rights:
   ```sql
   UPDATE public.profiles
   SET role = 'admin'
   WHERE id = (
     SELECT id FROM auth.users
-    WHERE email = 'admin@amouris-parfums.com'
+    WHERE email = 'admin@gmail.com'
   );
   ```
 

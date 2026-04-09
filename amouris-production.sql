@@ -328,7 +328,7 @@ CREATE POLICY "Users can update their own profile" ON public.profiles FOR UPDATE
 
 -- Policies: Settings
 CREATE POLICY "Public can view settings" ON public.settings FOR SELECT USING (true);
-CREATE POLICY "Admins can manage settings" ON public.settings ALL TO authenticated USING (is_admin());
+CREATE POLICY "Admins can manage settings" ON public.settings FOR ALL TO authenticated USING (is_admin());
 
 -- Policies: Catalogues (Categories, Brands, etc.)
 CREATE POLICY "Public can view catalogue" ON public.categories FOR SELECT USING (true);
@@ -340,13 +340,13 @@ CREATE POLICY "Admins can view ALL products" ON public.products FOR SELECT USING
 CREATE POLICY "Public can view variants" ON public.flacon_variants FOR SELECT USING (true);
 
 -- Admin management for catalogue
-CREATE POLICY "Admins can manage categories" ON public.categories ALL USING (is_admin());
-CREATE POLICY "Admins can manage brands" ON public.brands ALL USING (is_admin());
-CREATE POLICY "Admins can manage collections" ON public.collections ALL USING (is_admin());
-CREATE POLICY "Admins can manage tags" ON public.tags ALL USING (is_admin());
-CREATE POLICY "Admins can manage products" ON public.products ALL USING (is_admin());
-CREATE POLICY "Admins can manage variants" ON public.flacon_variants ALL USING (is_admin());
-CREATE POLICY "Admins can manage product_tags" ON public.product_tags ALL USING (is_admin());
+CREATE POLICY "Admins can manage categories" ON public.categories FOR ALL USING (is_admin());
+CREATE POLICY "Admins can manage brands" ON public.brands FOR ALL USING (is_admin());
+CREATE POLICY "Admins can manage collections" ON public.collections FOR ALL USING (is_admin());
+CREATE POLICY "Admins can manage tags" ON public.tags FOR ALL USING (is_admin());
+CREATE POLICY "Admins can manage products" ON public.products FOR ALL USING (is_admin());
+CREATE POLICY "Admins can manage variants" ON public.flacon_variants FOR ALL USING (is_admin());
+CREATE POLICY "Admins can manage product_tags" ON public.product_tags FOR ALL USING (is_admin());
 
 -- Policies: Orders
 CREATE POLICY "Public can create orders" ON public.orders FOR INSERT WITH CHECK (true);
@@ -491,6 +491,6 @@ UPDATE public.profiles
 SET role = 'admin'
 WHERE id = (
   SELECT id FROM auth.users
-  WHERE email = 'admin@amouris-parfums.com' -- Remplacer par l'email réel
+    WHERE email = 'admin@gmail.com' -- Remplacer par l'email réel
 );
 */
