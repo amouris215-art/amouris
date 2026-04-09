@@ -39,6 +39,10 @@ export default function AccountLayout({
 
   if (!mounted || !customer) return null;
 
+  // Defensive: handle both snake_case (DB) and camelCase (legacy) field names
+  const firstName = customer.first_name || (customer as any).firstName || '';
+  const lastName = customer.last_name || (customer as any).lastName || '';
+
   const handleLogout = () => {
     logout();
     router.replace('/');
@@ -60,9 +64,9 @@ export default function AccountLayout({
       <div className="md:hidden sticky top-0 z-50 bg-white border-b border-emerald-950/5 p-4 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-[#0a3d2e] text-white rounded-full flex items-center justify-center text-lg font-serif">
-            {customer.first_name.charAt(0)}
+            {firstName.charAt(0) || '?'}
           </div>
-          <span className="font-bold text-emerald-950">{customer.shop_name || `${customer.first_name} ${customer.last_name}`}</span>
+          <span className="font-bold text-emerald-950">{customer.shop_name || `${firstName} ${lastName}`}</span>
         </div>
         <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-2 text-emerald-950">
           {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
@@ -82,10 +86,10 @@ export default function AccountLayout({
       `}>
         <div className="p-8 border-b border-emerald-950/5 bg-neutral-50/30">
           <div className="w-20 h-20 bg-[#0a3d2e] text-white rounded-[2rem] flex items-center justify-center text-3xl font-serif mb-4 shadow-xl shadow-emerald-900/10">
-            {customer.first_name.charAt(0)}
+            {firstName.charAt(0) || '?'}
           </div>
           <h2 className="font-serif text-xl text-emerald-950 font-bold leading-tight">
-            {customer.first_name} {customer.last_name}
+            {firstName} {lastName}
           </h2>
           <p className="text-[10px] font-black uppercase tracking-widest text-[#C9A84C] mt-1 opacity-80">
             {customer.shop_name || t('common.partner')}

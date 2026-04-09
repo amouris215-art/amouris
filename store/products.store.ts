@@ -45,6 +45,8 @@ interface ProductsStore {
   updateStockGrams: (id: string, delta: number) => Promise<void>
   updateVariantStock: (productId: string, variantId: string, delta: number) => Promise<void>
   seed: (products: Product[]) => void
+  getBySlug: (slug: string) => Product | undefined
+  getActiveByType: (type: 'perfume' | 'flacon') => Product[]
 }
 
 const supabase = createClient()
@@ -185,5 +187,7 @@ export const useProductsStore = create<ProductsStore>((set, get) => ({
     await supabase.from('flacon_variants').update({ stock_units: newVal }).eq('id', variantId)
     await get().fetchProducts()
   },
-  seed: (products) => set({ products })
+  seed: (products) => set({ products }),
+  getBySlug: (slug) => get().products.find(p => p.slug === slug),
+  getActiveByType: (type) => get().products.filter(p => p.product_type === type && p.status === 'active')
 }))
