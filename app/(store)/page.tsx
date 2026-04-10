@@ -9,8 +9,7 @@ import { cookies } from 'next/headers'
 export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
-  const cookieStore = cookies()
-  const supabase = createClient(cookieStore)
+  const supabase = createClient()
 
   // 1. Charger en parallèle avec Promise.all
   const [
