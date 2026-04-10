@@ -1,14 +1,12 @@
 'use server'
 
-import { createClient } from '@/utils/supabase/server';
+import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { cookies } from 'next/headers';
 
 // --- Generic Helpers (internal, not exported) ---
 
 const fetchAll = async (table: string, orderCol = 'name_fr') => {
-  const cookieStore = await cookies();
-  const supabase = createClient(cookieStore);
+  const supabase = await createClient();
   const { data, error } = await supabase.from(table).select('*').order(orderCol);
   if (error) throw error;
   return data;

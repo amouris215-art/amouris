@@ -1,30 +1,31 @@
 import { useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { useOrdersStore } from '@/store/orders.store';
 import { toast } from 'sonner';
+import { useRouter } from 'next/navigation';
 
-export const useRealtimeOrderStatus = (orderId?: string) => {
-  const fetchOrders = useOrdersStore((s) => s.fetchOrders);
+export const useRealtimeOrderStatus = (orderId: string) => {
+  const router = useRouter();
 
   useEffect(() => {
     if (!orderId) return;
-
-    const supabase = createClient();
     
+    const supabase = createClient();
+
     const channel = supabase
-      .channel(`order-status-${orderId}`)
+      .channel(`order_status_${orderId}`)
       .on(
         'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
+        { 
+          event: 'UPDATE', 
+          schema: 'public', 
           table: 'orders',
-          filter: `id=eq.${orderId}`,
+          filter: `id=eq.${orderId}`
         },
         (payload) => {
-          console.log('Order status updated!', payload);
-          toast.info(`Statut de la commande mis à jour: ${payload.new.order_status}`);
-          fetchOrders(true); // Force refresh
+          if (payload.new.order_status !== payload.old.order_status) {
+            toast.info(`Le statut de votre commande a été mis à jour: ${payload.new.order_status}`);
+            router.refresh();
+          }
         }
       )
       .subscribe();
@@ -32,5 +33,5 @@ export const useRealtimeOrderStatus = (orderId?: string) => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [orderId, fetchOrders]);
+  }, [orderId, router]);
 };

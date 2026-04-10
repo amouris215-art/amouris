@@ -1,15 +1,17 @@
-'use server'
+import { createClient } from '@/lib/supabase/client';
 
-import { createClient } from '@/utils/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 
 export const fetchAllOrders = async () => {
-  const admin = createAdminClient();
-  const { data, error } = await admin
+  
+  const supabase = createClient();
+  
+  const { data, error } = await supabase
     .from('orders')
     .select(`
       *,
-      items:order_items(*)
+      items:order_items(*),
+      customer:profiles(*)
     `)
     .order('created_at', { ascending: false });
 
@@ -18,8 +20,11 @@ export const fetchAllOrders = async () => {
 };
 
 export const fetchCustomerOrders = async (customerId: string) => {
-  const admin = createAdminClient();
-  const { data, error } = await admin
+  
+  // Customers read own orders (via RLS if client, admin if server component with admin client)
+  const supabase = createClient();
+  
+  const { data, error } = await supabase
     .from('orders')
     .select(`
       *,
@@ -33,13 +38,16 @@ export const fetchCustomerOrders = async (customerId: string) => {
 };
 
 export const fetchOrderById = async (id: string) => {
-  const admin = createAdminClient();
-  const { data, error } = await admin
+  
+  const supabase = createClient();
+
+  const { data, error } = await supabase
     .from('orders')
     .select(`
       *,
       items:order_items(*),
-      status_history:order_history(*)
+      status_history:order_status_history(*),
+      customer:profiles(*)
     `)
     .eq('id', id)
     .single();
@@ -49,11 +57,12 @@ export const fetchOrderById = async (id: string) => {
 };
 
 export const createOrder = async (data: any) => {
-  const admin = createAdminClient();
+  // Always use browser client if called from client
+  const supabase = createClient();
   const { items, ...orderData } = data;
 
   // 1. Create Order
-  const { data: order, error: orderError } = await admin
+  const { data: order, error: orderError } = await supabase
     .from('orders')
     .insert([orderData])
     .select()
@@ -67,13 +76,13 @@ export const createOrder = async (data: any) => {
     order_id: order.id
   }));
 
-  const { error: itemsError } = await admin.from('order_items').insert(orderItems);
+  const { error: itemsError } = await supabase.from('order_items').insert(orderItems);
   if (itemsError) throw itemsError;
 
   // 3. Initial history
-  await admin.from('order_history').insert({
+  await supabase.from('order_status_history').insert({
     order_id: order.id,
-    status: orderData.order_status,
+    status: orderData.order_status || 'pending',
     note: 'Commande créée'
   });
 
@@ -81,10 +90,11 @@ export const createOrder = async (data: any) => {
 };
 
 export const updateOrderStatus = async (id: string, status: string, note?: string) => {
-  const admin = createAdminClient();
+  
+  const supabase = createClient();
   
   // Update order
-  const { error: updateError } = await admin
+  const { error: updateError } = await supabase
     .from('orders')
     .update({ order_status: status })
     .eq('id', id);
@@ -92,7 +102,7 @@ export const updateOrderStatus = async (id: string, status: string, note?: strin
   if (updateError) throw updateError;
 
   // Add history
-  await admin.from('order_history').insert({
+  await supabase.from('order_status_history').insert({
     order_id: id,
     status,
     note
@@ -102,14 +112,16 @@ export const updateOrderStatus = async (id: string, status: string, note?: strin
 };
 
 export const updateOrderPayment = async (id: string, amountPaid: number) => {
-  const admin = createAdminClient();
-  const { data: order } = await admin.from('orders').select('total_amount').eq('id', id).single();
+  
+  const supabase = createClient();
+
+  const { data: order } = await supabase.from('orders').select('total_amount').eq('id', id).single();
   
   if (!order) throw new Error('Order not found');
 
   const ps = amountPaid <= 0 ? 'unpaid' : amountPaid >= order.total_amount ? 'paid' : 'partial';
 
-  const { error } = await admin
+  const { error } = await supabase
     .from('orders')
     .update({ amount_paid: amountPaid, payment_status: ps })
     .eq('id', id);
@@ -119,8 +131,10 @@ export const updateOrderPayment = async (id: string, amountPaid: number) => {
 };
 
 export const updateOrderNotes = async (id: string, notes: string) => {
-  const admin = createAdminClient();
-  const { error } = await admin
+  
+  const supabase = createClient();
+
+  const { error } = await supabase
     .from('orders')
     .update({ admin_notes: notes })
     .eq('id', id);
@@ -130,13 +144,14 @@ export const updateOrderNotes = async (id: string, notes: string) => {
 };
 
 export const generateInvoice = async (orderId: string, invoiceData: any) => {
-  const admin = createAdminClient();
   
-  // Generate invoice number if not present
+  const supabase = createClient();
+  
+  // Create deterministic fake ID
   const invoiceNumber = `FAC-${Math.floor(Math.random() * 900000) + 100000}`;
   const finalData = { ...invoiceData, invoice_number: invoiceNumber };
 
-  const { error } = await admin
+  const { error } = await supabase
     .from('orders')
     .update({ 
       invoice_generated: true, 

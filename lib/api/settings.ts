@@ -1,34 +1,24 @@
-'use server'
+import { createClient } from '@/lib/supabase/client';
 
-import { createClient } from '@/utils/supabase/server';
-import { createAdminClient } from '@/lib/supabase/admin';
-import { cookies } from 'next/headers';
 
 export const fetchSettings = async () => {
-  const cookieStore = await cookies();
-  const supabase = createClient(cookieStore);
-  const { data, error } = await supabase
-    .from('settings')
-    .select('*')
-    .single();
-
-  if (error && error.code !== 'PGRST116') throw error;
-  return data;
+  
+  const supabase = createClient();
+  
+  const { data, error } = await supabase.from('settings').select('*');
+  if (error) throw error;
+  
+  // Transform key-value rows back into a single object
+  return data.reduce((acc, row) => ({ ...acc, [row.key]: row.value }), {});
 };
 
-export const updateSettings = async (updates: any) => {
-  const admin = createAdminClient();
+export const updateSettings = async (settings: any) => {
+  const supabase = createClient();
+  const entries = Object.entries(settings).map(([key, value]) => ({ key, value }));
   
-  // Try to update, if fails, insert (Upsert)
-  const { data: existing } = await admin.from('settings').select('id').single();
-  
-  if (existing) {
-    const { error } = await admin.from('settings').update(updates).eq('id', existing.id);
-    if (error) throw error;
-  } else {
-    const { error } = await admin.from('settings').insert([updates]);
+  if (entries.length > 0) {
+    const { error } = await supabase.from('settings').upsert(entries);
     if (error) throw error;
   }
-
   return true;
 };

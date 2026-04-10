@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from 'react';
-import { createClient } from '@/utils/supabase/client';
+import { createClient } from '@/lib/supabase/client';
 import { useCustomerAuthStore } from '@/store/customer-auth.store';
 import { useAdminAuthStore } from '@/store/admin-auth.store';
 import { useSettingsStore } from '@/store/settings.store';

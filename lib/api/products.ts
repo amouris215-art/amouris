@@ -1,136 +1,104 @@
-'use server'
+import { createClient } from '@/lib/supabase/client';
 
-import { createClient } from '@/utils/supabase/server';
-import { createAdminClient } from '@/lib/supabase/admin';
-import { cookies } from 'next/headers';
 
-export const fetchAllProducts = async (filters: any = {}) => {
-  const cookieStore = await cookies();
-  const supabase = createClient(cookieStore);
-  let query = supabase
-    .from('products')
-    .select(`
-      *,
-      category:categories(*),
-      brand:brands(*),
-      tags:product_tags(tag_id, tags(*)),
-      variants:flacon_variants(*)
-    `);
+export const fetchAllProducts = async (options?: { status?: string }) => {
+  
+  const supabase = createClient();
+  
+  let query = supabase.from('products').select(`
+    *,
+    category:categories(*),
+    brand:brands(*),
+    collection:collections(*),
+    variants:flacon_variants(*),
+    tags:product_tags(tag:tags(*))
+  `).order('created_at', { ascending: false });
 
-  if (filters.status === 'admin') {
-    // Admin can see everything
-  } else if (filters.status) {
-    query = query.eq('status', filters.status);
-  } else {
-    query = query.eq('status', 'active');
+  if (options?.status && options.status !== 'admin') {
+    query = query.eq('status', options.status);
   }
 
-  if (filters.type) {
-    query = query.eq('product_type', filters.type);
-  }
-
-  if (filters.category_id) {
-    query = query.eq('category_id', filters.category_id);
-  }
-
-  const { data, error } = await query.order('created_at', { ascending: false });
-
+  const { data, error } = await query;
   if (error) throw error;
-  return data;
+
+  return data.map(p => ({
+    ...p,
+    tag_ids: p.tags?.map((t: any) => t.tag?.id).filter(Boolean) || []
+  }));
 };
 
-export const fetchProductBySlug = async (slug: string) => {
-  const cookieStore = await cookies();
-  const supabase = createClient(cookieStore);
+export const fetchProductById = async (id: string) => {
+  
+  const supabase = createClient();
+
   const { data, error } = await supabase
     .from('products')
     .select(`
       *,
       category:categories(*),
       brand:brands(*),
-      tags:product_tags(tag_id, tags(*)),
-      variants:flacon_variants(*)
+      collection:collections(*),
+      variants:flacon_variants(*),
+      tags:product_tags(tag:tags(*))
     `)
-    .eq('slug', slug)
+    .eq('id', id)
     .single();
 
-  if (error) return null;
-  return data;
+  if (error) throw error;
+  
+  return {
+    ...data,
+    tag_ids: data.tags?.map((t: any) => t.tag?.id).filter(Boolean) || []
+  };
 };
 
-export const createProduct = async (data: any) => {
-  const admin = createAdminClient();
-  const { tag_ids, variants, ...productPayload } = data;
+export const createProduct = async (productData: any) => {
+  // Always use browser client if called from client
+  const supabase = createClient();
+  
+  const { tag_ids, variants, ...baseProduct } = productData;
 
-  // Insert the product core data
-  const { data: product, error } = await admin
+  const { data: newProduct, error } = await supabase
     .from('products')
-    .insert(productPayload)
+    .insert([baseProduct])
     .select()
     .single();
 
-  if (error) {
-    console.error('Error in createProduct:', error);
-    throw error;
-  }
+  if (error) throw error;
 
-  // Handle M2M relationships for tags
   if (tag_ids && tag_ids.length > 0) {
-    const tagLinks = tag_ids.map((tagId: string) => ({
-      product_id: product.id,
-      tag_id: tagId
+    const tagsToInsert = tag_ids.map((tagId: string) => ({
+      product_id: newProduct.id,
+      tag_id: tagId,
     }));
-    await admin.from('product_tags').insert(tagLinks);
+    await supabase.from('product_tags').insert(tagsToInsert);
   }
 
-  // Handle variants for flacons
-  if (product.product_type === 'flacon' && variants) {
-    const variantData = variants.map((v: any) => ({
-      ...v,
-      product_id: product.id
-    }));
-    await admin.from('flacon_variants').insert(variantData);
-  }
-
-  return product;
+  return fetchProductById(newProduct.id);
 };
 
-export const updateProduct = async (id: string, data: any) => {
-  const admin = createAdminClient();
-  const { tag_ids, variants, ...productPayload } = data;
+export const updateProduct = async (id: string, updates: any) => {
+  const supabase = createClient();
+  const { tag_ids, variants, ...baseData } = updates;
 
-  // Update the product core data
-  const { error } = await admin
-    .from('products')
-    .update(productPayload)
-    .eq('id', id);
+  if (Object.keys(baseData).length > 0) {
+    const { error: updateError } = await supabase
+      .from('products')
+      .update(baseData)
+      .eq('id', id);
 
-  if (error) {
-    console.error('Error in updateProduct:', error);
-    throw error;
+    if (updateError) throw updateError;
   }
 
-  // Sync tags
   if (tag_ids !== undefined) {
-    await admin.from('product_tags').delete().eq('product_id', id);
+    await supabase.from('product_tags').delete().eq('product_id', id);
     if (tag_ids.length > 0) {
-      const tagLinks = tag_ids.map((tagId: string) => ({
+      const newTags = tag_ids.map((tagId: string) => ({
         product_id: id,
-        tag_id: tagId
+        tag_id: tagId,
       }));
-      await admin.from('product_tags').insert(tagLinks);
-    }
-  }
-
-  // Sync variants
-  if (variants !== undefined) {
-    await admin.from('flacon_variants').delete().eq('product_id', id);
-    if (variants.length > 0) {
-      const variantData = variants.map((v: any) => ({
-        ...v,
-        product_id: id
-      }));
-      await admin.from('flacon_variants').insert(variantData);
+      const { error: tagError } = await supabase.from('product_tags').insert(newTags);
+      if (tagError) throw tagError;
     }
   }
 
@@ -138,32 +106,54 @@ export const updateProduct = async (id: string, data: any) => {
 };
 
 export const deleteProduct = async (id: string) => {
-  const admin = createAdminClient();
-  const { error } = await admin.from('products').delete().eq('id', id);
+  const supabase = createClient();
+  const { error } = await supabase.from('products').delete().eq('id', id);
   if (error) throw error;
   return true;
 };
 
 export const updateStockGrams = async (id: string, delta: number) => {
-  const admin = createAdminClient();
-  try {
-    const { error } = await admin.rpc('increment_product_stock', {
-      p_id: id,
-      delta: delta
-    });
-    if (error) throw error;
-  } catch {
-    const { data: p } = await admin.from('products').select('stock_grams').eq('id', id).single();
-    if (p) {
-      await admin.from('products').update({ stock_grams: Number(p.stock_grams) + delta }).eq('id', id);
-    }
-  }
+  const supabase = createClient();
+  // Fetch current
+  const { data: current, error: fetchErr } = await supabase
+    .from('products')
+    .select('stock_grams')
+    .eq('id', id)
+    .single();
+
+  if (fetchErr || !current) throw fetchErr || new Error('Product not found');
+
+  const newStock = Math.max(0, Number(current.stock_grams) + delta);
+
+  const { error } = await supabase
+    .from('products')
+    .update({ stock_grams: newStock })
+    .eq('id', id);
+
+  if (error) throw error;
+  return newStock;
 };
 
 export const updateVariantStock = async (variantId: string, delta: number) => {
-  const admin = createAdminClient();
-  const { data: v } = await admin.from('flacon_variants').select('stock_units').eq('id', variantId).single();
-  if (v) {
-    await admin.from('flacon_variants').update({ stock_units: Number(v.stock_units) + delta }).eq('id', variantId);
-  }
+  const supabase = createClient();
+  const { data: current, error: fetchErr } = await supabase
+    .from('flacon_variants')
+    .select('stock_units')
+    .eq('id', variantId)
+    .single();
+
+  if (fetchErr || !current) throw fetchErr || new Error('Variant not found');
+
+  const newStock = Math.max(0, Number(current.stock_units) + delta);
+
+  const { error } = await supabase
+    .from('flacon_variants')
+    .update({ stock_units: newStock })
+    .eq('id', variantId);
+
+  if (error) throw error;
+  return newStock;
 };
+
+// Alias used by ProductModal
+export const addProduct = createProduct;

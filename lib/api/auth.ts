@@ -1,93 +1,62 @@
-'use server'
+import { createClient } from '@/lib/supabase/client';
 
-import { createClient } from '@/utils/supabase/server';
-import { createAdminClient } from '@/lib/supabase/admin';
-import { cookies } from 'next/headers';
 
-export const loginAdmin = async (email: string, password: string) => {
-  const cookieStore = await cookies();
-  const supabase = createClient(cookieStore);
-  const { data, error } = await supabase.auth.signInWithPassword({
+export const registerCustomer = async (data: any) => {
+  const supabase = createClient();
+  const { phone, password, ...profileData } = data;
+  
+  // Format fake email: phone@amouris-client.com
+  const email = `${phone}@amouris-client.com`;
+  const generatedPassword = password || `pwd_${phone}_${Math.random().toString(36).slice(2,8)}`;
+
+  const { data: signUpData, error } = await supabase.auth.signUp({
     email,
-    password,
+    password: generatedPassword,
+    options: {
+      data: {
+        phone,
+        ...profileData
+      }
+    }
   });
 
   if (error) return { ok: false, error: error.message };
-
-  // Verify role
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', data.user.id)
-    .single();
-
-  if (profile?.role !== 'admin') {
-    await supabase.auth.signOut();
-    return { ok: false, error: 'Accès restreint aux administrateurs' };
-  }
-
-  return { ok: true, user: data.user };
+  return { ok: true, data: signUpData };
 };
 
 export const loginCustomer = async (phone: string, password?: string) => {
-  const cookieStore = await cookies();
-  const supabase = createClient(cookieStore);
-  const normalizedPhone = phone.replace(/\s+/g, '').replace(/[-+]/g, '');
-  const email = `${normalizedPhone}@amouris-user.dz`;
+  const supabase = createClient();
+  const email = `${phone}@amouris-client.com`;
   
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
-    password: password || 'default_password_if_needed',
+    password: password || `pwd_${phone}_DEFAULT` // fallback if old users
   });
 
   if (error) return { ok: false, error: error.message };
 
+  // Fetch profile
   const { data: profile } = await supabase
     .from('profiles')
     .select('*')
     .eq('id', data.user.id)
     .single();
 
-  return { ok: true, user: data.user, profile };
-};
-
-export const registerCustomer = async (data: any) => {
-  const admin = createAdminClient();
-  const normalizedPhone = data.phone.replace(/\s+/g, '').replace(/[-+]/g, '');
-  const email = `${normalizedPhone}@amouris-user.dz`;
-
-  const { data: authUser, error: authError } = await admin.auth.admin.createUser({
-    email,
-    password: data.password,
-    email_confirm: true,
-    user_metadata: {
-      first_name: data.first_name,
-      last_name: data.last_name,
-      phone: data.phone,
-      shop_name: data.shop_name,
-      wilaya: data.wilaya,
-      commune: data.commune,
-      role: 'customer'
-    }
-  });
-
-  if (authError) return { ok: false, error: authError.message };
-
-  // Profile is created by DB Trigger
-  return { ok: true, user: authUser.user };
+  return { ok: true, profile };
 };
 
 export const logout = async () => {
-  const cookieStore = await cookies();
-  const supabase = createClient(cookieStore);
-  await supabase.auth.signOut();
+  const supabase = createClient();
+  const { error } = await supabase.auth.signOut();
+  if (error) throw error;
 };
 
 export const getCurrentUser = async () => {
-  const cookieStore = await cookies();
-  const supabase = createClient(cookieStore);
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return null;
+  
+  const supabase = createClient();
+  
+  const { data: { user }, error } = await supabase.auth.getUser();
+  if (error || !user) return null;
 
   const { data: profile } = await supabase
     .from('profiles')
@@ -96,4 +65,29 @@ export const getCurrentUser = async () => {
     .single();
 
   return { user, profile };
+};
+
+export const loginAdmin = async (email: string, password: string) => {
+  const supabase = createClient();
+  
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password
+  });
+
+  if (error) return { ok: false, error: error.message };
+
+  // Verify admin role
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', data.user.id)
+    .single();
+
+  if (!profile || profile.role !== 'admin') {
+    await supabase.auth.signOut();
+    return { ok: false, error: 'Accès non autorisé' };
+  }
+
+  return { ok: true, profile };
 };

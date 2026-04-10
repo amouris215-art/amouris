@@ -1,38 +1,32 @@
-'use server'
+import { createClient } from '@/lib/supabase/client';
 
-import { createClient } from '@/utils/supabase/server';
-import { createAdminClient } from '@/lib/supabase/admin';
-import { cookies } from 'next/headers';
 
 export const fetchCategories = async () => {
-  const cookieStore = await cookies();
-  const supabase = createClient(cookieStore);
-  const { data, error } = await supabase
-    .from('categories')
-    .select('*')
-    .order('name_fr', { ascending: true });
-
+  
+  const supabase = createClient();
+  
+  const { data, error } = await supabase.from('categories').select('*').order('created_at', { ascending: false });
   if (error) throw error;
   return data;
 };
 
-export const createCategory = async (data: any) => {
-  const admin = createAdminClient();
-  const { data: item, error } = await admin.from('categories').insert([data]).select().single();
+export const createCategory = async (catData: any) => {
+  const supabase = createClient();
+  const { data, error } = await supabase.from('categories').insert([catData]).select().single();
   if (error) throw error;
-  return item;
+  return data;
 };
 
-export const updateCategory = async (id: string, data: any) => {
-  const admin = createAdminClient();
-  const { data: item, error } = await admin.from('categories').update(data).eq('id', id).select().single();
+export const updateCategory = async (id: string, updates: any) => {
+  const supabase = createClient();
+  const { error } = await supabase.from('categories').update(updates).eq('id', id);
   if (error) throw error;
-  return item;
+  return true;
 };
 
 export const deleteCategory = async (id: string) => {
-  const admin = createAdminClient();
-  const { error } = await admin.from('categories').delete().eq('id', id);
+  const supabase = createClient();
+  const { error } = await supabase.from('categories').delete().eq('id', id);
   if (error) throw error;
   return true;
 };

@@ -1,33 +1,28 @@
-'use server'
+import { createClient } from '@/lib/supabase/client';
 
-import { createClient } from '@/utils/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { cookies } from 'next/headers';
 
 export const fetchAnnouncements = async () => {
-  const cookieStore = await cookies();
-  const supabase = createClient(cookieStore);
-  const { data, error } = await supabase
-    .from('announcements')
-    .select('*')
-    .order('created_at', { ascending: false });
-
+  
+  const supabase = createClient();
+  
+  const { data, error } = await supabase.from('announcements').select('*').order('display_order', { ascending: true });
   if (error) throw error;
   return data;
 };
 
-export const createAnnouncement = async (data: any) => {
+export const createAnnouncement = async (annData: any) => {
   const admin = createAdminClient();
-  const { data: item, error } = await admin.from('announcements').insert([data]).select().single();
+  const { data, error } = await admin.from('announcements').insert([annData]).select().single();
   if (error) throw error;
-  return item;
+  return data;
 };
 
-export const updateAnnouncement = async (id: string, data: any) => {
+export const updateAnnouncement = async (id: string, updates: any) => {
   const admin = createAdminClient();
-  const { data: item, error } = await admin.from('announcements').update(data).eq('id', id).select().single();
+  const { error } = await admin.from('announcements').update(updates).eq('id', id);
   if (error) throw error;
-  return item;
+  return true;
 };
 
 export const deleteAnnouncement = async (id: string) => {
@@ -37,9 +32,9 @@ export const deleteAnnouncement = async (id: string) => {
   return true;
 };
 
-export const toggleAnnouncementActive = async (id: string, active: boolean) => {
+export const toggleAnnouncementActive = async (id: string, is_active: boolean) => {
   const admin = createAdminClient();
-  const { error } = await admin.from('announcements').update({ is_active: active }).eq('id', id);
+  const { error } = await admin.from('announcements').update({ is_active }).eq('id', id);
   if (error) throw error;
   return true;
 };

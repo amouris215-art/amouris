@@ -1,27 +1,23 @@
 import { useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { useOrdersStore } from '@/store/orders.store';
 import { toast } from 'sonner';
+import { useOrdersStore } from '@/store/orders.store';
 
 export const useRealtimeOrders = () => {
-  const fetchOrders = useOrdersStore((s) => s.fetchOrders);
+  const fetchOrders = useOrdersStore(state => state.fetchOrders);
 
   useEffect(() => {
     const supabase = createClient();
-    
+
     const channel = supabase
-      .channel('schema-db-changes')
+      .channel('admin_orders')
       .on(
         'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'orders',
-        },
+        { event: 'INSERT', schema: 'public', table: 'orders' },
         (payload) => {
-          console.log('New order received!', payload);
-          toast.success(`Nouvelle commande: ${payload.new.order_number}`);
-          fetchOrders(true); // Force refresh
+          toast.success(`Nouvelle commande reçue: ${payload.new.order_number}`);
+          // Force refresh the store
+          fetchOrders(true);
         }
       )
       .subscribe();
