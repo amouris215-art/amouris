@@ -1,16 +1,20 @@
 'use client'
 
 import { useState } from 'react'
-import * as XLSX from 'xlsx'
+import * as XLSX from 'xlsx-js-style'
 import { Download, FileSpreadsheet, Loader2 } from 'lucide-react'
 import { useOrdersStore } from '@/store/orders.store'
 import { useCustomersStore } from '@/store/customers.store'
 import { useProductsStore } from '@/store/products.store'
+import { useCategoriesStore } from '@/store/categories.store'
+import { useBrandsStore } from '@/store/brands.store'
 
 export function ReportsSection() {
   const { orders, fetchOrders } = useOrdersStore()
   const { customers, fetchCustomers } = useCustomersStore()
   const { products, fetchProducts } = useProductsStore()
+  const { categories, fetchCategories } = useCategoriesStore()
+  const { brands, fetchBrands } = useBrandsStore()
 
   const [loading, setLoading] = useState<string | null>(null)
 
@@ -139,13 +143,20 @@ export function ReportsSection() {
     ])
 
     // Format Résumé
-    for (let r = 1; r <= 3; r++) {
-      const cell = wsResume[XLSX.utils.encode_cell({ c: 1, r })]
-      if (cell) {
-        cell.t = 'n'
-        cell.z = numberFormat
+    const resRange = XLSX.utils.decode_range(wsResume['!ref'] || 'A1:A1')
+    for (let R = resRange.s.r; R <= resRange.e.r; ++R) {
+      for (let C = resRange.s.c; C <= resRange.e.c; ++C) {
+        const cellRef = XLSX.utils.encode_cell({ c: C, r: R })
+        if (!wsResume[cellRef]) continue
+        if (R === 0) {
+          wsResume[cellRef].s = headerStyle
+        } else if (C === 1 && R > 0) {
+          wsResume[cellRef].t = 'n'
+          wsResume[cellRef].z = numberFormat
+        }
       }
     }
+    wsResume['!cols'] = [{ wch: 35 }, { wch: 20 }]
 
     const wb = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(wb, wsVentes, 'Ventes Détails')
@@ -206,6 +217,9 @@ export function ReportsSection() {
              wsClients[cellRef].z = originalCell.z || '0'
              wsClients[cellRef].t = 'n'
            }
+           if (originalCell?.s) {
+             wsClients[cellRef].s = { ...wsClients[cellRef].s, ...originalCell.s }
+           }
          }
        }
      }
@@ -225,25 +239,36 @@ export function ReportsSection() {
   const generateInventory = async () => {
     setLoading('inventory')
     if (products.length === 0) await fetchProducts()
+    if (categories.length === 0) await fetchCategories()
+    if (brands.length === 0) await fetchBrands()
+    
     const allProducts = useProductsStore.getState().products
+    const allCats = useCategoriesStore.getState().categories
+    const allBrands = useBrandsStore.getState().brands
 
     const parfums = allProducts.filter(p => p.product_type === 'perfume')
     const flacons = allProducts.filter(p => p.product_type === 'flacon')
 
     // 1. Feuille Parfums
-    const parfumsData = parfums.map(p => {
+    const parfumsData = parfums.map((p, idx) => {
+      const isAlt = idx % 2 === 1
+      const defaultStyle = isAlt ? altRowStyle : {}
+      
+      const cat = allCats.find(c => c.id === p.category_id)
+      const brand = allBrands.find(b => b.id === p.brand_id)
+
       let statusStr = 'En Stock'
       if (p.stock_grams === 0) statusStr = 'Rupture'
       else if ((p.stock_grams || 0) < 500) statusStr = 'Stock Faible'
 
       return {
-        'Nom FR': p.name_fr,
-        'Nom AR': p.name_ar,
-        'Catégorie': p.category_id || '-',
-        'Marque': p.brand_id || '-',
-        'Prix/g DZD': { v: p.price_per_gram || 0, t: 'n', z: numberFormat },
-        'Stock Grammes': { v: p.stock_grams || 0, t: 'n', z: numberFormat },
-        'Statut Stock': statusStr
+        'Nom FR': { v: p.name_fr, s: defaultStyle },
+        'Nom AR': { v: p.name_ar, s: defaultStyle },
+        'Catégorie': { v: cat?.name_fr || '-', s: defaultStyle },
+        'Marque': { v: brand?.name || '-', s: defaultStyle },
+        'Prix/g DZD': { v: p.price_per_gram || 0, t: 'n', z: numberFormat, s: defaultStyle },
+        'Stock Grammes': { v: p.stock_grams || 0, t: 'n', z: numberFormat, s: defaultStyle },
+        'Statut Stock': { v: statusStr, s: defaultStyle }
       }
     })
 
@@ -269,6 +294,9 @@ export function ReportsSection() {
              wsParfums[cellRef].z = originalCell.z
              wsParfums[cellRef].t = 'n'
            }
+           if (originalCell?.s) {
+             wsParfums[cellRef].s = { ...wsParfums[cellRef].s, ...originalCell.s }
+           }
          }
        }
      }
@@ -280,30 +308,39 @@ export function ReportsSection() {
 
     // 2. Feuille Flacons
     const flaconsData: any[] = []
+    let globalIdx = 0
     flacons.forEach(p => {
       if (!p.variants || p.variants.length === 0) {
+        const isAlt = globalIdx % 2 === 1
+        const defaultStyle = isAlt ? altRowStyle : {}
+        globalIdx++
+
         let statusStr = 'En Stock'
-        if ((p.stock_grams || 0) === 0) statusStr = 'Rupture' // some generic fallback if no variants
+        if ((p.stock_grams || 0) === 0) statusStr = 'Rupture'
 
         flaconsData.push({
-          'Nom FR': p.name_fr,
-          'Variante': '-',
-          'Prix DZD': { v: p.base_price || 0, t: 'n', z: numberFormat },
-          'Stock Unités': { v: 0, t: 'n', z: numberFormat },
-          'Statut Stock': statusStr
+          'Nom FR': { v: p.name_fr, s: defaultStyle },
+          'Variante': { v: '-', s: defaultStyle },
+          'Prix DZD': { v: p.base_price || 0, t: 'n', z: numberFormat, s: defaultStyle },
+          'Stock Unités': { v: 0, t: 'n', z: numberFormat, s: defaultStyle },
+          'Statut Stock': { v: statusStr, s: defaultStyle }
         })
       } else {
         p.variants.forEach(v => {
+          const isAlt = globalIdx % 2 === 1
+          const defaultStyle = isAlt ? altRowStyle : {}
+          globalIdx++
+
           let statusStr = 'En Stock'
           if (v.stock_units === 0) statusStr = 'Rupture'
           else if (v.stock_units < 50) statusStr = 'Stock Faible'
 
           flaconsData.push({
-            'Nom FR': p.name_fr,
-            'Variante': `${v.size_ml}ml - ${v.color_name} - ${v.shape}`,
-            'Prix DZD': { v: v.price || 0, t: 'n', z: numberFormat },
-            'Stock Unités': { v: v.stock_units || 0, t: 'n', z: numberFormat },
-            'Statut Stock': statusStr
+            'Nom FR': { v: p.name_fr, s: defaultStyle },
+            'Variante': { v: `${v.size_ml}ml - ${v.color_name} - ${v.shape}`, s: defaultStyle },
+            'Prix DZD': { v: v.price || 0, t: 'n', z: numberFormat, s: defaultStyle },
+            'Stock Unités': { v: v.stock_units || 0, t: 'n', z: numberFormat, s: defaultStyle },
+            'Statut Stock': { v: statusStr, s: defaultStyle }
           })
         })
       }
@@ -330,6 +367,9 @@ export function ReportsSection() {
            if (originalCell?.t === 'n') {
              wsFlacons[cellRef].z = originalCell.z
              wsFlacons[cellRef].t = 'n'
+           }
+           if (originalCell?.s) {
+             wsFlacons[cellRef].s = { ...wsFlacons[cellRef].s, ...originalCell.s }
            }
          }
        }

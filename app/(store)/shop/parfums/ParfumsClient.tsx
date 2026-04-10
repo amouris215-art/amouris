@@ -2,22 +2,32 @@
 
 import { useMemo, useState } from 'react';
 import { useI18n } from '@/i18n/i18n-context';
-import { useProductsStore } from '@/store/products.store';
-import { useCategoriesStore } from '@/store/categories.store';
-import { useBrandsStore } from '@/store/brands.store';
-import { useTagsStore } from '@/store/tags.store';
-import { useShallow } from 'zustand/react/shallow';
 import { ProductCard } from '@/components/store/product-card';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Slider } from '@/components/ui/slider';
 import { ChevronDown, Filter, X } from 'lucide-react';
 
-export default function ParfumsClient() {
+interface ParfumsClientProps {
+  initialProducts: any[];
+  initialCategories: any[];
+  initialBrands: any[];
+  initialTags: any[];
+}
+
+export default function ParfumsClient({ 
+  initialProducts, 
+  initialCategories, 
+  initialBrands, 
+  initialTags 
+}: ParfumsClientProps) {
   const { language } = useI18n();
-  const products = useProductsStore(useShallow(s => s.getActiveByType('perfume')));
-  const categories = useCategoriesStore(s => s.categories);
-  const brands = useBrandsStore(s => s.brands);
-  const tags = useTagsStore(s => s.tags);
+  const products = useMemo(() => initialProducts.map(p => ({
+    ...p,
+    tag_ids: p.product_tags?.map((pt: any) => pt.tag_id) || []
+  })), [initialProducts]);
+  const categories = initialCategories;
+  const brands = initialBrands;
+  const tags = initialTags;
 
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedBrand, setSelectedBrand] = useState<string>('all');

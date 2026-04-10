@@ -58,12 +58,12 @@ export function Header() {
       >
         <div className="max-w-[1600px] mx-auto px-6 h-16 flex items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="group flex flex-col items-start">
+          <Link href="/" className="group flex flex-col items-start text-left rtl:text-right">
             <span className="font-serif text-2xl tracking-tighter text-emerald-800 leading-none group-hover:text-amber-600 transition-colors">
               Amouris
             </span>
             <span className="text-[10px] uppercase tracking-[0.4em] text-amber-500 font-black leading-none mt-1">
-              L'Excellence
+              {isAr ? 'التميز' : "L'Excellence"}
             </span>
           </Link>
 
@@ -99,7 +99,7 @@ export function Header() {
                 onMouseLeave={() => setShowCatMenu(false)}
               >
                 <div className="flex items-center gap-1 hover:text-emerald-800 transition-colors">
-                  {isAr ? 'الكتالوجات' : 'Catalogues'}
+                  {t('nav.catalogues')}
                   <ChevronDown size={10} className={`transition-transform duration-300 ${showCatMenu ? 'rotate-180' : ''}`} />
                 </div>
                 
@@ -116,7 +116,7 @@ export function Header() {
                              <Download size={14} />
                           </div>
                           <span className="normal-case font-bold text-gray-700 group-hover:item:text-emerald-800 transition-colors">
-                            {cat.type === 'parfums' ? (isAr ? 'عطور' : 'Parfums') : (isAr ? 'قنينات' : 'Flacons')}
+                            {cat.type === 'parfums' ? t('nav.parfums_cat') : t('nav.flacons_cat')}
                           </span>
                         </a>
                       ))}
@@ -175,5 +175,3 @@ export function Header() {
     </>
   );
 }
-
-

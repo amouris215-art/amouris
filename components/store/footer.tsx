@@ -29,12 +29,12 @@ export function Footer() {
     },
     {
       id: 'links',
-      title: language === 'ar' ? 'الروابط' : 'Liens',
+      title: t('footer.links'),
       links: [
         { label: t('nav.about'), href: '/about' },
         { label: t('nav.contact'), href: '/contact' },
         { label: t('common.login'), href: '/login' },
-        { label: language === 'ar' ? 'الإدارة' : 'Admin', href: '/admin/login', discret: true },
+        { label: t('footer.admin_link'), href: '/admin/login', discret: true },
       ]
     },
     {
@@ -50,7 +50,7 @@ export function Footer() {
 
   return (
     <footer className="bg-emerald-950 text-white border-t border-white/5 pt-16 pb-8">
-      <div className="container mx-auto px-6">
+      <div className="container mx-auto px-6 font-sans">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
           {/* Column 1: Brand & Socials */}
           <div className="space-y-6">
@@ -83,7 +83,7 @@ export function Footer() {
             <div key={section.id} className="md:block border-b border-white/10 md:border-0 pb-4 md:pb-0">
               <button 
                 onClick={() => toggleSection(section.id)}
-                className="w-full md:hidden flex items-center justify-between py-2 text-left"
+                className="w-full md:hidden flex items-center justify-between py-2 text-left rtl:text-right"
               >
                 <h4 className="font-serif text-lg text-amber-400 uppercase tracking-widest">{section.title}</h4>
                 <ChevronDown className={`transition-transform duration-300 ${openSection === section.id ? 'rotate-180' : ''}`} size={20} />
@@ -123,13 +123,13 @@ export function Footer() {
         
         {/* Bottom Footer */}
         <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6 text-[10px] md:text-sm text-emerald-100/40 uppercase tracking-widest font-light">
-          <p>© {new Date().getFullYear()} {language === 'ar' ? settings.storeNameAR : settings.storeNameFR}. {language === 'ar' ? 'جميع الحقوق محفوظة.' : 'Tous droits réservés.'}</p>
+          <p>© {new Date().getFullYear()} {language === 'ar' ? settings.storeNameAR : settings.storeNameFR}. {t('footer.rights')}</p>
           <div className="flex gap-8">
             <Link href="/confidentialite" className="hover:text-amber-400 transition-colors">
-              {language === 'ar' ? 'سياسة الخصوصية' : 'Confidentialité'}
+              {t('footer.privacy')}
             </Link>
             <Link href="/conditions" className="hover:text-amber-400 transition-colors">
-              {language === 'ar' ? 'الشروط والأحكام' : 'Conditions'}
+              {t('footer.terms')}
             </Link>
           </div>
         </div>

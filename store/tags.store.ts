@@ -1,7 +1,7 @@
 'use client'
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { fetchTags, tagApi } from '@/lib/api/catalogue'
+import { fetchTags, createTag, updateTag as updateTagApi, removeTag } from '@/lib/api/catalogue'
 
 export interface Tag {
   id: string
@@ -55,7 +55,7 @@ export const useTagsStore = create<TagsStore>()(
       addTag: async (tag) => {
         set({ isLoading: true })
         try {
-          const data = await tagApi.create(tag)
+          const data = await createTag(tag)
           set(s => ({ tags: [...s.tags, data], isLoading: false }))
         } catch (err: any) {
           set({ error: err.message, isLoading: false })
@@ -66,7 +66,7 @@ export const useTagsStore = create<TagsStore>()(
       update: async (id, updates) => {
         set({ isLoading: true })
         try {
-          const data = await tagApi.update(id, updates)
+          const data = await updateTagApi(id, updates)
           set(s => ({
             tags: s.tags.map(t => t.id === id ? { ...t, ...data } : t),
             isLoading: false
@@ -80,7 +80,7 @@ export const useTagsStore = create<TagsStore>()(
       deleteTag: async (id) => {
         set({ isLoading: true })
         try {
-          await tagApi.remove(id)
+          await removeTag(id)
           set(s => ({ tags: s.tags.filter(t => t.id !== id), isLoading: false }))
         } catch (err: any) {
           set({ error: err.message, isLoading: false })

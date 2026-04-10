@@ -2,11 +2,6 @@
 
 import { useMemo, useState, useEffect } from 'react';
 import { useI18n } from '@/i18n/i18n-context';
-import { useProductsStore } from '@/store/products.store';
-import { useCategoriesStore } from '@/store/categories.store';
-import { useBrandsStore } from '@/store/brands.store';
-import { useCollectionsStore } from '@/store/collections.store';
-import { useTagsStore } from '@/store/tags.store';
 import { useCartStore } from '@/store/cart.store';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
@@ -14,17 +9,19 @@ import { ProductImage } from '@/components/store/ProductImage';
 import { ChevronRight, Minus, Plus, CheckCircle, ShoppingCart, Info } from 'lucide-react';
 
 interface ProductClientProps {
-  slug: string;
+  initialProduct: any;
+  initialTags: any[];
 }
 
-export default function ProductClient({ slug }: ProductClientProps) {
-  const { language } = useI18n();
-  const product = useProductsStore(s => s.getBySlug(slug));
-  const categories = useCategoriesStore(s => s.categories);
-  const brands = useBrandsStore(s => s.brands);
-  const collections = useCollectionsStore(s => s.collections);
-  const tagsList = useTagsStore(s => s.tags);
+export default function ProductClient({ initialProduct, initialTags }: ProductClientProps) {
+  const { t, language } = useI18n();
   const addItem = useCartStore(s => s.addItem);
+  
+  const product = initialProduct;
+  const categories: any[] = product?.categories ? [product.categories] : [];
+  const brands: any[] = product?.brands ? [product.brands] : [];
+  const collections: any[] = product?.collections ? [product.collections] : [];
+  const tagsList = initialTags;
 
   const [grams, setGrams] = useState(100);
   const [quantity, setQuantity] = useState(1);
@@ -49,19 +46,22 @@ export default function ProductClient({ slug }: ProductClientProps) {
   if (!product) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center text-center p-6">
-        <h2 className="font-serif text-3xl text-emerald-950 mb-4">Produit introuvable</h2>
-        <p className="text-emerald-900/40 mb-8">Désolé, ce produit n'existe pas ou plus.</p>
+        <h2 className="font-serif text-3xl text-emerald-950 mb-4">{t('product.not_found')}</h2>
+        <p className="text-emerald-900/40 mb-8">{t('product.not_found_desc')}</p>
         <Link href="/shop" className="bg-[#0a3d2e] text-white px-8 py-4 rounded-xl font-bold text-xs uppercase tracking-widest">
-            Retour à la boutique
+            {t('product.back_to_shop')}
         </Link>
       </div>
     );
   }
 
-  const category = categories.find(c => c.id === product.category_id);
-  const brand = brands.find(b => b.id === product.brand_id);
-  const collection = collections.find(c => c.id === product.collection_id);
-  const productTags = tagsList.filter(t => product.tag_ids.includes(t.id));
+  const category = categories[0];
+  const brand = brands[0];
+  const collection = collections[0];
+  
+  // Extract tag IDs from the Supabase join record
+  const productTagIds = product.product_tags?.map((pt: any) => pt.tag_id) || [];
+  const productTags = tagsList.filter(t => productTagIds.includes(t.id));
 
   const isPerfume = product.product_type === 'perfume';
   const unitPrice = isPerfume ? (product.price_per_gram || 0) : (selectedVariant?.price || 0);
@@ -90,10 +90,10 @@ export default function ProductClient({ slug }: ProductClientProps) {
       {/* Breadcrumb — hidden on mobile */}
       <div className="container mx-auto px-4 md:px-6 py-4 md:py-8 hidden md:block">
         <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-gray-400">
-          <Link href="/shop" className="hover:text-emerald-950 transition-colors">Boutique</Link>
+          <Link href="/shop" className="hover:text-emerald-950 transition-colors">{t('nav.shop')}</Link>
           <ChevronRight size={12} />
           <Link href={isPerfume ? '/shop/parfums' : '/shop/flacons'} className="hover:text-emerald-950 transition-colors">
-            {isPerfume ? (isAr ? 'عطور' : 'Parfums') : (isAr ? 'قوارير' : 'Flacons')}
+            {isPerfume ? t('nav.perfumes') : t('nav.flacons')}
           </Link>
           {category && (
             <>
@@ -135,9 +135,9 @@ export default function ProductClient({ slug }: ProductClientProps) {
             <div className="mb-6 md:mb-10">
               <div className="flex items-center gap-3 md:gap-4 mb-3 md:mb-4">
                  <span className="bg-emerald-50 text-[#0a3d2e] px-3 py-1 md:px-4 md:py-1.5 rounded-full text-[9px] md:text-[10px] font-black uppercase tracking-widest border border-emerald-100">
-                    {isPerfume ? (isAr ? 'مجموعة الزيوت' : 'Huile de Parfum') : (isAr ? 'عبوة فاخرة' : 'Packaging Elite')}
+                    {isPerfume ? t('product.huile_badge') : t('product.packaging_elite')}
                  </span>
-                 {product.status === 'draft' && <span className="bg-amber-50 text-amber-700 px-3 py-1 md:px-4 md:py-1.5 rounded-full text-[9px] md:text-[10px] font-black uppercase tracking-widest border border-amber-100">Brouillon</span>}
+                 {product.status === 'draft' && <span className="bg-amber-50 text-amber-700 px-3 py-1 md:px-4 md:py-1.5 rounded-full text-[9px] md:text-[10px] font-black uppercase tracking-widest border border-amber-100">{t('common.draft')}</span>}
               </div>
 
               <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl lg:text-3xl text-gray-900 mb-2 md:mb-3 tracking-tight">
@@ -163,8 +163,8 @@ export default function ProductClient({ slug }: ProductClientProps) {
                 /* Perfume: Grams Selector */
                 <div className="space-y-6 md:space-y-8">
                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-                      <h3 className="text-[10px] uppercase font-black tracking-[0.3em] text-emerald-950/20">Quantité en grammes</h3>
-                      <span className="text-[10px] font-bold text-[#C9A84C]">Min. 100g — Stock: {product.stock_grams?.toLocaleString()}g</span>
+                      <h3 className="text-[10px] uppercase font-black tracking-[0.3em] text-emerald-950/20">{t('product.quantity_grams')}</h3>
+                      <span className="text-[10px] font-bold text-[#C9A84C]">{t('product.min_stock_info').replace('{count}', product.stock_grams?.toLocaleString() || '0')}</span>
                    </div>
                    
                    <div className="flex items-center gap-4 md:gap-6">
@@ -188,14 +188,14 @@ export default function ProductClient({ slug }: ProductClientProps) {
                           <Plus size={18} />
                         </button>
                       </div>
-                      <span className="text-emerald-950/20 font-serif text-lg md:text-2xl italic">grammes</span>
+                      <span className="text-emerald-950/20 font-serif text-lg md:text-2xl italic">{t('common.grams')}</span>
                    </div>
                 </div>
               ) : (
                 /* Flacon: Variant Selector */
                 <div className="space-y-8 md:space-y-12">
                   <div className="space-y-4 md:space-y-6">
-                    <h3 className="text-[10px] uppercase font-black tracking-[0.3em] text-emerald-950/20 shadow-none border-b border-emerald-950/5 pb-4">Choix du modèle</h3>
+                    <h3 className="text-[10px] uppercase font-black tracking-[0.3em] text-emerald-950/20 shadow-none border-b border-emerald-950/5 pb-4">{t('product.choice_model')}</h3>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 md:gap-4">
                       {product.variants?.map(v => (
                         <button 
@@ -221,7 +221,7 @@ export default function ProductClient({ slug }: ProductClientProps) {
                   </div>
 
                   <div className="space-y-6 md:space-y-8">
-                    <h3 className="text-[10px] uppercase font-black tracking-[0.3em] text-emerald-950/20 border-b border-emerald-950/5 pb-4">Unités à commander</h3>
+                    <h3 className="text-[10px] uppercase font-black tracking-[0.3em] text-emerald-950/20 border-b border-emerald-950/5 pb-4">{t('product.units_to_order')}</h3>
                     <div className="flex items-center gap-4 md:gap-6">
                        <div className="flex items-center bg-white border border-emerald-950/5 rounded-2xl p-1.5 md:p-2 shadow-sm w-fit">
                           <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="w-11 h-11 md:w-14 md:h-14 rounded-xl hover:bg-emerald-50 text-emerald-950 transition-colors flex items-center justify-center"><Minus size={18} /></button>
@@ -233,7 +233,7 @@ export default function ProductClient({ slug }: ProductClientProps) {
                             <Plus size={18} />
                           </button>
                        </div>
-                       <p className="text-[10px] font-bold text-emerald-950/30 uppercase tracking-widest">Stock: {selectedVariant?.stock_units || 0} pcs</p>
+                       <p className="text-[10px] font-bold text-emerald-950/30 uppercase tracking-widest">{t('product.stock_pcs').replace('{count}', selectedVariant?.stock_units?.toString() || '0')}</p>
                     </div>
                   </div>
                 </div>
@@ -243,14 +243,14 @@ export default function ProductClient({ slug }: ProductClientProps) {
             {/* Total Display — visible on desktop, hidden on mobile (shown in sticky bar) */}
             <div className="hidden md:flex p-8 rounded-[2.5rem] bg-white border border-emerald-950/5 shadow-2xl shadow-emerald-950/5 mb-10 justify-between items-center group">
                <div>
-                  <p className="text-[10px] font-black uppercase tracking-[0.3em] text-emerald-950/20 mb-2">Total de votre sélection</p>
+                  <p className="text-[10px] font-black uppercase tracking-[0.3em] text-emerald-950/20 mb-2">{t('product.total_selection')}</p>
                   <p className="font-serif text-4xl text-emerald-950">
-                    {total.toLocaleString()} <span className="text-sm font-normal text-emerald-950/40 italic">DZD</span>
+                    {total.toLocaleString()} <span className="text-sm font-normal text-emerald-950/40 italic">{t('common.dzd')}</span>
                   </p>
                </div>
                <div className="text-right">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-emerald-950/20 mb-1">Prix Unitaire</p>
-                  <p className="text-sm font-bold text-[#C9A84C]">{unitPrice.toLocaleString()} DZD</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-emerald-950/20 mb-1">{t('product.unit_price')}</p>
+                  <p className="text-sm font-bold text-[#C9A84C]">{unitPrice.toLocaleString()} {t('common.dzd')}</p>
                </div>
             </div>
 
@@ -263,38 +263,38 @@ export default function ProductClient({ slug }: ProductClientProps) {
               {added ? (
                 <>
                   <CheckCircle size={18} />
-                  {isAr ? 'تمت الإضافة' : 'Produit ajouté'}
+                  {t('common.added')}
                 </>
               ) : (
                 <>
                   <ShoppingCart size={18} />
-                  {isAr ? 'إضافة إلى السلة' : 'Ajouter au panier'}
+                  {t('common.add_to_cart')}
                 </>
               )}
             </button>
 
             {isPerfume && <p className="hidden md:flex text-center mt-6 text-[10px] uppercase font-black tracking-widest text-[#C9A84C] items-center justify-center gap-2">
                 <Info size={12} />
-                {isAr ? 'تعبئة يدوية بوزن دقيق جداً' : 'Conditionnement manuel avec précision de pesée'}
+                {t('product.packaging_info')}
             </p>}
           </div>
         </div>
 
         {/* Detailed Info Footer */}
-        <div className="mt-16 md:mt-32 grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-12 border-t border-emerald-950/5 pt-8 md:pt-16 px-4 md:px-0">
+        <div className="mt-16 md:mt-32 grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-12 border-t border-emerald-950/5 pt-8 md:pt-16 px-4 md:px-0 font-sans">
            <div>
-              <h4 className="text-[10px] uppercase font-black tracking-widest text-emerald-950/20 mb-3 md:mb-6">Maison / Collection</h4>
-              <div className="space-y-2 md:space-y-4">
+              <h4 className="text-[10px] uppercase font-black tracking-widest text-emerald-950/20 mb-3 md:mb-6">{t('product.brand_collection')}</h4>
+              <div className="space-y-2 md:space-y-4 text-start rtl:text-end">
                 <p className="text-xs md:text-sm font-bold text-emerald-950">{brand?.name || 'Amouris Selection'}</p>
                 <p className="text-[10px] md:text-xs text-emerald-950/40 italic">{collection?.name_fr || 'Collection Royale'}</p>
               </div>
            </div>
-           <div>
-              <h4 className="text-[10px] uppercase font-black tracking-widest text-emerald-950/20 mb-3 md:mb-6">Univers</h4>
+           <div className="text-start rtl:text-end">
+              <h4 className="text-[10px] uppercase font-black tracking-widest text-emerald-950/20 mb-3 md:mb-6">{t('product.universe')}</h4>
               <p className="text-xs md:text-sm font-bold text-emerald-950">{category?.name_fr || 'Inconnu'}</p>
            </div>
-           <div>
-              <h4 className="text-[10px] uppercase font-black tracking-widest text-emerald-950/20 mb-3 md:mb-6">Signatures Olfactives</h4>
+           <div className="text-start rtl:text-end">
+              <h4 className="text-[10px] uppercase font-black tracking-widest text-emerald-950/20 mb-3 md:mb-6">{t('product.olfactive_signatures')}</h4>
               <div className="flex flex-wrap gap-2">
                 {productTags.map(tag => (
                    <span key={tag.id} className="text-[8px] md:text-[9px] font-black uppercase tracking-widest px-2 md:px-3 py-1 bg-white border border-emerald-950/5 rounded-full text-gray-700">
@@ -303,9 +303,9 @@ export default function ProductClient({ slug }: ProductClientProps) {
                 ))}
               </div>
            </div>
-           <div>
-              <h4 className="text-[10px] uppercase font-black tracking-widest text-emerald-950/20 mb-3 md:mb-6">Service Client B2B</h4>
-              <p className="text-[10px] md:text-xs text-emerald-950/60 leading-relaxed font-medium">Pour toute assistance personnalisée ou demande de gros volume, contactez notre équipe sur WhatsApp.</p>
+           <div className="text-start rtl:text-end">
+              <h4 className="text-[10px] uppercase font-black tracking-widest text-emerald-950/20 mb-3 md:mb-6">{t('product.b2b_service')}</h4>
+              <p className="text-[10px] md:text-xs text-emerald-950/60 leading-relaxed font-medium">{t('product.b2b_service_desc')}</p>
            </div>
         </div>
       </div>
@@ -314,10 +314,10 @@ export default function ProductClient({ slug }: ProductClientProps) {
       <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-emerald-950/10 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] safe-area-bottom">
         <div className="px-4 pt-3 pb-3">
           {/* Total row */}
-          <div className="flex items-center justify-between mb-2.5">
-            <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Total</span>
+          <div className="flex items-center justify-between mb-2.5 rtl:flex-row-reverse">
+            <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">{t('product.total')}</span>
             <span className="font-serif text-xl text-emerald-950">
-              {total.toLocaleString()} <span className="text-[10px] font-normal text-gray-500">DZD</span>
+              {total.toLocaleString()} <span className="text-[10px] font-normal text-gray-500">{t('common.dzd')}</span>
             </span>
           </div>
           {/* Add to cart button */}
@@ -333,12 +333,12 @@ export default function ProductClient({ slug }: ProductClientProps) {
             {added ? (
               <>
                 <CheckCircle size={16} />
-                {isAr ? 'تمت الإضافة' : 'Ajouté !'}
+                {t('common.added')}
               </>
             ) : (
               <>
                 <ShoppingCart size={16} />
-                {isAr ? 'إضافة إلى السلة' : 'Ajouter au panier'} — {total.toLocaleString()} DZD
+                {t('common.add_to_cart')} — {total.toLocaleString()} {t('common.dzd')}
               </>
             )}
           </button>

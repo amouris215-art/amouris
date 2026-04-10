@@ -6,10 +6,17 @@ import { useCustomerAuthStore } from '@/store/customer-auth.store'
 import { useCustomersStore } from '@/store/customers.store'
 import Link from 'next/link'
 
+import { createBrowserClient } from '@supabase/ssr'
+import { normalizePhone, phoneToEmail } from '@/lib/utils/phone'
+
 export default function LoginPage() {
   const router = useRouter()
   const setCustomer = useCustomerAuthStore(s => s.setCustomer)
-  const loginCustomer = useCustomersStore(s => s.login)
+
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
   
   const [phone, setPhone] = useState('')
   const [password, setPassword] = useState('')
@@ -26,18 +33,47 @@ export default function LoginPage() {
     }
 
     setLoading(true)
-    // Simulate slight delay for luxury feel
-    await new Promise(r => setTimeout(r, 400))
     
-    const result = await loginCustomer(phone, password)
-    
-    if (result.ok && result.customer) {
-      setCustomer(result.customer)
-      router.replace('/account')
-    } else {
-      setError(result.error || 'Identifiants incorrects')
+    try {
+      const normalizedPhone = normalizePhone(phone)
+      const fakeEmail = phoneToEmail(normalizedPhone)
+
+      const { data: authData, error: signInError } = await supabase.auth.signInWithPassword({
+        email: fakeEmail,
+        password
+      })
+
+      if (signInError) {
+        throw new Error('Numéro ou mot de passe incorrect')
+      }
+
+      if (authData.user) {
+        // 5. Récupérer le profil
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', authData.user.id)
+          .single()
+
+        if (profileError || !profile) {
+          throw new Error('Profil introuvable')
+        }
+
+        // b. Vérifier is_frozen
+        if (profile.is_frozen) {
+          await supabase.auth.signOut()
+          throw new Error('Compte suspendu. Veuillez contacter le support.')
+        }
+
+        // Accès OK
+        setCustomer(profile as any)
+        router.replace('/account')
+      }
+    } catch (err: any) {
+      setError(err.message || 'Identifiants incorrects')
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }
 
   return (

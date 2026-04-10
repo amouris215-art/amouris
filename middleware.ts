@@ -9,7 +9,7 @@ export const middleware = async (request: NextRequest) => {
   });
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseKey) {
     return supabaseResponse;
@@ -36,15 +36,25 @@ export const middleware = async (request: NextRequest) => {
     },
   );
 
-  // refreshing the auth token
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { session } } = await supabase.auth.getSession();
+  const user = session?.user;
 
   // Protect /admin/* (but allow /admin/login)
   if (request.nextUrl.pathname.startsWith('/admin') && request.nextUrl.pathname !== '/admin/login') {
-    // Check if user is logged in and has admin role
-    // Role is stored in user_metadata or we might need to fetch profile
-    // But metadata is faster if set correctly
-    if (!user || user.user_metadata?.role !== 'admin') {
+    if (!user) {
+      const url = request.nextUrl.clone();
+      url.pathname = '/admin/login';
+      return NextResponse.redirect(url);
+    }
+    
+    // Verify from profile instead of user_metadata
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+
+    if (!profile || profile.role !== 'admin') {
       const url = request.nextUrl.clone();
       url.pathname = '/admin/login';
       return NextResponse.redirect(url);

@@ -1,7 +1,21 @@
-'use client'
+import { fetchCustomerOrders } from '@/lib/api/orders';
+import { getCurrentUser } from '@/lib/api/auth';
+import AccountOverviewClient from './AccountOverviewClient';
+import { redirect } from 'next/navigation';
 
-import AccountClient from './AccountClient';
+export default async function AccountPage() {
+  const session = await getCurrentUser();
 
-export default function AccountPage() {
-  return <AccountClient />;
+  if (!session || !session.profile) {
+    redirect('/login');
+  }
+
+  const orders = await fetchCustomerOrders(session.profile.id);
+
+  return (
+    <AccountOverviewClient 
+      customer={session.profile} 
+      orders={orders} 
+    />
+  );
 }

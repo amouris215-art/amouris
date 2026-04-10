@@ -1,12 +1,13 @@
-'use client';
-
+import { getCurrentUser } from '@/lib/api/auth';
+import { redirect } from 'next/navigation';
 import SettingsClient from './SettingsClient';
-import { useCustomerAuth } from '@/store/customer-auth.store';
 
-export default function SettingsPage() {
-  const { customer, isAuthenticated } = useCustomerAuth();
-  
-  if (!customer || !isAuthenticated) return null;
+export default async function SettingsPage() {
+  const session = await getCurrentUser();
 
-  return <SettingsClient />;
+  if (!session || !session.profile) {
+    redirect('/login');
+  }
+
+  return <SettingsClient initialCustomer={session.profile} />;
 }

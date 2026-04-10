@@ -1,7 +1,7 @@
 'use client'
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { fetchBrands, brandApi } from '@/lib/api/catalogue'
+import { fetchBrands, createBrand, updateBrand as updateBrandApi, removeBrand } from '@/lib/api/catalogue'
 
 export interface Brand {
   id: string
@@ -53,7 +53,7 @@ export const useBrandsStore = create<BrandsStore>()(
       addBrand: async (brand) => {
         set({ isLoading: true })
         try {
-          const data = await brandApi.create(brand)
+          const data = await createBrand(brand)
           set(s => ({ brands: [...s.brands, data], isLoading: false }))
         } catch (err: any) {
           set({ error: err.message, isLoading: false })
@@ -64,7 +64,7 @@ export const useBrandsStore = create<BrandsStore>()(
       update: async (id, updates) => {
         set({ isLoading: true })
         try {
-          const data = await brandApi.update(id, updates)
+          const data = await updateBrandApi(id, updates)
           set(s => ({
             brands: s.brands.map(b => b.id === id ? { ...b, ...data } : b),
             isLoading: false
@@ -78,7 +78,7 @@ export const useBrandsStore = create<BrandsStore>()(
       deleteBrand: async (id) => {
         set({ isLoading: true })
         try {
-          await brandApi.remove(id)
+          await removeBrand(id)
           set(s => ({ brands: s.brands.filter(b => b.id !== id), isLoading: false }))
         } catch (err: any) {
           set({ error: err.message, isLoading: false })

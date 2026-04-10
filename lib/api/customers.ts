@@ -23,6 +23,34 @@ export const fetchAllCustomers = async () => {
   }));
 };
 
+export const fetchCustomerById = async (id: string) => {
+  const admin = createAdminClient();
+  const { data, error } = await admin
+    .from('profiles')
+    .select(`
+      *,
+      orders:orders(*)
+    `)
+    .eq('id', id)
+    .single();
+
+  if (error) throw error;
+  return data;
+};
+
+export const updateCustomerProfile = async (id: string, data: any) => {
+  const admin = createAdminClient();
+  const { data: profile, error } = await admin
+    .from('profiles')
+    .update(data)
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return profile;
+};
+
 export const freezeCustomer = async (id: string, isFrozen: boolean = true) => {
   const admin = createAdminClient();
   const { error } = await admin

@@ -1,8 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from 'react';
-import { useOrdersStore, Order, OrderStatus, PaymentStatus } from '@/store/orders.store';
-import { useSettingsStore } from '@/store/settings.store';
+import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Search, Filter, Clock, CheckCircle2, 
@@ -14,6 +12,9 @@ import {
 import { generateInvoicePDF } from '@/lib/utils/invoice-generator';
 import Link from 'next/link';
 import { useI18n } from '@/i18n/i18n-context';
+import { OrderStatus, PaymentStatus } from '@/store/orders.store';
+import { updateOrderStatus as apiUpdateOrderStatus, updateOrderPayment as apiUpdateOrderPayment } from '@/lib/api/orders';
+import { useRouter } from 'next/navigation';
 import { getOrderStatusLabel, getPaymentStatusLabel } from '@/lib/status-helpers';
 
 const STATUS_ORDER: OrderStatus[] = ['pending', 'confirmed', 'preparing', 'shipped', 'delivered', 'cancelled'];
@@ -33,10 +34,14 @@ const PAYMENT_COLORS: Record<PaymentStatus, string> = {
   paid: 'bg-green-100 text-green-800 border-green-200',
 };
 
-export default function AdminOrdersClient() {
+interface AdminOrdersClientProps {
+  initialOrders: any[];
+  settings: any;
+}
+
+export default function AdminOrdersClient({ initialOrders, settings }: AdminOrdersClientProps) {
+  const router = useRouter();
   const { t, language } = useI18n();
-  const { orders, fetchOrders, updateStatus, updatePayment, updateNotes } = useOrdersStore();
-  const settings = useSettingsStore();
 
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -44,9 +49,7 @@ export default function AdminOrdersClient() {
   const [wilayaFilter, setWilayaFilter] = useState('all');
   const [showFilters, setShowFilters] = useState(false);
 
-  useEffect(() => {
-    fetchOrders();
-  }, [fetchOrders]);
+  const orders = initialOrders;
 
   const filtered = useMemo(() => {
     return orders.filter(o => {
@@ -61,14 +64,29 @@ export default function AdminOrdersClient() {
     });
   }, [orders, search, statusFilter, paymentFilter, wilayaFilter, t]);
 
-  const handlePrint = (order: Order) => {
+  const handlePrint = (order: any) => {
     const doc = generateInvoicePDF(order, settings)
-    doc.save(`Facture_${order.order_number}.pdf`)
+    const filename = language === 'ar' ? `فاتورة_${order.order_number}.pdf` : `Facture_${order.order_number}.pdf`
+    doc.save(filename)
   };
 
   const handleUpdatePayment = async (orderId: string, amount: string) => {
     const val = parseFloat(amount) || 0;
-    await updatePayment(orderId, val);
+    try {
+      await apiUpdateOrderPayment(orderId, val);
+      router.refresh();
+    } catch (err) {
+      alert('Erreur lors de la mise à jour du paiement');
+    }
+  };
+
+  const handleStatusChange = async (orderId: string, status: OrderStatus) => {
+    try {
+      await apiUpdateOrderStatus(orderId, status);
+      router.refresh();
+    } catch (err) {
+      alert('Erreur lors de la mise à jour du statut');
+    }
   };
 
   return (
@@ -141,17 +159,17 @@ export default function AdminOrdersClient() {
           <table className="w-full border-collapse">
             <thead>
               <tr className="border-b border-emerald-950/5 bg-neutral-50/50">
-                <th className="px-10 py-6 text-left text-[9px] font-black uppercase tracking-[0.3em] text-gray-500">{t('admin.orders.table.id_date')}</th>
-                <th className="px-10 py-6 text-left text-[9px] font-black uppercase tracking-[0.3em] text-emerald-950/30">{t('admin.orders.table.customer')}</th>
-                <th className="px-10 py-6 text-left text-[9px] font-black uppercase tracking-[0.3em] text-emerald-950/30">{t('admin.orders.table.amount_payment')}</th>
-                <th className="px-10 py-6 text-left text-[9px] font-black uppercase tracking-[0.3em] text-emerald-950/30">{t('admin.orders.table.progress')}</th>
-                <th className="px-10 py-6 text-right text-[9px] font-black uppercase tracking-[0.3em] text-emerald-950/30">{t('admin.orders.table.actions')}</th>
+                <th className="px-10 py-6 text-left rtl:text-right text-[9px] font-black uppercase tracking-[0.3em] text-gray-500">{t('admin.orders.table.id_date')}</th>
+                <th className="px-10 py-6 text-left rtl:text-right text-[9px] font-black uppercase tracking-[0.3em] text-emerald-950/30">{t('admin.orders.table.customer')}</th>
+                <th className="px-10 py-6 text-left rtl:text-right text-[9px] font-black uppercase tracking-[0.3em] text-emerald-950/30">{t('admin.orders.table.amount_payment')}</th>
+                <th className="px-10 py-6 text-left rtl:text-right text-[9px] font-black uppercase tracking-[0.3em] text-emerald-950/30">{t('admin.orders.table.progress')}</th>
+                <th className="px-10 py-6 text-right rtl:text-left text-[9px] font-black uppercase tracking-[0.3em] text-emerald-950/30">{t('admin.orders.table.actions')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-emerald-950/5">
               <AnimatePresence mode="popLayout">
                 {filtered.map((order) => {
-                  const name = order.guest_first_name ? `${order.guest_first_name} ${order.guest_last_name}` : `ID: ${order.customer_id?.slice(0, 8)}`;
+                  const name = order.guest_first_name ? `${order.guest_first_name} ${order.guest_last_name}` : `${t('common.account')} ID: ${order.customer_id?.slice(0, 8)}`;
                   const reste = order.total_amount - order.amount_paid;
                   
                   return (
@@ -199,7 +217,7 @@ export default function AdminOrdersClient() {
                       <td className="px-10 py-8">
                          <select 
                            value={order.order_status}
-                           onChange={e => updateStatus(order.id, e.target.value as OrderStatus)}
+                           onChange={e => handleStatusChange(order.id, e.target.value as OrderStatus)}
                            className={`h-10 px-4 rounded-xl text-[9px] font-black uppercase tracking-widest border transition-all cursor-pointer ${STATUS_COLORS[order.order_status]}`}
                          >
                            {STATUS_ORDER.map((k) => (
@@ -207,8 +225,8 @@ export default function AdminOrdersClient() {
                            ))}
                          </select>
                       </td>
-                      <td className="px-10 py-8 text-right">
-                         <div className="flex justify-end gap-3 h-full items-center">
+                      <td className="px-10 py-8 text-right rtl:text-left">
+                         <div className="flex justify-end rtl:justify-start gap-3 h-full items-center">
                             <Link 
                               href={`/admin/orders/${order.id}`}
                               className="w-12 h-12 rounded-2xl bg-white border border-emerald-950/5 flex items-center justify-center text-emerald-950/40 hover:text-emerald-950 hover:border-emerald-950/20 transition-all shadow-sm"

@@ -1,6 +1,6 @@
 'use client'
 import { create } from 'zustand'
-import { fetchCollections, collectionApi } from '@/lib/api/catalogue'
+import { fetchCollections, createCollection, updateCollection as updateCollectionApi, removeCollection } from '@/lib/api/catalogue'
 
 export interface Collection {
   id: string
@@ -44,7 +44,7 @@ export const useCollectionsStore = create<CollectionsStore>((set, get) => ({
   addCollection: async (collection) => {
     set({ isLoading: true })
     try {
-      const data = await collectionApi.create(collection)
+      const data = await createCollection(collection)
       set(s => ({ collections: [...s.collections, data], isLoading: false }))
     } catch (error: any) {
       set({ error: error.message, isLoading: false })
@@ -55,7 +55,7 @@ export const useCollectionsStore = create<CollectionsStore>((set, get) => ({
   updateCollection: async (id, updates) => {
     set({ isLoading: true })
     try {
-      const data = await collectionApi.update(id, updates)
+      const data = await updateCollectionApi(id, updates)
       set(s => ({
         collections: s.collections.map(c => c.id === id ? { ...c, ...data } : c),
         isLoading: false
@@ -69,7 +69,7 @@ export const useCollectionsStore = create<CollectionsStore>((set, get) => ({
   deleteCollection: async (id) => {
     set({ isLoading: true })
     try {
-      await collectionApi.remove(id)
+      await removeCollection(id)
       set(s => ({ collections: s.collections.filter(c => c.id !== id), isLoading: false }))
     } catch (error: any) {
       set({ error: error.message, isLoading: false })

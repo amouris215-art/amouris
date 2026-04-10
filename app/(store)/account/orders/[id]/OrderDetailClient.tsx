@@ -2,14 +2,13 @@
 
 import Link from 'next/link';
 import { useI18n } from '@/i18n/i18n-context';
-import { Order } from '@/store/orders.store';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, FileText, CheckCircle2, ChevronRight, Package, Receipt, CreditCard, XCircle } from 'lucide-react';
 import { generateInvoicePDF } from '@/lib/generate-invoice';
 import { motion } from 'framer-motion';
 
 interface OrderDetailClientProps {
-  order: Order;
+  order: any;
 }
 
 export default function OrderDetailClient({ order }: OrderDetailClientProps) {

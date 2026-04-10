@@ -5,13 +5,12 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { X } from 'lucide-react';
 import Link from 'next/link';
 
-import { useSettingsStore } from '@/store/settings.store';
-import { useAnnouncementsStore } from '@/store/announcements.store';
 
-export function AnnouncementBar() {
+
+export function AnnouncementBar({ initialAnnouncements = [], settings }: { initialAnnouncements?: any[], settings?: any }) {
   const { language } = useI18n();
-  const freeDeliveryThreshold = useSettingsStore(s => s.freeDeliveryThreshold);
-  const announcements = useAnnouncementsStore(s => s.announcements);
+  const freeDeliveryThreshold = settings?.free_shipping_threshold || 50000;
+  const announcements = initialAnnouncements;
   
   const [isVisible, setIsVisible] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -20,8 +19,7 @@ export function AnnouncementBar() {
 
   // 1. Get and process active announcements
   const activeAnnouncements = useMemo(() => {
-    const raw = announcements.filter(a => a.is_active).sort((a, b) => a.display_order - b.display_order);
-    if (raw.length === 0) {
+    if (announcements.length === 0) {
       // Fallback if no announcements are configured
       return [{
         fr: `Livraison gratuite dès ${freeDeliveryThreshold.toLocaleString()} DZD`,
@@ -30,10 +28,10 @@ export function AnnouncementBar() {
       }];
     }
 
-    return raw.map(ann => ({
-      fr: ann.text_fr.replace('{{threshold}}', freeDeliveryThreshold.toLocaleString()),
-      ar: ann.text_ar.replace('{{threshold}}', freeDeliveryThreshold.toLocaleString()),
-      link: null // Can be enhanced later with an optional link field in store
+    return announcements.map(ann => ({
+      fr: (ann.text_fr || '').replace('{{threshold}}', freeDeliveryThreshold.toLocaleString()),
+      ar: (ann.text_ar || '').replace('{{threshold}}', freeDeliveryThreshold.toLocaleString()),
+      link: null 
     }));
   }, [announcements, freeDeliveryThreshold]);
 

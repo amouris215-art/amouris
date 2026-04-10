@@ -1,15 +1,21 @@
 "use client";
 
 import { useState, useMemo } from 'react';
-import { useCategoriesStore, Category } from '@/store/categories.store';
-import { useProductsStore } from '@/store/products.store';
+import { Category } from '@/store/categories.store';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Search, Edit2, Trash2, Tag, FolderTree } from 'lucide-react';
 import { CategoryModal } from '@/components/admin/CategoryModal';
+import { deleteCategory as apiDeleteCategory } from '@/lib/api/categories';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 
-export default function CategoriesClient() {
-  const { categories, remove } = useCategoriesStore();
-  const products = useProductsStore(s => s.products);
+interface CategoriesClientProps {
+  initialCategories: (Category & { product_count: number })[];
+}
+
+export default function CategoriesClient({ initialCategories }: CategoriesClientProps) {
+  const router = useRouter();
+  const categories = initialCategories;
 
   const [search, setSearch] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
@@ -32,22 +38,27 @@ export default function CategoriesClient() {
     setModalOpen(true);
   };
 
-  const handleDelete = (id: string) => {
-    const productsInCat = products.filter(p => p.category_id === id).length;
-    if (productsInCat > 0) {
-      alert(`Impossible de supprimer : cette catégorie contient ${productsInCat} produits.`);
+  const handleDelete = async (cat: Category & { product_count: number }) => {
+    if (cat.product_count > 0) {
+      toast.error(`Impossible de supprimer : cette catégorie contient ${cat.product_count} références.`);
       return;
     }
     if (confirm('Voulez-vous vraiment supprimer cette catégorie ?')) {
-      remove(id);
+      try {
+        await apiDeleteCategory(cat.id);
+        router.refresh();
+        toast.success('Catégorie supprimée');
+      } catch (err: any) {
+        toast.error('Erreur: ' + err.message);
+      }
     }
   };
 
   return (
-    <div className="space-y-12">
+    <div className="space-y-12 pb-20 font-sans">
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-8">
         <div>
-           <h1 className="font-serif text-4xl text-emerald-950 mb-2">Structure du Catalogue</h1>
+           <h1 className="font-serif text-4xl text-emerald-950 mb-2 font-bold italic">Structure du Catalogue</h1>
            <p className="text-[10px] font-black uppercase tracking-[0.4em] text-[#C9A84C]">Organisation des Collections</p>
         </div>
         <button 
@@ -66,7 +77,7 @@ export default function CategoriesClient() {
              placeholder="Rechercher une catégorie..."
              value={search}
              onChange={e => setSearch(e.target.value)}
-             className="w-full h-16 pl-16 pr-8 bg-white border border-emerald-950/5 rounded-2xl outline-none focus:border-[#C9A84C] shadow-sm font-medium text-emerald-950 transition-all"
+             className="w-full h-16 pl-16 pr-8 bg-white border border-emerald-950/5 rounded-2xl outline-none focus:border-[#C9A84C] shadow-sm font-medium text-emerald-950 transition-all font-sans"
            />
         </div>
       </section>
@@ -78,14 +89,13 @@ export default function CategoriesClient() {
               <tr className="border-b border-emerald-950/5 bg-neutral-50/50">
                 <th className="px-10 py-6 text-left text-[9px] font-black uppercase tracking-[0.3em] text-emerald-950/30">Désignation</th>
                 <th className="px-10 py-6 text-left text-[9px] font-black uppercase tracking-[0.3em] text-emerald-950/30">Lien URL (Slug)</th>
-                <th className="px-10 py-6 text-left text-[9px] font-black uppercase tracking-[0.3em] text-emerald-950/30">Produits Liés</th>
+                <th className="px-10 py-6 text-left text-[9px] font-black uppercase tracking-[0.3em] text-emerald-950/30 text-center">Produits Liés</th>
                 <th className="px-10 py-6 text-right text-[9px] font-black uppercase tracking-[0.3em] text-emerald-950/30">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-emerald-950/5">
               <AnimatePresence mode="popLayout">
                 {filtered.map((category) => {
-                  const productCount = products.filter(p => p.category_id === category.id).length;
                   return (
                     <motion.tr 
                       layout
@@ -101,8 +111,8 @@ export default function CategoriesClient() {
                              <Tag size={20} />
                           </div>
                           <div>
-                            <p className="font-serif text-lg text-emerald-950">{category.name_fr}</p>
-                            <p className="text-xs font-arabic text-emerald-950/30" dir="rtl">{category.name_ar}</p>
+                            <p className="font-serif text-lg text-emerald-950 font-bold">{category.name_fr}</p>
+                            <p className="text-xs font-arabic text-emerald-950/30 text-right" dir="rtl">{category.name_ar}</p>
                           </div>
                         </div>
                       </td>
@@ -112,17 +122,17 @@ export default function CategoriesClient() {
                         </code>
                       </td>
                       <td className="px-10 py-6">
-                         <div className="flex items-center gap-2">
+                         <div className="flex items-center gap-2 justify-center">
                            <FolderTree size={14} className="text-emerald-950/20" />
-                           <span className="text-sm font-bold text-emerald-950">{productCount} <span className="text-[10px] font-black opacity-30">RÉFÉRENCES</span></span>
+                           <span className="text-sm font-bold text-emerald-950">{category.product_count} <span className="text-[10px] font-black opacity-30">RÉFÉRENCES</span></span>
                          </div>
                       </td>
                       <td className="px-10 py-6 text-right">
-                         <div className="flex justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                         <div className="flex justify-end gap-3 transition-opacity">
                             <button onClick={() => handleEdit(category)} className="w-10 h-10 rounded-xl bg-white border border-emerald-950/5 flex items-center justify-center text-emerald-950/40 hover:text-emerald-950 hover:border-emerald-950/20 transition-all shadow-sm">
                                <Edit2 size={14} />
                             </button>
-                            <button onClick={() => handleDelete(category.id)} className="w-10 h-10 rounded-xl bg-white border border-emerald-950/5 flex items-center justify-center text-rose-300 hover:text-rose-600 hover:border-rose-100 transition-all shadow-sm">
+                            <button onClick={() => handleDelete(category)} className="w-10 h-10 rounded-xl bg-white border border-emerald-950/5 flex items-center justify-center text-rose-300 hover:text-rose-600 hover:border-rose-100 transition-all shadow-sm">
                                <Trash2 size={14} />
                             </button>
                          </div>

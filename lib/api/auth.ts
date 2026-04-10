@@ -2,9 +2,11 @@
 
 import { createClient } from '@/utils/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { cookies } from 'next/headers';
 
 export const loginAdmin = async (email: string, password: string) => {
-  const supabase = await createClient();
+  const cookieStore = await cookies();
+  const supabase = createClient(cookieStore);
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password,
@@ -28,13 +30,14 @@ export const loginAdmin = async (email: string, password: string) => {
 };
 
 export const loginCustomer = async (phone: string, password?: string) => {
-  const supabase = await createClient();
+  const cookieStore = await cookies();
+  const supabase = createClient(cookieStore);
   const normalizedPhone = phone.replace(/\s+/g, '').replace(/[-+]/g, '');
   const email = `${normalizedPhone}@amouris-user.dz`;
   
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
-    password: password || 'default_password_if_needed', // In real app, password is required
+    password: password || 'default_password_if_needed',
   });
 
   if (error) return { ok: false, error: error.message };
@@ -60,7 +63,7 @@ export const registerCustomer = async (data: any) => {
     user_metadata: {
       first_name: data.first_name,
       last_name: data.last_name,
-      phone: data.phone, // We store the original phone in metadata for UI
+      phone: data.phone,
       shop_name: data.shop_name,
       wilaya: data.wilaya,
       commune: data.commune,
@@ -75,12 +78,14 @@ export const registerCustomer = async (data: any) => {
 };
 
 export const logout = async () => {
-  const supabase = await createClient();
+  const cookieStore = await cookies();
+  const supabase = createClient(cookieStore);
   await supabase.auth.signOut();
 };
 
 export const getCurrentUser = async () => {
-  const supabase = await createClient();
+  const cookieStore = await cookies();
+  const supabase = createClient(cookieStore);
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 

@@ -8,18 +8,22 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { wilayas } from '@/lib/wilayas';
 import { toast } from 'sonner';
-import { Settings, Save, ShieldCheck, Lock, UserCircle } from 'lucide-react';
-import { useCustomersStore, Customer } from '@/store/customers.store';
-import { useCustomerAuthStore } from '@/store/customer-auth.store';
+import { Save, ShieldCheck, Lock, UserCircle } from 'lucide-react';
+import { updateCustomerProfile, resetCustomerPassword } from '@/lib/api/customers';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 
-export default function SettingsClient() {
+interface SettingsClientProps {
+  initialCustomer: any;
+}
+
+export default function SettingsClient({ initialCustomer }: SettingsClientProps) {
+  const router = useRouter();
   const { language } = useI18n();
-  const { customer, setCustomer } = useCustomerAuthStore();
-  const { update, resetPassword } = useCustomersStore();
   const [isLoading, setIsLoading] = useState(false);
   
   const isAr = language === 'ar';
+  const customer = initialCustomer;
 
   const [profileData, setProfileData] = useState({
     first_name: customer?.first_name || '',
@@ -30,27 +34,21 @@ export default function SettingsClient() {
   });
 
   const [passwordData, setPasswordData] = useState({
-    oldPassword: '',
+    oldPassword: '', // In production, we don't verify old password client-side if we use Supabase auth properly
     newPassword: '',
     confirmPassword: '',
   });
-
-  if (!customer) return null;
 
   const handleProfileSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     
     try {
-      const res = await update(customer.id, profileData);
-      if (res.ok && res.customer) {
-        setCustomer(res.customer);
-        toast.success(isAr ? 'تم تحديث البيانات بنجاح' : 'Profil mis à jour avec succès');
-      } else {
-        toast.error(res.error || (isAr ? 'خطأ في التحديث' : 'Erreur lors de la mise à jour'));
-      }
-    } catch (err) {
-      toast.error(isAr ? 'خطأ في الاتصال' : 'Erreur de connexion');
+      await updateCustomerProfile(customer.id, profileData);
+      toast.success(isAr ? 'تم تحديث البيانات بنجاح' : 'Profil mis à jour avec succès');
+      router.refresh();
+    } catch (err: any) {
+      toast.error(isAr ? 'خطأ في التحديث' : 'Erreur: ' + err.message);
     } finally {
       setIsLoading(false);
     }
@@ -59,11 +57,6 @@ export default function SettingsClient() {
   const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (passwordData.oldPassword !== customer.password_hash) {
-      toast.error(isAr ? 'كلمة المرور القديمة غير صحيحة' : 'Ancien mot de passe incorrect');
-      return;
-    }
-
     if (passwordData.newPassword !== passwordData.confirmPassword) {
       toast.error(isAr ? 'كلمتا المرور غير متطابقتين' : 'Les mots de passe ne correspondent pas');
       return;
@@ -74,20 +67,20 @@ export default function SettingsClient() {
       return;
     }
 
-    resetPassword(customer.id, passwordData.newPassword);
-    
-    // Update local state to reflect new password if needed (though store handles it)
-    const updated = { ...customer, password_hash: passwordData.newPassword };
-    setCustomer(updated);
-
-    toast.success(isAr ? 'تم تغيير كلمة المرور' : 'Mot de passe modifié');
-    setPasswordData({ oldPassword: '', newPassword: '', confirmPassword: '' });
+    try {
+      await resetCustomerPassword(customer.id, passwordData.newPassword);
+      toast.success(isAr ? 'تم تغيير كلمة المرور' : 'Mot de passe modifié');
+      setPasswordData({ oldPassword: '', newPassword: '', confirmPassword: '' });
+      router.refresh();
+    } catch (err: any) {
+      toast.error(isAr ? 'خطأ' : 'Erreur: ' + err.message);
+    }
   };
 
   return (
-    <div className="max-w-4xl space-y-12 pb-20">
+    <div className="max-w-4xl space-y-12 pb-20 font-sans">
       <header>
-        <h1 className="font-serif text-4xl md:text-5xl text-emerald-950 mb-2">
+        <h1 className="font-serif text-4xl md:text-5xl text-emerald-950 mb-2 font-bold italic">
           {isAr ? 'إعدادات الحساب' : 'Paramètres'}
         </h1>
         <p className="text-emerald-950/40 font-medium">
@@ -95,7 +88,7 @@ export default function SettingsClient() {
         </p>
       </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-12 font-sans">
         {/* Profile Section */}
         <div className="md:col-span-2 space-y-8">
           <motion.section 
@@ -115,7 +108,7 @@ export default function SettingsClient() {
                     {isAr ? 'الاسم' : 'Prénom'}
                   </Label>
                   <Input 
-                    className="h-14 rounded-2xl border-emerald-950/5 bg-neutral-50/50 focus:bg-white transition-all shadow-none"
+                    className="h-14 rounded-2xl border-emerald-950/5 bg-neutral-50/50 focus:bg-white transition-all shadow-none font-sans"
                     value={profileData.first_name}
                     onChange={(e) => setProfileData({ ...profileData, first_name: e.target.value })}
                     required 
@@ -126,7 +119,7 @@ export default function SettingsClient() {
                     {isAr ? 'اللقب' : 'Nom'}
                   </Label>
                   <Input 
-                    className="h-14 rounded-2xl border-emerald-950/5 bg-neutral-50/50 focus:bg-white transition-all shadow-none"
+                    className="h-14 rounded-2xl border-emerald-950/5 bg-neutral-50/50 focus:bg-white transition-all shadow-none font-sans"
                     value={profileData.last_name}
                     onChange={(e) => setProfileData({ ...profileData, last_name: e.target.value })}
                     required 
@@ -139,7 +132,7 @@ export default function SettingsClient() {
                   {isAr ? 'اسم المحل' : 'Nom du magasin'}
                 </Label>
                 <Input 
-                  className="h-14 rounded-2xl border-emerald-950/5 bg-neutral-50/50 focus:bg-white transition-all shadow-none"
+                  className="h-14 rounded-2xl border-emerald-950/5 bg-neutral-50/50 focus:bg-white transition-all shadow-none font-sans"
                   value={profileData.shop_name}
                   onChange={(e) => setProfileData({ ...profileData, shop_name: e.target.value })}
                   required 
@@ -155,12 +148,12 @@ export default function SettingsClient() {
                     value={profileData.wilaya} 
                     onValueChange={(val) => setProfileData({ ...profileData, wilaya: val })}
                   >
-                    <SelectTrigger className="h-14 rounded-2xl border-emerald-950/5 bg-neutral-50/50 focus:bg-white transition-all shadow-none">
+                    <SelectTrigger className="h-14 rounded-2xl border-emerald-950/5 bg-neutral-50/50 focus:bg-white transition-all shadow-none font-sans">
                       <SelectValue placeholder={isAr ? 'اختر الولاية' : 'Sélectionner'} />
                     </SelectTrigger>
                     <SelectContent className="rounded-2xl border-emerald-950/5 shadow-2xl">
                       {wilayas.map((w) => (
-                        <SelectItem key={w.id} value={w.name} className="py-3 rounded-xl">
+                        <SelectItem key={w.id} value={w.name} className="py-3 rounded-xl font-sans">
                           {w.id} - {isAr ? w.nameAR : w.name}
                         </SelectItem>
                       ))}
@@ -172,7 +165,7 @@ export default function SettingsClient() {
                     {isAr ? 'البلدية' : 'Commune'}
                   </Label>
                   <Input 
-                    className="h-14 rounded-2xl border-emerald-950/5 bg-neutral-50/50 focus:bg-white transition-all shadow-none"
+                    className="h-14 rounded-2xl border-emerald-950/5 bg-neutral-50/50 focus:bg-white transition-all shadow-none font-sans"
                     value={profileData.commune}
                     onChange={(e) => setProfileData({ ...profileData, commune: e.target.value })}
                     required 
@@ -202,22 +195,6 @@ export default function SettingsClient() {
             </div>
 
             <form onSubmit={handlePasswordSubmit} className="space-y-6">
-              <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-emerald-950/40 px-1">
-                  {isAr ? 'كلمة المرور الحالية' : 'Mot de passe actuel'}
-                </Label>
-                <div className="relative">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-300 rtl:left-auto rtl:right-4" size={16} />
-                  <Input 
-                    type="password"
-                    className="h-14 rounded-2xl border-emerald-950/5 bg-neutral-50/50 pl-12 rtl:pl-4 rtl:pr-12"
-                    value={passwordData.oldPassword}
-                    onChange={(e) => setPasswordData({ ...passwordData, oldPassword: e.target.value })}
-                    required 
-                  />
-                </div>
-              </div>
-
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase tracking-widest text-emerald-950/40 px-1">
@@ -225,7 +202,7 @@ export default function SettingsClient() {
                   </Label>
                   <Input 
                     type="password"
-                    className="h-14 rounded-2xl border-emerald-950/5 bg-neutral-50/50"
+                    className="h-14 rounded-2xl border-emerald-950/5 bg-neutral-50/50 font-sans"
                     value={passwordData.newPassword}
                     onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
                     required 
@@ -237,7 +214,7 @@ export default function SettingsClient() {
                   </Label>
                   <Input 
                     type="password"
-                    className="h-14 rounded-2xl border-emerald-950/5 bg-neutral-50/50"
+                    className="h-14 rounded-2xl border-emerald-950/5 bg-neutral-50/50 font-sans"
                     value={passwordData.confirmPassword}
                     onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
                     required 
@@ -246,7 +223,7 @@ export default function SettingsClient() {
               </div>
 
               <div className="pt-4">
-                <Button type="submit" variant="outline" className="w-full h-14 rounded-2xl border-emerald-950/10 text-emerald-950 hover:bg-neutral-50 font-black uppercase tracking-widest text-[10px]">
+                <Button type="submit" variant="outline" className="w-full h-14 rounded-2xl border-emerald-950/10 text-emerald-950 hover:bg-neutral-50 font-black uppercase tracking-widest text-[10px] font-sans">
                   {isAr ? 'تحديث كلمة المرور' : 'Mettre à jour le mot de passe'}
                 </Button>
               </div>
@@ -264,7 +241,7 @@ export default function SettingsClient() {
                   ? 'هل تحتاج إلى تغيير رقم هاتفك أو معلومات ضريبية؟ تواصل مع مدير حسابك.' 
                   : 'Besoin de modifier votre numéro ou vos infos fiscales ? Contactez votre gestionnaire de compte.'}
               </p>
-              <Button className="w-full bg-white text-emerald-950 hover:bg-emerald-50 rounded-xl text-[10px] font-black uppercase tracking-widest py-6">
+              <Button className="w-full bg-white text-emerald-950 hover:bg-emerald-50 rounded-xl text-[10px] font-black uppercase tracking-widest py-6 font-sans">
                 WhatsApp Support
               </Button>
            </div>

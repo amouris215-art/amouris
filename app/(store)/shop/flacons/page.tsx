@@ -1,7 +1,33 @@
-import dynamic from 'next/dynamic';
+import { createClient } from '@/lib/supabase/server';
+import { cookies } from 'next/headers';
+import FlaconsClient from './FlaconsClient';
 
-const FlaconsClient = dynamic(() => import('./FlaconsClient'), { ssr: false });
+export default async function FlaconsPage() {
+  const cookieStore = cookies();
+  const supabase = createClient(cookieStore);
 
-export default function FlaconsPage() {
-  return <FlaconsClient />;
+  const [
+    { data: products },
+    { data: categories },
+    { data: brands },
+    { data: tags }
+  ] = await Promise.all([
+    supabase
+      .from('products')
+      .select('*, categories(*), brands(*), flacon_variants(*), product_tags(tag_id)')
+      .eq('product_type', 'flacon')
+      .eq('status', 'active'),
+    supabase.from('categories').select('*'),
+    supabase.from('brands').select('*'),
+    supabase.from('tags').select('*')
+  ]);
+
+  return (
+    <FlaconsClient 
+      initialProducts={products || []} 
+      initialCategories={categories || []}
+      initialBrands={brands || []}
+      initialTags={tags || []}
+    />
+  );
 }

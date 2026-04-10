@@ -1,30 +1,32 @@
-import { useState, useEffect, useMemo } from 'react'
-import { useCustomersStore } from '@/store/customers.store'
-import { useOrdersStore } from '@/store/orders.store'
+'use client'
+
+import { useState, useMemo } from 'react'
 import { 
-  Search, User, Phone, MapPin, 
-  ShoppingBag, Eye, ShieldAlert, 
-  ShieldCheck, Filter, Loader2,
-  ChevronRight
+  Search, User, MapPin, 
+  Eye, ShieldAlert, 
+  ShieldCheck, Filter
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useI18n } from '@/i18n/i18n-context'
+import { freezeCustomer as apiFreezeCustomer } from '@/lib/api/customers'
+import { toast } from 'sonner'
 
-export default function AdminCustomersClient() {
+interface AdminCustomersClientProps {
+  initialCustomers: any[]
+}
+
+export default function AdminCustomersClient({ initialCustomers }: AdminCustomersClientProps) {
   const { t, language } = useI18n()
-  const { customers, fetchCustomers, toggleFreeze } = useCustomersStore()
-  const { orders, fetchOrders } = useOrdersStore()
+  const router = useRouter()
   
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [wilayaFilter, setWilayaFilter] = useState('all')
   const [showFilters, setShowFilters] = useState(false)
 
-  useEffect(() => {
-    fetchCustomers()
-    fetchOrders()
-  }, [fetchCustomers, fetchOrders])
+  const customers = initialCustomers
 
   const filtered = useMemo(() => {
     return customers.filter(c => {
@@ -34,14 +36,24 @@ export default function AdminCustomersClient() {
                           (c.email && c.email.toLowerCase().includes(search.toLowerCase()))
       
       const matchStatus = statusFilter === 'all' || 
-                          (statusFilter === 'active' && c.status === 'active') ||
-                          (statusFilter === 'frozen' && c.status === 'frozen')
+                          (statusFilter === 'active' && !c.is_frozen) ||
+                          (statusFilter === 'frozen' && c.is_frozen)
       
       const matchWilaya = wilayaFilter === 'all' || c.wilaya === wilayaFilter
       
       return matchSearch && matchStatus && matchWilaya
     })
   }, [customers, search, statusFilter, wilayaFilter])
+
+  const handleToggleFreeze = async (id: string, currentIsFrozen: boolean) => {
+    try {
+      await apiFreezeCustomer(id, !currentIsFrozen)
+      router.refresh()
+      toast.success(currentIsFrozen ? 'Compte réactivé' : 'Compte suspendu')
+    } catch (err: any) {
+      toast.error('Erreur: ' + err.message)
+    }
+  }
 
   return (
     <div className="space-y-12 pb-20">
@@ -115,9 +127,7 @@ export default function AdminCustomersClient() {
             <tbody className="divide-y divide-emerald-950/5">
               <AnimatePresence mode="popLayout">
                 {filtered.map((customer) => {
-                  const customerOrders = orders.filter(o => o.customer_id === customer.id)
-                  const totalSpent = customerOrders.reduce((s, o) => s + o.total_amount, 0)
-                  const isFrozen = customer.status === 'frozen'
+                  const isFrozen = customer.is_frozen
                   
                   return (
                     <motion.tr 
@@ -149,13 +159,13 @@ export default function AdminCustomersClient() {
                       </td>
                       <td className="px-10 py-8">
                          <div className="text-center">
-                            <div className="font-serif text-lg font-bold text-emerald-950">{customerOrders.length} <span className="text-[10px] font-normal opacity-30 italic">Cmd</span></div>
-                            <div className="text-[10px] text-emerald-700 font-black uppercase tracking-widest mt-1">{totalSpent.toLocaleString()} {t('common.dzd')}</div>
+                            <div className="font-serif text-lg font-bold text-emerald-950">{customer.order_count} <span className="text-[10px] font-normal opacity-30 italic">Cmd</span></div>
+                            <div className="text-[10px] text-emerald-700 font-black uppercase tracking-widest mt-1">{customer.total_spent.toLocaleString()} {t('common.dzd')}</div>
                          </div>
                       </td>
                       <td className="px-10 py-8">
                         <button 
-                          onClick={() => toggleFreeze(customer.id)}
+                          onClick={() => handleToggleFreeze(customer.id, !!isFrozen)}
                           className={`px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${isFrozen ? 'bg-rose-50 text-rose-600' : 'bg-emerald-50 text-emerald-700'}`}
                         >
                            {isFrozen ? <ShieldAlert size={12} className="inline mr-2" /> : <ShieldCheck size={12} className="inline mr-2" />}
@@ -165,9 +175,9 @@ export default function AdminCustomersClient() {
                       <td className="px-10 py-8 text-right">
                          <div className="flex justify-end gap-3 h-full items-center">
                             <Link 
-                              href={`/admin/customers/${customer.id}`}
-                              className="w-12 h-12 rounded-2xl bg-white border border-emerald-950/5 flex items-center justify-center text-emerald-950/40 hover:text-emerald-950 hover:border-emerald-950/20 transition-all shadow-sm"
-                              title={t('common.view_details')}
+                               href={`/admin/customers/${customer.id}`}
+                               className="w-12 h-12 rounded-2xl bg-white border border-emerald-950/5 flex items-center justify-center text-emerald-950/40 hover:text-emerald-950 hover:border-emerald-950/20 transition-all shadow-sm"
+                               title={t('common.view_details')}
                             >
                                <Eye size={18} />
                             </Link>

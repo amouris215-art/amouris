@@ -2,9 +2,11 @@
 
 import { createClient } from '@/utils/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { cookies } from 'next/headers';
 
 export const fetchAllProducts = async (filters: any = {}) => {
-  const supabase = await createClient();
+  const cookieStore = await cookies();
+  const supabase = createClient(cookieStore);
   let query = supabase
     .from('products')
     .select(`
@@ -38,7 +40,8 @@ export const fetchAllProducts = async (filters: any = {}) => {
 };
 
 export const fetchProductBySlug = async (slug: string) => {
-  const supabase = await createClient();
+  const cookieStore = await cookies();
+  const supabase = createClient(cookieStore);
   const { data, error } = await supabase
     .from('products')
     .select(`

@@ -17,6 +17,37 @@ export const fetchAllOrders = async () => {
   return data;
 };
 
+export const fetchCustomerOrders = async (customerId: string) => {
+  const admin = createAdminClient();
+  const { data, error } = await admin
+    .from('orders')
+    .select(`
+      *,
+      items:order_items(*)
+    `)
+    .eq('customer_id', customerId)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return data;
+};
+
+export const fetchOrderById = async (id: string) => {
+  const admin = createAdminClient();
+  const { data, error } = await admin
+    .from('orders')
+    .select(`
+      *,
+      items:order_items(*),
+      status_history:order_history(*)
+    `)
+    .eq('id', id)
+    .single();
+
+  if (error) throw error;
+  return data;
+};
+
 export const createOrder = async (data: any) => {
   const admin = createAdminClient();
   const { items, ...orderData } = data;

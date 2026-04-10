@@ -1,64 +1,78 @@
-'use client'
-
-import { useEffect, useState } from 'react'
-import { useAdminAuthStore } from '@/store/admin-auth.store'
-import { useProductsStore, Product } from '@/store/products.store'
-import { useOrdersStore } from '@/store/orders.store'
-import { useCustomersStore } from '@/store/customers.store'
-import { useSettingsStore } from '@/store/settings.store'
 import { 
   ShoppingBag, 
   Users, 
   TrendingUp, 
   Package, 
   AlertTriangle, 
-  ArrowRight,
-  ChevronDown
+  ArrowRight
 } from 'lucide-react'
 import Link from 'next/link'
+import { createClient } from '@/lib/supabase/server'
+import { cookies } from 'next/headers'
+import { redirect } from 'next/navigation'
 
-export default function AdminDashboard() {
-  const { email } = useAdminAuthStore()
-  
-  // Stores
-  const { products, fetchProducts } = useProductsStore()
-  const { orders, fetchOrders } = useOrdersStore()
-  const { customers, fetchCustomers } = useCustomersStore()
-  const { alertStockPerfume, alertStockFlacon } = useSettingsStore()
+export const dynamic = 'force-dynamic';
 
-  useEffect(() => {
-    fetchProducts()
-    fetchOrders()
-    fetchCustomers()
-  }, [fetchProducts, fetchOrders, fetchCustomers])
+export default async function AdminDashboard() {
+  const cookieStore = cookies()
+  const supabase = createClient(cookieStore)
 
-  // Stats calculation
-  const totalRevenue = orders.reduce((s, o) => s + o.total_amount, 0)
-  const activeProducts = products.filter(p => p.status === 'active').length
-  
-  // Monthly Revenue
-  const currentMonth = new Date().getMonth()
-  const currentYear = new Date().getFullYear()
-  const monthlyRevenue = orders
-    .filter(o => {
-      const d = new Date(o.created_at)
-      return d.getMonth() === currentMonth && d.getFullYear() === currentYear
-    })
-    .reduce((s, o) => s + o.total_amount, 0)
+  // 1. Check Auth & Admin Role
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/admin/login')
 
-  // Low Stock Alerts
-  const lowStockProducts = products.filter(p => {
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
+  if (profile?.role !== 'admin') redirect('/')
+
+  // 2. Fetch Aggregates & Data in Parallel
+  const now = new Date()
+  const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
+
+  const [
+    { count: productsCount },
+    { count: ordersCount },
+    { count: customersCount },
+    { data: recentOrders },
+    { data: newestCustomers },
+    { data: monthlyOrders },
+    { data: settings },
+    { data: allProducts }
+  ] = await Promise.all([
+    supabase.from('products').select('*', { count: 'exact', head: true }).eq('status', 'active'),
+    supabase.from('orders').select('*', { count: 'exact', head: true }),
+    supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'customer'),
+    supabase.from('orders').select('*').order('created_at', { ascending: false }).limit(5),
+    supabase.from('profiles').select('*').eq('role', 'customer').order('created_at', { ascending: false }).limit(3),
+    supabase.from('orders').select('total_amount').gte('created_at', firstDayOfMonth),
+    supabase.from('settings').select('*').limit(1).maybeSingle(),
+    supabase.from('products').select('*, flacon_variants(*)').eq('status', 'active')
+  ])
+
+  // 3. Process Logic
+  const monthlyRevenue = monthlyOrders?.reduce((acc, o) => acc + (o.total_amount || 0), 0) || 0
+  const thresholdPerfume = settings?.free_shipping_threshold || 1000 // use correct column name from DB if different, but instructions say alertStockPerfume in store. 
+  // Wait, let's check settings columns in previous scripts. 
+  // In initial-data.ts it was alert_stock_perfume.
+  const alertPerfume = settings?.alert_stock_perfume || 1000
+  const alertFlacon = settings?.alert_stock_flacon || 20
+
+  const lowStockProducts = (allProducts || []).filter(p => {
     if (p.product_type === 'perfume') {
-      return (p.stock_grams || 0) < alertStockPerfume
+      return (p.stock_grams || 0) < alertPerfume
     } else {
-      return p.variants?.some(v => v.stock_units < alertStockFlacon)
+      return p.flacon_variants?.some((v: any) => v.stock_units < alertFlacon)
     }
-  })
+  }).slice(0, 5)
 
   const stats = [
-    { label: 'Produits actifs', value: activeProducts, icon: Package, color: 'bg-emerald-50 text-emerald-700' },
-    { label: 'Commandes totales', value: orders.length, icon: ShoppingBag, color: 'bg-blue-50 text-blue-700' },
-    { label: 'Clients inscrits', value: customers.length, icon: Users, color: 'bg-purple-50 text-purple-700' },
+    { label: 'Produits actifs', value: productsCount || 0, icon: Package, color: 'bg-emerald-50 text-emerald-700' },
+    { label: 'Commandes totales', value: ordersCount || 0, icon: ShoppingBag, color: 'bg-blue-50 text-blue-700' },
+    { label: 'Clients inscrits', value: customersCount || 0, icon: Users, color: 'bg-purple-50 text-purple-700' },
     { label: 'Revenu du mois', value: `${monthlyRevenue.toLocaleString()} DZD`, icon: TrendingUp, color: 'bg-amber-50 text-amber-700' },
   ]
 
@@ -67,7 +81,7 @@ export default function AdminDashboard() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
         <div>
           <h1 className="text-4xl font-black text-gray-900 font-serif tracking-tight">Vue d&apos;ensemble</h1>
-          <p className="text-gray-500 text-sm mt-2 font-medium">B2B Dashboard — {email}</p>
+          <p className="text-gray-500 text-sm mt-2 font-medium">B2B Dashboard — {user.email}</p>
         </div>
         <div className="flex gap-4 w-full md:w-auto">
             <Link href="/admin/orders" className="flex-1 md:flex-none text-center text-[10px] font-black bg-white px-6 py-4 border border-emerald-50 rounded-2xl shadow-sm hover:bg-emerald-50 transition-all uppercase tracking-widest">Commandes</Link>
@@ -75,7 +89,6 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map(({ label, value, icon: Icon, color }) => (
           <div key={label} className="bg-white rounded-[2.5rem] border border-emerald-50 p-8 shadow-sm hover:shadow-xl hover:shadow-emerald-900/5 transition-all group overflow-hidden relative">
@@ -92,7 +105,6 @@ export default function AdminDashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Recent Orders */}
         <div className="lg:col-span-2 space-y-8">
           <div className="bg-white rounded-[2.5rem] border border-emerald-50 overflow-hidden shadow-sm">
               <div className="p-8 border-b border-emerald-50 flex items-center justify-between">
@@ -102,8 +114,8 @@ export default function AdminDashboard() {
                   </Link>
               </div>
               <div className="divide-y divide-emerald-50">
-                  {orders.slice(0, 5).length > 0 ? (
-                      orders.slice(0, 5).map(order => {
+                  {recentOrders && recentOrders.length > 0 ? (
+                      recentOrders.map(order => {
                           const name = order.guest_first_name
                             ? `${order.guest_first_name} ${order.guest_last_name}`
                             : (order.customer_id ? `Client #${order.customer_id.slice(0, 6)}` : 'Client');
@@ -134,7 +146,6 @@ export default function AdminDashboard() {
               </div>
           </div>
 
-          {/* Low Stock Alerts */}
           <div className="bg-white rounded-[2.5rem] border border-rose-50 overflow-hidden shadow-sm">
             <div className="p-8 border-b border-rose-50 flex items-center justify-between bg-rose-50/30">
                 <div className="flex items-center gap-3">
@@ -174,21 +185,20 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Newest Customers */}
         <div className="space-y-8">
           <div className="bg-white rounded-[2.5rem] border border-emerald-50 p-8 shadow-sm">
               <h2 className="text-xl font-bold text-emerald-950 font-serif mb-8 flex items-center justify-between">
                 <span>Nouveaux Clients</span>
-                <span className="w-8 h-8 rounded-full bg-emerald-50 text-emerald-900 text-[10px] flex items-center justify-center font-black">{customers.length}</span>
+                <span className="w-8 h-8 rounded-full bg-emerald-50 text-emerald-900 text-[10px] flex items-center justify-center font-black">{customersCount || 0}</span>
               </h2>
               <div className="space-y-6">
-                  {customers.slice(0, 3).map(customer => (
+                  {newestCustomers?.map(customer => (
                       <div key={customer.id} className="flex items-center gap-4 group">
                           <div className="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-700 font-bold group-hover:bg-amber-950 group-hover:text-white group-hover:rotate-6 transition-all">
                               {(customer.first_name || customer.phone || '?').charAt(0)}
                           </div>
                           <div className="flex-1 min-w-0">
-                              <p className="text-sm font-bold text-emerald-950 truncate">{customer.first_name} {customer.last_name}</p>
+                               <p className="text-sm font-bold text-emerald-950 truncate">{customer.first_name} {customer.last_name}</p>
                               <p className="text-[10px] text-emerald-950/30 uppercase tracking-widest font-black">{customer.wilaya}</p>
                           </div>
                           <Link href={`/admin/customers/${customer.id}`} className="text-emerald-900/10 hover:text-emerald-900 transition-colors">
@@ -196,11 +206,11 @@ export default function AdminDashboard() {
                           </Link>
                       </div>
                   ))}
-                  {customers.length === 0 && (
+                  {(!newestCustomers || newestCustomers.length === 0) && (
                     <p className="text-center text-emerald-950/20 py-10 italic">Aucun client inscrit</p>
                   )}
               </div>
-              {customers.length > 3 && (
+              {(customersCount || 0) > 3 && (
                 <Link href="/admin/customers" className="mt-8 block text-center py-4 border-t border-emerald-50 text-[10px] font-black uppercase tracking-widest text-emerald-950/40 hover:text-emerald-950 transition-colors">
                   Voir tous les clients
                 </Link>
@@ -212,9 +222,9 @@ export default function AdminDashboard() {
               <TrendingUp size={240} />
             </div>
             <p className="text-[10px] font-black uppercase tracking-[0.3em] text-emerald-400 mb-2">Total Revenu</p>
-            <h3 className="text-4xl font-black font-sans tracking-tighter mb-6">{totalRevenue.toLocaleString()} <span className="text-sm opacity-50">DZD</span></h3>
+            <h3 className="text-4xl font-black font-sans tracking-tighter mb-6">{monthlyRevenue.toLocaleString()} <span className="text-sm opacity-50">DZD (Ce mois)</span></h3>
             <div className="h-1 w-12 bg-emerald-400 mb-6 rounded-full" />
-            <p className="text-xs text-white/50 leading-relaxed">Croissance calculée sur l&apos;ensemble de la période d&apos;activité de la boutique.</p>
+            <p className="text-xs text-white/50 leading-relaxed">Revenu cumulé sur le mois en cours.</p>
           </div>
         </div>
       </div>

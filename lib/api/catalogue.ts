@@ -2,11 +2,13 @@
 
 import { createClient } from '@/utils/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { cookies } from 'next/headers';
 
-// --- Generic Helpers ---
+// --- Generic Helpers (internal, not exported) ---
 
 const fetchAll = async (table: string, orderCol = 'name_fr') => {
-  const supabase = await createClient();
+  const cookieStore = await cookies();
+  const supabase = createClient(cookieStore);
   const { data, error } = await supabase.from(table).select('*').order(orderCol);
   if (error) throw error;
   return data;
@@ -33,33 +35,29 @@ const deleteItem = async (table: string, id: string) => {
   return true;
 };
 
-// --- Exports ---
+// --- Fetch Functions ---
 
-export const fetchCategories = () => fetchAll('categories');
-export const fetchBrands = () => fetchAll('brands', 'name');
-export const fetchTags = () => fetchAll('tags');
-export const fetchCollections = () => fetchAll('collections');
+export const fetchCategories = async () => fetchAll('categories');
+export const fetchBrands = async () => fetchAll('brands', 'name');
+export const fetchTags = async () => fetchAll('tags');
+export const fetchCollections = async () => fetchAll('collections');
 
-export const categoryApi = {
-  create: (data: any) => createItem('categories', data),
-  update: (id: string, data: any) => updateItem('categories', id, data),
-  remove: (id: string) => deleteItem('categories', id),
-};
+// --- Category CRUD ---
+export const createCategory = async (data: any) => createItem('categories', data);
+export const updateCategory = async (id: string, data: any) => updateItem('categories', id, data);
+export const removeCategory = async (id: string) => deleteItem('categories', id);
 
-export const brandApi = {
-  create: (data: any) => createItem('brands', data),
-  update: (id: string, data: any) => updateItem('brands', id, data),
-  remove: (id: string) => deleteItem('brands', id),
-};
+// --- Brand CRUD ---
+export const createBrand = async (data: any) => createItem('brands', data);
+export const updateBrand = async (id: string, data: any) => updateItem('brands', id, data);
+export const removeBrand = async (id: string) => deleteItem('brands', id);
 
-export const collectionApi = {
-  create: (data: any) => createItem('collections', data),
-  update: (id: string, data: any) => updateItem('collections', id, data),
-  remove: (id: string) => deleteItem('collections', id),
-};
+// --- Collection CRUD ---
+export const createCollection = async (data: any) => createItem('collections', data);
+export const updateCollection = async (id: string, data: any) => updateItem('collections', id, data);
+export const removeCollection = async (id: string) => deleteItem('collections', id);
 
-export const tagApi = {
-  create: (data: any) => createItem('tags', data),
-  update: (id: string, data: any) => updateItem('tags', id, data),
-  remove: (id: string) => deleteItem('tags', id),
-};
+// --- Tag CRUD ---
+export const createTag = async (data: any) => createItem('tags', data);
+export const updateTag = async (id: string, data: any) => updateItem('tags', id, data);
+export const removeTag = async (id: string) => deleteItem('tags', id);

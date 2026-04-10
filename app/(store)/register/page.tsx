@@ -18,10 +18,17 @@ const WILAYAS = [
   'Béni Abbès','In Salah','In Guezzam','Touggourt','Djanet','El MGhair','El Meniaa'
 ]
 
+import { createBrowserClient } from '@supabase/ssr'
+import { normalizePhone, phoneToEmail } from '@/lib/utils/phone'
+
 export default function RegisterPage() {
   const router = useRouter()
   const setCustomer = useCustomerAuthStore(s => s.setCustomer)
-  const registerCustomer = useCustomersStore(s => s.register)
+
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
 
   const [form, setForm] = useState({
     firstName: '', 
@@ -68,26 +75,61 @@ export default function RegisterPage() {
     if (!validate()) return
 
     setLoading(true)
-    // Simulate slight delay for luxury feel
-    await new Promise(r => setTimeout(r, 400))
 
-    const result = await registerCustomer({
-      first_name: form.firstName.trim(),
-      last_name: form.lastName.trim(),
-      phone: form.phone.trim(),
-      shop_name: form.shopName.trim() || undefined,
-      wilaya: form.wilaya,
-      commune: form.commune.trim() || undefined,
-      password: form.password,
-    })
+    try {
+      const normalizedPhone = normalizePhone(form.phone)
+      const fakeEmail = phoneToEmail(normalizedPhone)
 
-    if (result.ok && result.customer) {
-      setCustomer(result.customer)
-      router.replace('/account')
-    } else {
-      setGlobalError(result.error || 'Échec de la création du compte')
+      // 1. Vérifier si le numéro existe déjà
+      const { data: existingProfile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('phone', normalizedPhone)
+        .maybeSingle()
+
+      if (existingProfile) {
+        throw new Error('Ce numéro est déjà enregistré')
+      }
+
+      // 2. Créer le compte
+      const { data: authData, error: signUpError } = await supabase.auth.signUp({
+        email: fakeEmail,
+        password: form.password,
+        options: {
+          data: {
+            first_name: form.firstName.trim(),
+            last_name: form.lastName.trim(),
+            shop_name: form.shopName.trim() || null,
+            phone: normalizedPhone,
+            wilaya: form.wilaya,
+            commune: form.commune.trim() || null,
+            role: 'customer'
+          }
+        }
+      })
+
+      if (signUpError) throw signUpError
+
+      if (authData.user) {
+        // Sync Zustand store for UI consistency (if needed)
+        setCustomer({
+          id: authData.user.id,
+          first_name: form.firstName.trim(),
+          last_name: form.lastName.trim(),
+          phone: normalizedPhone,
+          shop_name: form.shopName.trim() || undefined,
+          wilaya: form.wilaya,
+          commune: form.commune.trim() || undefined,
+          role: 'customer'
+        } as any)
+        
+        router.replace('/account')
+      }
+    } catch (err: any) {
+      setGlobalError(err.message || 'Échec de la création du compte')
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }
 
   return (

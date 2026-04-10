@@ -2,16 +2,32 @@
 
 import { useMemo, useState } from 'react';
 import { useI18n } from '@/i18n/i18n-context';
-import { useProductsStore } from '@/store/products.store';
-import { useShallow } from 'zustand/react/shallow';
 import { ProductCard } from '@/components/store/product-card';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Slider } from '@/components/ui/slider';
 import { ChevronDown, Filter, X } from 'lucide-react';
 
-export default function FlaconsClient() {
+interface FlaconsClientProps {
+  initialProducts: any[];
+  initialCategories: any[];
+  initialBrands: any[];
+  initialTags: any[];
+}
+
+export default function FlaconsClient({ 
+  initialProducts, 
+  initialCategories, 
+  initialBrands, 
+  initialTags 
+}: FlaconsClientProps) {
   const { language } = useI18n();
-  const products = useProductsStore(useShallow(s => s.getActiveByType('flacon')));
+  const products = useMemo(() => initialProducts.map(p => ({
+    ...p,
+    tag_ids: p.product_tags?.map((pt: any) => pt.tag_id) || []
+  })), [initialProducts]);
+  const categories = initialCategories;
+  const brands = initialBrands;
+  const tags = initialTags;
 
   const [selectedSize, setSelectedSize] = useState<string>('all');
   const [selectedColor, setSelectedColor] = useState<string>('all');

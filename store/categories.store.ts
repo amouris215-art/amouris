@@ -1,7 +1,7 @@
 'use client'
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { fetchCategories, categoryApi } from '@/lib/api/catalogue'
+import { fetchCategories, createCategory, updateCategory as updateCategoryApi, removeCategory } from '@/lib/api/catalogue'
 
 export interface Category {
   id: string
@@ -53,7 +53,7 @@ export const useCategoriesStore = create<CategoriesStore>()(
       addCategory: async (category) => {
         set({ isLoading: true })
         try {
-          const data = await categoryApi.create(category)
+          const data = await createCategory(category)
           set(s => ({ categories: [...s.categories, data], isLoading: false }))
         } catch (err: any) {
           set({ error: err.message, isLoading: false })
@@ -64,7 +64,7 @@ export const useCategoriesStore = create<CategoriesStore>()(
       update: async (id, updates) => {
         set({ isLoading: true })
         try {
-          const data = await categoryApi.update(id, updates)
+          const data = await updateCategoryApi(id, updates)
           set(s => ({
             categories: s.categories.map(c => c.id === id ? { ...c, ...data } : c),
             isLoading: false
@@ -78,7 +78,7 @@ export const useCategoriesStore = create<CategoriesStore>()(
       deleteCategory: async (id) => {
         set({ isLoading: true })
         try {
-          await categoryApi.remove(id)
+          await removeCategory(id)
           set(s => ({ categories: s.categories.filter(c => c.id !== id), isLoading: false }))
         } catch (err: any) {
           set({ error: err.message, isLoading: false })

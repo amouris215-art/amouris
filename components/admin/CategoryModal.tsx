@@ -2,8 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { useCategoriesStore, Category } from '@/store/categories.store';
-import { Loader2, Sparkles, Tag } from 'lucide-react';
+import { Category } from '@/store/categories.store';
+import { Loader2, Tag } from 'lucide-react';
+import { createCategory, updateCategory } from '@/lib/api/categories';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 
 interface CategoryModalProps {
   category?: Category | null;
@@ -12,7 +15,7 @@ interface CategoryModalProps {
 }
 
 export function CategoryModal({ category, isOpen, onClose }: CategoryModalProps) {
-  const { add, update } = useCategoriesStore();
+  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   
   const [formData, setFormData] = useState<Omit<Category, 'id'>>({
@@ -43,14 +46,17 @@ export function CategoryModal({ category, isOpen, onClose }: CategoryModalProps)
 
     try {
       if (category) {
-        await update(category.id, formData);
+        await updateCategory(category.id, formData);
+        toast.success('Catégorie mise à jour');
       } else {
-        await add(formData);
+        await createCategory(formData);
+        toast.success('Catégorie créée');
       }
+      router.refresh();
       onClose();
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error saving category:', err);
-      alert('Erreur lors de la sauvegarde');
+      toast.error('Erreur: ' + err.message);
     } finally {
       setIsLoading(false);
     }
@@ -60,6 +66,7 @@ export function CategoryModal({ category, isOpen, onClose }: CategoryModalProps)
     return name
       .toLowerCase()
       .trim()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
       .replace(/[^\w\s-]/g, '')
       .replace(/[\s_-]+/g, '-')
       .replace(/^-+|-+$/g, '');
@@ -67,7 +74,7 @@ export function CategoryModal({ category, isOpen, onClose }: CategoryModalProps)
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-xl bg-white rounded-[2rem] p-0 border-none shadow-2xl">
+      <DialogContent className="max-w-xl bg-white rounded-[2rem] p-0 border-none shadow-2xl font-sans">
         <div className="bg-[#0a3d2e] p-8 text-white relative overflow-hidden">
            <div className="absolute top-0 right-0 w-48 h-48 bg-emerald-400/10 rounded-full blur-[60px]" />
            <DialogHeader className="relative z-10">
@@ -105,7 +112,7 @@ export function CategoryModal({ category, isOpen, onClose }: CategoryModalProps)
                     value={formData.name_ar} 
                     onChange={e => setFormData({ ...formData, name_ar: e.target.value })} 
                     dir="rtl" 
-                    className="w-full h-14 px-6 rounded-2xl bg-neutral-50 border border-emerald-950/5 focus:border-[#C9A84C] outline-none font-medium text-emerald-950 transition-colors font-arabic" 
+                    className="w-full h-14 px-6 rounded-2xl bg-neutral-50 border border-emerald-950/5 focus:border-[#C9A84C] outline-none font-medium text-emerald-950 transition-colors font-arabic text-right" 
                  />
               </div>
 

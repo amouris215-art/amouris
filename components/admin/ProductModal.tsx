@@ -2,41 +2,37 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { useProductsStore, FlaconVariant, Product } from '@/store/products.store';
-import { useCategoriesStore } from '@/store/categories.store';
-import { useBrandsStore } from '@/store/brands.store';
-import { useTagsStore } from '@/store/tags.store';
-import { useCollectionsStore } from '@/store/collections.store';
+import { createClient } from '@/lib/supabase/client';
+import { addProduct as apiAddProduct, updateProduct as apiUpdateProduct } from '@/lib/api/products';
 import { Upload, X, Plus, Trash2, Loader2, Sparkles, Box, Droplets, Image as ImageIcon, Eye, EyeOff, AlertCircle } from 'lucide-react';
 
 interface ProductModalProps {
-  product?: Product | null;
+  product?: any | null;
   isOpen: boolean;
   onClose: () => void;
+  categories: any[];
+  brands: any[];
+  collections: any[];
+  tags: any[];
+  onSave: () => void;
 }
 
-function fileToBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = () => resolve(reader.result as string)
-    reader.onerror = reject
-    reader.readAsDataURL(file)
-  })
-}
-
-export function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
-  const { addProduct, updateProduct } = useProductsStore();
-  const categories = useCategoriesStore(s => s.categories);
-  const brands = useBrandsStore(s => s.brands);
-  const collections = useCollectionsStore(s => s.collections);
-  const tags = useTagsStore(s => s.tags);
-
+export function ProductModal({ 
+  product, 
+  isOpen, 
+  onClose, 
+  categories, 
+  brands, 
+  collections, 
+  tags,
+  onSave 
+}: ProductModalProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [type, setType] = useState<'perfume' | 'flacon'>('perfume');
   const fileInputRef = useRef<HTMLInputElement>(null);
   
-  const [formData, setFormData] = useState<Partial<Product>>({
+  const [formData, setFormData] = useState<any>({
     name_fr: '',
     name_ar: '',
     description_fr: '',
@@ -52,7 +48,7 @@ export function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
   const [slug, setSlug] = useState('');
   const [pricePerGram, setPricePerGram] = useState<number>(0);
   const [stockGrams, setStockGrams] = useState<number>(0);
-  const [variants, setVariants] = useState<FlaconVariant[]>([]);
+  const [variants, setVariants] = useState<any[]>([]);
 
   useEffect(() => {
     if (product) {
@@ -64,7 +60,7 @@ export function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
         description_fr: product.description_fr,
         description_ar: product.description_ar,
         category_id: product.category_id,
-        brand_id: product.brand_id,
+        brand_id: product.brand_id || '',
         collection_id: product.collection_id || '',
         tag_ids: product.tag_ids || [],
         images: product.images || [],
@@ -195,12 +191,13 @@ export function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
       };
 
       if (product) {
-        await updateProduct(product.id, data);
+        await apiUpdateProduct(product.id, data);
       } else {
-        await addProduct(data);
+        await apiAddProduct(data);
       }
-      onClose();
+      onSave();
     } catch (err) {
+      console.error(err);
       alert('Erreur lors de la sauvegarde');
     } finally {
       setIsLoading(false);

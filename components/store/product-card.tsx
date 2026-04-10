@@ -13,7 +13,7 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product, index = 0, compact = false }: ProductCardProps) {
-  const { language } = useI18n()
+  const { t, language } = useI18n()
   const tags = useTagsStore(s => s.tags)
   
   const name = language === 'ar' ? product.name_ar : product.name_fr
@@ -70,7 +70,7 @@ export function ProductCard({ product, index = 0, compact = false }: ProductCard
           {/* Type Indicator */}
           <div className="absolute bottom-4 left-4 z-20 opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 transition-all duration-700">
              <span className="text-[8px] font-black uppercase tracking-[0.2em] px-3 py-1 bg-[#C9A84C] text-emerald-950 rounded-full">
-                {isPerfume ? (language === 'ar' ? 'مجموعة عطرية' : 'Huile de Parfum') : (language === 'ar' ? 'كريستال' : 'Flacons d\'Elite')}
+                {isPerfume ? t('product.huile_badge') : t('product.flacons_badge')}
              </span>
           </div>
         </div>
@@ -106,7 +106,7 @@ export function ProductCard({ product, index = 0, compact = false }: ProductCard
               {displayPrice?.toLocaleString()}
             </span>
             <span className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest text-gray-400">
-              DZD {isPerfume ? '/ G' : ''}
+              {t('common.dzd')} {isPerfume ? t('common.per_gram') : ''}
             </span>
           </div>
         </div>

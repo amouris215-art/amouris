@@ -1,10 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAdminAuth } from '@/store/admin-auth.store'
 import { Eye, EyeOff, Lock } from 'lucide-react'
 import Link from 'next/link'
+import { createBrowserClient } from '@supabase/ssr'
 
 export default function AdminLoginPage() {
   const [email, setEmail] = useState('')
@@ -13,14 +13,11 @@ export default function AdminLoginPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const router = useRouter()
-  const { login, isAdminAuthenticated } = useAdminAuth()
 
-  // Si déjà connecté → redirect direct
-  useEffect(() => {
-    if (isAdminAuthenticated) {
-      router.replace('/admin')
-    }
-  }, [isAdminAuthenticated, router])
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -28,11 +25,25 @@ export default function AdminLoginPage() {
     setLoading(true)
 
     try {
-      const result = await login(email, password)
-      if (result.ok) {
+      const { data, error: authError } = await supabase.auth.signInWithPassword({ email, password })
+      
+      if (authError) {
+        throw authError
+      }
+
+      if (data?.user) {
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', data.user.id)
+          .single()
+
+        if (profileError || !profile || profile.role !== 'admin') {
+          await supabase.auth.signOut()
+          throw new Error('Accès non autorisé')
+        }
+
         router.replace('/admin')
-      } else {
-        setError(result.error || 'Identifiants incorrects')
       }
     } catch (err: any) {
       setError(err.message || 'Erreur lors de la connexion')

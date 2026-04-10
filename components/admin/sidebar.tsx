@@ -6,7 +6,7 @@ import { useI18n } from '@/i18n/i18n-context';
 import { useAdminStore } from '@/store/admin-ui.store';
 import { 
   LayoutDashboard, Package, Tag, Users, ShoppingCart, 
-  FileText, TrendingUp, Settings, Inbox, Menu, Store 
+  FileText, TrendingUp, Settings, Inbox, Menu, Store, Layers 
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -21,6 +21,7 @@ export function AdminSidebar() {
       items: [
         { name: language === 'ar' ? 'المنتجات' : 'Produits', href: '/admin/products', icon: Package },
         { name: language === 'ar' ? 'الأصناف' : 'Catégories', href: '/admin/categories', icon: Tag },
+        { name: language === 'ar' ? 'المجموعات' : 'Collections', href: '/admin/collections', icon: Layers },
         { name: language === 'ar' ? 'العلامات' : 'Marques', href: '/admin/brands', icon: Store },
       ]
     },

@@ -22,10 +22,12 @@ export function StoreInitializer() {
   const { tags, seed: seedTags, fetchTags } = useTagsStore();
   const { fetchSettings } = useSettingsStore();
   const { fetchProducts, seed: seedProducts } = useProductsStore();
+  const { fetchAnnouncements } = useAnnouncementsStore();
 
   useEffect(() => {
     // Initial data synchronization from Supabase
     fetchSettings();
+    fetchAnnouncements();
     fetchCategories();
     fetchBrands();
     fetchCollections();

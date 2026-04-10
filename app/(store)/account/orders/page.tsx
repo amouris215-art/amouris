@@ -1,12 +1,16 @@
-'use client';
+import { fetchCustomerOrders } from '@/lib/api/orders';
+import { getCurrentUser } from '@/lib/api/auth';
+import { redirect } from 'next/navigation';
+import AccountOrdersListClient from './AccountOrdersListClient';
 
-import AccountOrdersClient from './AccountOrdersClient';
-import { useCustomerAuth } from '@/store/customer-auth.store';
+export default async function AccountOrdersPage() {
+  const session = await getCurrentUser();
 
-export default function AccountOrdersPage() {
-  const { customer, isAuthenticated } = useCustomerAuth();
-  
-  if (!customer || !isAuthenticated) return null;
+  if (!session || !session.profile) {
+    redirect('/login');
+  }
 
-  return <AccountOrdersClient customerId={customer.id} />;
+  const orders = await fetchCustomerOrders(session.profile.id);
+
+  return <AccountOrdersListClient initialOrders={orders} />;
 }

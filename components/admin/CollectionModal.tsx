@@ -2,9 +2,12 @@
 
 import { useState, useEffect } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { useCollectionsStore, Collection } from '@/store/collections.store'
-import { Upload, X, Loader2, Sparkles, Layers } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
+import { Collection } from '@/store/collections.store'
+import { Upload, X, Loader2, Layers } from 'lucide-react'
+import { createClient } from '@/utils/supabase/client'
+import { createCollection, updateCollection } from '@/lib/api/catalogue'
+import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 
 interface CollectionModalProps {
   collection?: Collection | null
@@ -15,7 +18,7 @@ interface CollectionModalProps {
 const supabase = createClient()
 
 export function CollectionModal({ collection, isOpen, onClose }: CollectionModalProps) {
-  const { addCollection, updateCollection } = useCollectionsStore()
+  const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
 
@@ -65,8 +68,9 @@ export function CollectionModal({ collection, isOpen, onClose }: CollectionModal
         .getPublicUrl(filePath)
 
       setFormData(prev => ({ ...prev, cover_url: publicUrl }))
-    } catch (err) {
-      alert("Erreur upload")
+      toast.success('Image téléchargée')
+    } catch (err: any) {
+      toast.error("Erreur upload: " + err.message)
     } finally {
       setIsUploading(false)
     }
@@ -79,12 +83,15 @@ export function CollectionModal({ collection, isOpen, onClose }: CollectionModal
     try {
         if (collection?.id) {
           await updateCollection(collection.id, formData)
+          toast.success('Collection mise à jour')
         } else {
-          await addCollection(formData as any)
+          await createCollection(formData as any)
+          toast.success('Collection créée')
         }
+        router.refresh()
         onClose()
-    } catch (err) {
-        alert('Erreur lors de la sauvegarde')
+    } catch (err: any) {
+        toast.error('Erreur: ' + err.message)
     } finally {
         setIsLoading(false)
     }
@@ -92,11 +99,11 @@ export function CollectionModal({ collection, isOpen, onClose }: CollectionModal
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md bg-white rounded-[2.5rem] p-0 border-none shadow-2xl overflow-hidden">
+      <DialogContent className="max-w-md bg-white rounded-[2.5rem] p-0 border-none shadow-2xl overflow-hidden font-sans">
         <div className="bg-amber-950 p-8 text-white relative">
            <div className="absolute top-0 right-0 w-32 h-32 bg-amber-400/10 rounded-full blur-[40px]" />
            <DialogHeader>
-              <DialogTitle className="font-serif text-2xl flex items-center gap-3 relative z-10">
+              <DialogTitle className="font-serif text-2xl flex items-center gap-3 relative z-10 font-bold italic">
                 <Layers size={24} className="text-[#C9A84C]" />
                 {collection ? 'Éditer la Collection' : 'Nouvelle Collection'}
               </DialogTitle>
@@ -105,7 +112,7 @@ export function CollectionModal({ collection, isOpen, onClose }: CollectionModal
         </div>
 
         <form onSubmit={handleSubmit} className="p-8 space-y-8">
-          <div className="space-y-4">
+          <div className="space-y-4 font-sans">
             <label className="text-[10px] font-black uppercase tracking-widest text-emerald-950/20 px-1">Image de Couverture</label>
             <div className="relative group/cover aspect-[21/9] rounded-2xl overflow-hidden border border-emerald-950/5 bg-neutral-50/50">
               {formData.cover_url ? (
@@ -120,7 +127,7 @@ export function CollectionModal({ collection, isOpen, onClose }: CollectionModal
                   </button>
                 </>
               ) : (
-                <label className="w-full h-full flex flex-col items-center justify-center cursor-pointer hover:bg-neutral-100 transition-all">
+                <label className="w-full h-full flex flex-col items-center justify-center cursor-pointer hover:bg-neutral-100 transition-all font-sans">
                   {isUploading ? <Loader2 size={24} className="animate-spin text-emerald-950/20" /> : <Upload size={24} className="text-emerald-950/20 mb-1" />}
                   <span className="text-[8px] font-black uppercase tracking-widest text-emerald-950/20">{isUploading ? 'Chargement' : 'Upload Cover'}</span>
                   <input type="file" accept="image/*" className="hidden" disabled={isUploading} onChange={handleImageUpload} />
@@ -129,22 +136,22 @@ export function CollectionModal({ collection, isOpen, onClose }: CollectionModal
             </div>
           </div>
 
-          <div className="space-y-6">
+          <div className="space-y-6 font-sans">
             <div className="space-y-2">
               <label className="text-[10px] font-black uppercase tracking-widest text-emerald-950/20 px-1">Nom Français</label>
-              <input required value={formData.name_fr} onChange={e => setFormData({ ...formData, name_fr: e.target.value })} className="w-full h-12 px-5 rounded-2xl bg-neutral-50 border border-emerald-950/5 focus:border-[#C9A84C] outline-none font-bold text-emerald-950 transition-all" />
+              <input required value={formData.name_fr} onChange={e => setFormData({ ...formData, name_fr: e.target.value })} className="w-full h-12 px-5 rounded-2xl bg-neutral-50 border border-emerald-950/5 focus:border-[#C9A84C] outline-none font-bold text-emerald-950 transition-all font-sans" />
             </div>
             <div className="space-y-2">
               <label className="text-[10px] font-black uppercase tracking-widest text-emerald-950/20 px-1">Nom Arabe</label>
-              <input required value={formData.name_ar} onChange={e => setFormData({ ...formData, name_ar: e.target.value })} dir="rtl" className="w-full h-12 px-5 rounded-2xl bg-neutral-50 border border-emerald-950/5 focus:border-[#C9A84C] outline-none font-bold text-emerald-950 transition-all font-arabic" />
+              <input required value={formData.name_ar} onChange={e => setFormData({ ...formData, name_ar: e.target.value })} dir="rtl" className="w-full h-12 px-5 rounded-2xl bg-neutral-50 border border-emerald-950/5 focus:border-[#C9A84C] outline-none font-bold text-emerald-950 transition-all font-arabic text-right" />
             </div>
             <div className="space-y-2">
               <label className="text-[10px] font-black uppercase tracking-widest text-emerald-950/20 px-1">Description</label>
-              <textarea value={formData.description_fr} onChange={e => setFormData({ ...formData, description_fr: e.target.value })} rows={2} className="w-full p-5 rounded-2xl bg-neutral-50 border border-emerald-950/5 focus:border-[#C9A84C] outline-none font-medium text-emerald-950 transition-all resize-none" />
+              <textarea value={formData.description_fr} onChange={e => setFormData({ ...formData, description_fr: e.target.value })} rows={2} className="w-full p-5 rounded-2xl bg-neutral-50 border border-emerald-950/5 focus:border-[#C9A84C] outline-none font-medium text-emerald-950 transition-all resize-none font-sans" />
             </div>
           </div>
 
-          <div className="pt-6 flex gap-3">
+          <div className="pt-6 flex gap-3 font-sans">
              <button type="button" onClick={onClose} className="flex-1 h-14 rounded-2xl border border-emerald-950/5 text-[10px] font-black uppercase tracking-widest text-emerald-950/40 hover:bg-neutral-50 transition-colors">Annuler</button>
              <button type="submit" disabled={isLoading || isUploading} className="flex-[2] h-14 bg-amber-950 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-amber-950/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2">
                {isLoading ? <Loader2 className="animate-spin" size={16} /> : (collection ? 'Enregistrer' : 'Créer la Collection')}

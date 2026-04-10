@@ -51,34 +51,33 @@ export function ShopContent({ initialProducts, categories, brands, initialType }
   // Count active filters
   const activeFilterCount = [selectedType !== 'all', selectedCategory !== 'all', selectedBrand !== 'all', selectedTag !== 'all'].filter(Boolean).length;
 
-  const heroConfig = {
-    all: {
-      titleFR: "La Boutique Amouris",
-      titleAR: "بوتيك أموريس",
-      descFR: "Découvrez l'intégralité de nos collections d'exception.",
-      descAR: "اكتشف مجموعاتنا الكاملة والمميزة.",
-      bg: "bg-[#0a3d2e]",
-      accent: "text-amber-400"
-    },
-    perfume: {
-      titleFR: "Huiles de Parfums",
-      titleAR: "زيوت عطرية",
-      descFR: "L'essence de l'élégance capturée dans nos huiles les plus pures.",
-      descAR: "جوهر الأناقة المحفوف في أنقى زيوتنا العطرية.",
-      bg: "bg-[#0a3d2e]",
-      accent: "text-emerald-300"
-    },
-    flacon: {
-      titleFR: "Flacons & Packaging",
-      titleAR: "قوارير وتغليف",
-      descFR: "Des écrins de verre sculptés pour préserver vos fragrances.",
-      descAR: "صناديق زجاجية منحوتة للحفاظ على عطورك.",
-      bg: "bg-[#1a202c]",
-      accent: "text-amber-500"
+  const getHeroConfig = () => {
+    switch(selectedType) {
+      case 'perfume':
+        return {
+          title: t('shop.perfumes_title'),
+          desc: t('shop.perfumes_desc'),
+          bg: "bg-[#0a3d2e]",
+          accent: "text-emerald-300"
+        };
+      case 'flacon':
+        return {
+          title: t('shop.flacons_title'),
+          desc: t('shop.flacons_desc'),
+          bg: "bg-[#1a202c]",
+          accent: "text-amber-500"
+        };
+      default:
+        return {
+          title: t('shop.title'),
+          desc: t('shop.description'),
+          bg: "bg-[#0a3d2e]",
+          accent: "text-amber-400"
+        };
     }
   };
 
-  const currentHero = heroConfig[selectedType];
+  const currentHero = getHeroConfig();
 
   const clearAllFilters = () => {
     setSelectedType('all');
@@ -94,12 +93,12 @@ export function ShopContent({ initialProducts, categories, brands, initialType }
       <div className="space-y-4 lg:space-y-8">
         <div className="flex items-center justify-between border-b border-emerald-950/5 pb-4">
           <h3 className="text-[10px] uppercase font-black tracking-[0.3em] text-emerald-950/20">
-            {language === 'ar' ? 'الفئات' : 'Collection'}
+            {t('shop.filter_categories')}
           </h3>
         </div>
         <div className="flex flex-col gap-2">
           <FilterChip 
-            label={language === 'ar' ? 'جميع الفئات' : 'Toutes les catégories'} 
+            label={t('shop.all_categories')} 
             active={selectedCategory === 'all'} 
             onClick={() => setSelectedCategory('all')} 
           />
@@ -118,12 +117,12 @@ export function ShopContent({ initialProducts, categories, brands, initialType }
       <div className="space-y-4 lg:space-y-8">
         <div className="flex items-center justify-between border-b border-emerald-950/5 pb-4">
           <h3 className="text-[10px] uppercase font-black tracking-[0.3em] text-emerald-950/20">
-            {language === 'ar' ? 'العلامات التجارية' : 'Maisons'}
+            {t('shop.filter_brands')}
           </h3>
         </div>
         <div className="flex flex-col gap-2">
           <FilterChip 
-            label={language === 'ar' ? 'جميع الماركات' : 'Toutes les marques'} 
+            label={t('shop.all_brands')} 
             active={selectedBrand === 'all'} 
             onClick={() => setSelectedBrand('all')} 
           />
@@ -142,7 +141,7 @@ export function ShopContent({ initialProducts, categories, brands, initialType }
       <div className="space-y-4 lg:space-y-8">
         <div className="flex items-center justify-between border-b border-emerald-950/5 pb-4">
           <h3 className="text-[10px] uppercase font-black tracking-[0.3em] text-emerald-950/20">
-            {language === 'ar' ? 'النوع' : 'Univers'}
+            {t('shop.filter_type')}
           </h3>
         </div>
         <div className="flex flex-col gap-2">
@@ -150,9 +149,9 @@ export function ShopContent({ initialProducts, categories, brands, initialType }
             <FilterChip 
               key={type}
               label={
-                type === 'all' ? (language === 'ar' ? 'الكل' : 'Tout l\'univers') : 
-                type === 'perfume' ? (language === 'ar' ? 'زيوت عطرية' : 'Huiles de Parfums') : 
-                (language === 'ar' ? 'قوارير وتغليف' : 'Flacons & Packaging')
+                type === 'all' ? t('shop.all_universes') : 
+                type === 'perfume' ? t('nav.perfumes') : 
+                t('nav.flacons')
               } 
               active={selectedType === type} 
               onClick={() => setSelectedType(type)} 
@@ -183,10 +182,10 @@ export function ShopContent({ initialProducts, categories, brands, initialType }
                 Amouris L'Excellence
               </span>
               <h1 className="font-serif text-3xl sm:text-5xl md:text-7xl text-white mb-4 md:mb-8 tracking-tight">
-                {language === 'ar' ? currentHero.titleAR : currentHero.titleFR}
+                {currentHero.title}
               </h1>
               <p className="text-white/40 font-light text-sm md:text-xl max-w-2xl mx-auto leading-relaxed italic">
-                {language === 'ar' ? currentHero.descAR : currentHero.descFR}
+                {currentHero.desc}
               </p>
            </motion.div>
         </div>
@@ -200,19 +199,19 @@ export function ShopContent({ initialProducts, categories, brands, initialType }
             className="flex-1 flex items-center justify-center gap-2 min-h-[44px] bg-white border border-emerald-950/5 rounded-2xl text-[10px] font-black uppercase tracking-widest text-emerald-950/60 shadow-sm active:scale-95 transition-transform"
           >
             <SlidersHorizontal size={14} />
-            {language === 'ar' ? 'تصفية' : 'Filtres'}
+            {t('common.filter')}
             {activeFilterCount > 0 && (
               <span className="bg-[#0a3d2e] text-white text-[9px] w-5 h-5 rounded-full flex items-center justify-center">{activeFilterCount}</span>
             )}
           </button>
           <Select>
             <SelectTrigger className="flex-1 border-emerald-950/5 bg-white min-h-[44px] rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-sm">
-              <SelectValue placeholder={language === 'ar' ? 'ترتيب' : 'Trier'} />
+              <SelectValue placeholder={t('common.sort')} />
             </SelectTrigger>
             <SelectContent className="rounded-2xl border-emerald-950/5">
-              <SelectItem value="newest" className="text-[10px] font-black uppercase tracking-widest py-3">Nouveautés</SelectItem>
-              <SelectItem value="price-asc" className="text-[10px] font-black uppercase tracking-widest py-3">Prix ↑</SelectItem>
-              <SelectItem value="price-desc" className="text-[10px] font-black uppercase tracking-widest py-3">Prix ↓</SelectItem>
+              <SelectItem value="newest" className="text-[10px] font-black uppercase tracking-widest py-3">{t('shop.sort_newest')}</SelectItem>
+              <SelectItem value="price-asc" className="text-[10px] font-black uppercase tracking-widest py-3">{t('shop.sort_price_asc')}</SelectItem>
+              <SelectItem value="price-desc" className="text-[10px] font-black uppercase tracking-widest py-3">{t('shop.sort_price_desc')}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -232,7 +231,7 @@ export function ShopContent({ initialProducts, categories, brands, initialType }
             <div className="hidden lg:flex flex-col sm:flex-row justify-between items-start sm:items-center mb-16 gap-8">
               <div>
                 <h2 className="text-3xl font-serif text-emerald-950 mb-2">
-                  {filteredProducts.length} {language === 'ar' ? 'منتج متاح' : 'Créations disponibles'}
+                  {filteredProducts.length} {t('shop.available_products')}
                 </h2>
                 <div className="h-0.5 w-12 bg-[#C9A84C]" />
               </div>
@@ -240,12 +239,12 @@ export function ShopContent({ initialProducts, categories, brands, initialType }
               <div className="flex items-center gap-4 w-full sm:w-auto">
                 <Select>
                   <SelectTrigger className="w-full sm:w-[260px] border-emerald-950/5 bg-white h-14 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-sm">
-                    <SelectValue placeholder={language === 'ar' ? 'ترتيب حسب' : 'Trier par rayonnement'} />
+                    <SelectValue placeholder={t('shop.sort_placeholder')} />
                   </SelectTrigger>
                   <SelectContent className="rounded-2xl border-emerald-950/5">
-                    <SelectItem value="newest" className="text-[10px] font-black uppercase tracking-widest py-3">Nouveautés</SelectItem>
-                    <SelectItem value="price-asc" className="text-[10px] font-black uppercase tracking-widest py-3">Prix croissant</SelectItem>
-                    <SelectItem value="price-desc" className="text-[10px] font-black uppercase tracking-widest py-3">Prix décroissant</SelectItem>
+                    <SelectItem value="newest" className="text-[10px] font-black uppercase tracking-widest py-3">{t('shop.sort_newest')}</SelectItem>
+                    <SelectItem value="price-asc" className="text-[10px] font-black uppercase tracking-widest py-3">{t('shop.sort_price_asc')}</SelectItem>
+                    <SelectItem value="price-desc" className="text-[10px] font-black uppercase tracking-widest py-3">{t('shop.sort_price_desc')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -254,7 +253,7 @@ export function ShopContent({ initialProducts, categories, brands, initialType }
             {/* Mobile result count */}
             <div className="lg:hidden mb-4">
               <p className="text-sm text-emerald-950/40 font-medium">
-                {filteredProducts.length} {language === 'ar' ? 'منتج' : 'résultats'}
+                {filteredProducts.length} {t('shop.results')}
               </p>
             </div>
 
@@ -287,9 +286,8 @@ export function ShopContent({ initialProducts, categories, brands, initialType }
                   </svg>
                 </div>
                 <h3 className="font-serif text-xl md:text-2xl text-emerald-950/20 italic mb-2">
-                  Aucun trésor ne correspond à votre recherche.
+                  {t('shop.no_results')}
                 </h3>
-                <p className="font-arabic text-emerald-950/10 text-lg md:text-xl" dir="rtl">لا توجد منتجات تطابق بحثكم.</p>
               </div>
             )}
           </div>
@@ -307,7 +305,7 @@ export function ShopContent({ initialProducts, categories, brands, initialType }
             {/* Drawer Header */}
             <div className="flex items-center justify-between px-6 pb-4 border-b border-emerald-950/5">
               <Drawer.Title className="font-serif text-xl text-emerald-950">
-                {language === 'ar' ? 'تصفية المنتجات' : 'Filtrer les produits'}
+                {t('shop.filter_products')}
               </Drawer.Title>
               <div className="flex items-center gap-3">
                 {activeFilterCount > 0 && (
@@ -315,7 +313,7 @@ export function ShopContent({ initialProducts, categories, brands, initialType }
                     onClick={clearAllFilters}
                     className="text-[10px] font-black uppercase tracking-widest text-rose-500 min-h-[44px] flex items-center"
                   >
-                    {language === 'ar' ? 'مسح الكل' : 'Tout effacer'}
+                    {t('shop.clear_all')}
                   </button>
                 )}
                 <button 
@@ -338,7 +336,7 @@ export function ShopContent({ initialProducts, categories, brands, initialType }
                 onClick={() => setFilterDrawerOpen(false)}
                 className="w-full min-h-[48px] bg-[#0a3d2e] text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.3em] active:scale-95 transition-transform"
               >
-                {language === 'ar' ? `عرض ${filteredProducts.length} منتج` : `Voir ${filteredProducts.length} résultats`}
+                {t('shop.view_results').replace('{count}', filteredProducts.length.toString())}
               </button>
             </div>
           </Drawer.Content>

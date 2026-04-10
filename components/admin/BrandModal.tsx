@@ -2,9 +2,12 @@
 
 import { useState, useEffect } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { useBrandsStore, Brand } from '@/store/brands.store'
-import { Upload, X, Loader2, Store, Sparkles } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
+import { Brand } from '@/store/brands.store'
+import { Upload, X, Loader2, Store } from 'lucide-react'
+import { createClient } from '@/utils/supabase/client'
+import { createBrand, updateBrand } from '@/lib/api/brands'
+import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 
 interface BrandModalProps {
   brand?: Brand | null
@@ -15,7 +18,7 @@ interface BrandModalProps {
 const supabase = createClient()
 
 export function BrandModal({ brand, isOpen, onClose }: BrandModalProps) {
-  const { addBrand, updateBrand } = useBrandsStore()
+  const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
 
@@ -65,8 +68,9 @@ export function BrandModal({ brand, isOpen, onClose }: BrandModalProps) {
         .getPublicUrl(filePath)
 
       setFormData(prev => ({ ...prev, logo_url: publicUrl }))
-    } catch (err) {
-      alert("Erreur upload")
+      toast.success('Logo téléchargé')
+    } catch (err: any) {
+      toast.error("Erreur upload: " + err.message)
     } finally {
       setIsUploading(false)
     }
@@ -79,12 +83,15 @@ export function BrandModal({ brand, isOpen, onClose }: BrandModalProps) {
     try {
         if (brand?.id) {
           await updateBrand(brand.id, formData)
+          toast.success('Maison mise à jour')
         } else {
-          await addBrand(formData as any)
+          await createBrand(formData as any)
+          toast.success('Nouvelle Maison créée')
         }
+        router.refresh()
         onClose()
-    } catch (err) {
-        alert('Erreur lors de la sauvegarde')
+    } catch (err: any) {
+        toast.error('Erreur: ' + err.message)
     } finally {
         setIsLoading(false)
     }
@@ -92,7 +99,7 @@ export function BrandModal({ brand, isOpen, onClose }: BrandModalProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md bg-white rounded-[2.5rem] p-0 border-none shadow-2xl overflow-hidden">
+      <DialogContent className="max-w-md bg-white rounded-[2.5rem] p-0 border-none shadow-2xl overflow-hidden font-sans">
         <div className="bg-emerald-950 p-8 text-white relative">
            <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-400/10 rounded-full blur-[40px]" />
            <DialogHeader>
@@ -136,7 +143,7 @@ export function BrandModal({ brand, isOpen, onClose }: BrandModalProps) {
             </div>
             <div className="space-y-2">
               <label className="text-[10px] font-black uppercase tracking-widest text-emerald-950/20 px-1">Nom Arabe</label>
-              <input required value={formData.name_ar} onChange={e => setFormData({ ...formData, name_ar: e.target.value })} dir="rtl" className="w-full h-12 px-5 rounded-2xl bg-neutral-50 border border-emerald-950/5 focus:border-[#C9A84C] outline-none font-bold text-emerald-950 transition-all font-arabic" />
+              <input required value={formData.name_ar} onChange={e => setFormData({ ...formData, name_ar: e.target.value })} dir="rtl" className="w-full h-12 px-5 rounded-2xl bg-neutral-50 border border-emerald-950/5 focus:border-[#C9A84C] outline-none font-bold text-emerald-950 transition-all font-arabic text-right" />
             </div>
             <div className="space-y-2">
               <label className="text-[10px] font-black uppercase tracking-widest text-emerald-950/20 px-1">Description FR</label>
