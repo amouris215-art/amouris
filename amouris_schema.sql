@@ -63,7 +63,7 @@ CREATE TABLE IF NOT EXISTS public.products (
     price_per_gram DECIMAL(10,2),
     stock_grams DECIMAL(10,2),
     
-    -- Pour les flacons (base price used if no variants, though usually variants override)
+    -- Pour les flacons
     base_price DECIMAL(10,2),
     
     status TEXT DEFAULT 'active' CHECK (status IN ('active', 'draft', 'archived')),
@@ -179,3 +179,12 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER update_products_updated_at BEFORE UPDATE ON public.products FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_orders_updated_at BEFORE UPDATE ON public.orders FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_profiles_updated_at BEFORE UPDATE ON public.profiles FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- 8. ORDER STATUS HISTORY
+CREATE TABLE IF NOT EXISTS public.order_status_history (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    order_id UUID REFERENCES public.orders(id) ON DELETE CASCADE,
+    status TEXT NOT NULL,
+    note TEXT,
+    created_at TIMESTAMPTZ DEFAULT now()
+);

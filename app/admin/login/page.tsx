@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Eye, EyeOff, Lock } from 'lucide-react'
 import Link from 'next/link'
-import { createBrowserClient } from '@supabase/ssr'
+import { loginAdmin } from '@/lib/api/auth'
 
 export default function AdminLoginPage() {
   const [email, setEmail] = useState('')
@@ -14,37 +14,19 @@ export default function AdminLoginPage() {
   const [loading, setLoading] = useState(false)
   const router = useRouter()
 
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError('')
     setLoading(true)
 
     try {
-      const { data, error: authError } = await supabase.auth.signInWithPassword({ email, password })
+      const { ok, error: loginError } = await loginAdmin(email, password)
       
-      if (authError) {
-        throw authError
+      if (!ok) {
+        throw new Error(loginError || 'Identifiants invalides')
       }
 
-      if (data?.user) {
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', data.user.id)
-          .single()
-
-        if (profileError || !profile || profile.role !== 'admin') {
-          await supabase.auth.signOut()
-          throw new Error('Accès non autorisé')
-        }
-
-        router.replace('/admin')
-      }
+      router.replace('/admin')
     } catch (err: any) {
       setError(err.message || 'Erreur lors de la connexion')
     } finally {

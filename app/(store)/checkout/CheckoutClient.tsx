@@ -63,8 +63,8 @@ export default function CheckoutClient() {
       }));
 
       const orderData = {
-        customer_id: isAuthenticated ? currentCustomer!.id : null,
-        is_registered_customer: isAuthenticated,
+        customer_id: isAuthenticated ? currentCustomer?.id : null,
+        is_registered_customer: !!isAuthenticated,
         guest_first_name: !isAuthenticated ? formData.firstName : null,
         guest_last_name: !isAuthenticated ? formData.lastName : null,
         guest_phone: !isAuthenticated ? formData.phone : null,

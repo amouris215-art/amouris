@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { createClient } from '@/lib/supabase/client';
 import { addProduct as apiAddProduct, updateProduct as apiUpdateProduct } from '@/lib/api/products';
-import { Upload, X, Plus, Trash2, Loader2, Sparkles, Box, Droplets, Image as ImageIcon, Eye, EyeOff, AlertCircle } from 'lucide-react';
+import { Upload, X, Plus, Trash2, Loader2, Sparkles, Box, Droplets, Pipette, Eye, EyeOff, AlertCircle } from 'lucide-react';
 
 interface ProductModalProps {
   product?: any | null;
@@ -29,7 +29,7 @@ export function ProductModal({
 }: ProductModalProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [type, setType] = useState<'perfume' | 'flacon'>('perfume');
+  const [type, setType] = useState<'perfume' | 'flacon' | 'accessory'>('perfume');
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [formData, setFormData] = useState<any>({
@@ -152,10 +152,10 @@ export function ProductModal({
   const handleAddVariant = () => {
     setVariants([...variants, {
       id: `v_${Date.now()}`,
-      size_ml: 50,
-      color: '#000000',
-      color_name: 'Noir',
-      shape: 'Ronde',
+      size_ml: type === 'accessory' ? 0 : 50,
+      color: type === 'accessory' ? '' : '#000000',
+      color_name: type === 'accessory' ? 'Standard' : 'Noir',
+      shape: '',
       price: 0,
       stock_units: 0
     }]);
@@ -165,7 +165,7 @@ export function ProductModal({
     setVariants(variants.filter(v => v.id !== id));
   };
 
-  const handeUpdateVariant = (id: string, updates: Partial<FlaconVariant>) => {
+  const handeUpdateVariant = (id: string, updates: any) => {
     setVariants(variants.map(v => v.id === id ? { ...v, ...updates } : v));
   };
 
@@ -218,21 +218,28 @@ export function ProductModal({
         </div>
 
         <form onSubmit={handleSubmit} className="p-8 space-y-12">
-           {/* Product Type Toggle */}
-           <div className="flex gap-4 p-2 bg-neutral-100 rounded-2xl w-fit">
+           {/* Product Type Selector */}
+           <div className="flex flex-wrap gap-4 p-2 bg-neutral-100 rounded-2xl w-fit">
               <button 
                 type="button" 
                 onClick={() => setType('perfume')}
                 className={`px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-all ${type === 'perfume' ? 'bg-[#0a3d2e] text-white shadow-lg' : 'text-emerald-950/40 hover:text-emerald-950'}`}
               >
-                <Droplets size={14} /> Parfum / Huile
+                <Droplets size={14} /> Parfum
               </button>
               <button 
                 type="button" 
                 onClick={() => setType('flacon')}
                 className={`px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-all ${type === 'flacon' ? 'bg-[#0a3d2e] text-white shadow-lg' : 'text-emerald-950/40 hover:text-emerald-950'}`}
               >
-                <Box size={14} /> Flacon / Vide
+                <Box size={14} /> Flacon
+              </button>
+              <button 
+                type="button" 
+                onClick={() => setType('accessory')}
+                className={`px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-all ${type === 'accessory' ? 'bg-[#0a3d2e] text-white shadow-lg' : 'text-emerald-950/40 hover:text-emerald-950'}`}
+              >
+                <Pipette size={14} /> Accessoire
               </button>
            </div>
 
@@ -292,24 +299,6 @@ export function ProductModal({
                          {isUploading ? 'Chargement...' : (formData.images?.length || 0) >= 3 ? 'Limite atteinte' : 'Ajouter'}
                        </span>
                     </button>
-
-                    <button 
-                       type="button"
-                       onClick={() => {
-                         const mockImages = [
-                           'https://images.unsplash.com/photo-1541602288-50720526017a?q=80&w=1000&auto=format&fit=crop',
-                           'https://images.unsplash.com/photo-1594035910387-fea47794261f?q=80&w=1000&auto=format&fit=crop',
-                           'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?q=80&w=1000&auto=format&fit=crop',
-                           'https://images.unsplash.com/photo-1563170351-be82bc888bb4?q=80&w=1000&auto=format&fit=crop'
-                         ];
-                         const randomImg = mockImages[Math.floor(Math.random() * mockImages.length)];
-                         setFormData({ ...formData, images: [...(formData.images || []), randomImg] });
-                       }}
-                       className="aspect-square rounded-2xl border border-[#C9A84C]/20 flex flex-col items-center justify-center gap-2 bg-amber-50/30 hover:bg-amber-50 transition-colors group"
-                    >
-                       <Sparkles size={20} className="text-[#C9A84C] group-hover:scale-110 transition-transform" />
-                       <span className="text-[8px] font-black uppercase tracking-widest text-[#C9A84C]">Simulation AI</span>
-                    </button>
                  </div>
               </div>
 
@@ -358,13 +347,6 @@ export function ProductModal({
                        {brands.map(b => <option key={b.id} value={b.id}>{b.name_fr}</option>)}
                     </select>
                  </div>
-                 <div className="space-y-4">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-emerald-950/20 px-1">Collection</label>
-                    <select value={formData.collection_id || ''} onChange={e => setFormData({ ...formData, collection_id: e.target.value })} className="w-full h-14 px-6 rounded-2xl bg-neutral-50 border border-emerald-950/5 outline-none text-sm font-bold text-emerald-950">
-                       <option value="">Sélectionner une collection (Optionnel)</option>
-                       {collections.map(c => <option key={c.id} value={c.id}>{c.name_fr}</option>)}
-                    </select>
-                 </div>
               </div>
 
               <div className="space-y-4">
@@ -400,30 +382,43 @@ export function ProductModal({
               ) : (
                  <div className="space-y-8">
                     <div className="flex justify-between items-center mb-4">
-                       <h3 className="font-serif text-xl text-emerald-950">Gestion des variantes</h3>
+                       <h3 className="font-serif text-xl text-emerald-950">Variantes {type === 'accessory' ? 'Options' : 'Taille/Couleur'}</h3>
                        <button type="button" onClick={handleAddVariant} className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-amber-600 hover:text-amber-500 transition-colors">
-                          <Plus size={14} /> Ajouter une taille/couleur
+                          <Plus size={14} /> Ajouter une option
                        </button>
                     </div>
                     
                     <div className="space-y-4">
                        {variants.map((v, i) => (
                           <div key={v.id} className="grid grid-cols-2 md:grid-cols-6 gap-4 p-6 bg-white border border-emerald-950/5 rounded-[2rem] items-end">
+                             {type !== 'accessory' && (
+                               <div className="space-y-2 col-span-1">
+                                  <label className="text-[8px] font-black uppercase tracking-widest text-emerald-950/20">Contenance ml</label>
+                                  <input type="number" value={v.size_ml} onChange={e => handeUpdateVariant(v.id, { size_ml: +e.target.value })} className="w-full h-10 px-3 bg-neutral-50 rounded-lg text-xs font-bold" />
+                               </div>
+                             )}
                              <div className="space-y-2 col-span-1">
-                                <label className="text-[8px] font-black uppercase tracking-widest text-emerald-950/20">Contenance ml</label>
-                                <input type="number" value={v.size_ml} onChange={e => handeUpdateVariant(v.id, { size_ml: +e.target.value })} className="w-full h-10 px-3 bg-neutral-50 rounded-lg text-xs font-bold" />
+                                {type !== 'accessory' ? (
+                                  <>
+                                    <label className="text-[8px] font-black uppercase tracking-widest text-emerald-950/20">Teinte</label>
+                                    <div className="flex gap-2">
+                                       <input type="color" value={v.color} onChange={e => handeUpdateVariant(v.id, { color: e.target.value })} className="w-10 h-10 p-0 border-none bg-transparent cursor-pointer" />
+                                       <input type="text" value={v.color_name} onChange={e => handeUpdateVariant(v.id, { color_name: e.target.value })} placeholder="Nom" className="w-full h-10 px-3 bg-neutral-50 rounded-lg text-[10px] font-bold" />
+                                    </div>
+                                  </>
+                                ) : (
+                                  <>
+                                    <label className="text-[8px] font-black uppercase tracking-widest text-emerald-950/20">Référence / Modèle</label>
+                                    <input type="text" value={v.color_name} onChange={e => handeUpdateVariant(v.id, { color_name: e.target.value })} placeholder="Ex: Grand modèle" className="w-full h-10 px-3 bg-neutral-50 rounded-lg text-[10px] font-bold" />
+                                  </>
+                                )}
                              </div>
-                             <div className="space-y-2 col-span-1">
-                                <label className="text-[8px] font-black uppercase tracking-widest text-emerald-950/20">Teinte</label>
-                                <div className="flex gap-2">
-                                   <input type="color" value={v.color} onChange={e => handeUpdateVariant(v.id, { color: e.target.value })} className="w-10 h-10 p-0 border-none bg-transparent cursor-pointer" />
-                                   <input type="text" value={v.color_name} onChange={e => handeUpdateVariant(v.id, { color_name: e.target.value })} placeholder="Nom" className="w-full h-10 px-3 bg-neutral-50 rounded-lg text-[10px] font-bold" />
-                                </div>
-                             </div>
-                             <div className="space-y-2 col-span-1">
-                                <label className="text-[8px] font-black uppercase tracking-widest text-emerald-950/20">Forme</label>
-                                <input type="text" value={v.shape} onChange={e => handeUpdateVariant(v.id, { shape: e.target.value })} className="w-full h-10 px-3 bg-neutral-50 rounded-lg text-xs font-bold" />
-                             </div>
+                             {type !== 'accessory' && (
+                               <div className="space-y-2 col-span-1">
+                                  <label className="text-[8px] font-black uppercase tracking-widest text-emerald-950/20">Forme</label>
+                                  <input type="text" value={v.shape} onChange={e => handeUpdateVariant(v.id, { shape: e.target.value })} className="w-full h-10 px-3 bg-neutral-50 rounded-lg text-xs font-bold" />
+                               </div>
+                             )}
                              <div className="space-y-2 col-span-1">
                                 <label className="text-[8px] font-black uppercase tracking-widest text-emerald-950/20">Prix (DZD)</label>
                                 <input type="number" value={v.price} onChange={e => handeUpdateVariant(v.id, { price: +e.target.value })} className="w-full h-10 px-3 bg-neutral-50 rounded-lg text-xs font-bold text-amber-600" />

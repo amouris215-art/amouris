@@ -37,7 +37,7 @@ export default function AdminProductsClient({
 }: AdminProductsClientProps) {
   const router = useRouter();
   const [search, setSearch] = useState('');
-  const [typeFilter, setTypeFilter] = useState<'all' | 'perfume' | 'flacon'>('all');
+  const [typeFilter, setTypeFilter] = useState<'all' | 'perfume' | 'flacon' | 'accessory'>('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [brandFilter, setBrandFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'draft'>('all');
@@ -148,6 +148,7 @@ export default function AdminProductsClient({
                     <option value="all">Tous les types</option>
                     <option value="perfume">Parfums (Huiles)</option>
                     <option value="flacon">Flacons (Vides)</option>
+                    <option value="accessory">Accessoires & Autres</option>
                   </select>
                 </div>
                 <div className="space-y-2">
@@ -226,9 +227,9 @@ export default function AdminProductsClient({
                       </td>
                       <td className="px-10 py-6">
                         <div className="space-y-1.5">
-                           <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[8px] font-black uppercase tracking-widest ${isPerfume ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>
-                             {isPerfume ? <Droplets size={10} /> : <Box size={10} />}
-                             {isPerfume ? 'Huile' : 'Flacon'}
+                           <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[8px] font-black uppercase tracking-widest ${isPerfume ? 'bg-emerald-50 text-emerald-700' : product.product_type === 'accessory' ? 'bg-rose-50 text-rose-700' : 'bg-amber-50 text-amber-700'}`}>
+                             {isPerfume ? <Droplets size={10} /> : product.product_type === 'accessory' ? <Plus size={10} /> : <Box size={10} />}
+                             {isPerfume ? 'Huile' : product.product_type === 'accessory' ? 'Accessoire' : 'Flacon'}
                            </span>
                            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">{cat?.name_fr || 'Sans catégorie'} / {brand?.name_fr || 'Sans marque'}</p>
                         </div>

@@ -73,6 +73,7 @@ export function Header() {
               { name: t('nav.shop'), href: '/shop' },
               { name: t('nav.perfumes'), href: '/shop/parfums' },
               { name: t('nav.flacons'), href: '/shop/flacons' },
+              { name: t('nav.accessoires'), href: '/shop/accessoires' },
               { name: t('nav.brands'), href: '/brands' },
             ].map((item) => {
               const isActive = pathname === item.href;

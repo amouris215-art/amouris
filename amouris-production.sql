@@ -14,7 +14,6 @@ DROP FUNCTION IF EXISTS public.is_admin() CASCADE;
 DROP FUNCTION IF EXISTS public.increment_product_stock(text, numeric) CASCADE;
 DROP FUNCTION IF EXISTS public.increment_variant_stock(text, integer) CASCADE;
 
-DROP TABLE IF EXISTS public.order_history CASCADE;
 DROP TABLE IF EXISTS public.order_status_history CASCADE;
 DROP TABLE IF EXISTS public.order_items CASCADE;
 DROP TABLE IF EXISTS public.orders CASCADE;
@@ -192,8 +191,8 @@ CREATE TABLE public.order_items (
     total_price NUMERIC(10, 2) NOT NULL
 );
 
--- Table: order_history
-CREATE TABLE public.order_history (
+-- Table: order_status_history
+CREATE TABLE public.order_status_history (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     order_id UUID REFERENCES public.orders(id) ON DELETE CASCADE,
     status TEXT NOT NULL,
@@ -377,17 +376,12 @@ CREATE POLICY "Users can view their own order items" ON public.order_items FOR S
 -- === SECTION 9: REALTIME ===
 ALTER PUBLICATION supabase_realtime ADD TABLE public.orders;
 ALTER PUBLICATION supabase_realtime ADD TABLE public.order_items;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.order_history;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.order_status_history;
 ALTER PUBLICATION supabase_realtime ADD TABLE public.profiles;
 
 -- === SECTION 10: STORAGE ===
 
 -- Note: Buckets must be created via Dashboard or API.
--- These are the policies for the expected buckets.
-
--- Bucket: 'products'
--- Bucket: 'brands'
--- Bucket: 'collections'
 -- Bucket: 'catalogues'
 
 -- Policy for public read access

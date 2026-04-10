@@ -29,7 +29,7 @@ export interface Tag {
   homepage_order?: number;
 }
 
-export type ProductType = 'perfume' | 'flacon';
+export type ProductType = 'perfume' | 'flacon' | 'accessory';
 
 export interface BaseProduct {
   id: string;
@@ -66,7 +66,7 @@ export interface FlaconVariant {
 }
 
 export interface FlaconProduct extends BaseProduct {
-  product_type: 'flacon';
+  product_type: 'flacon' | 'accessory';
   variants: FlaconVariant[];
 }
 

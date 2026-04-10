@@ -3,13 +3,13 @@
 import { createClient } from '@/lib/supabase/server';
 import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
+import { phoneToEmail } from '@/lib/utils/phone';
 
 export async function login(phone: string, password: string) {
   const cookieStore = cookies();
   const supabase = createClient(cookieStore);
 
-  const normalizedPhone = phone.replace(/[\s\-\.]/g, '').trim();
-  const email = `${normalizedPhone}@amouris.dz`;
+  const email = phoneToEmail(phone);
 
   const { data, error } = await supabase.auth.signInWithPassword({
     email,

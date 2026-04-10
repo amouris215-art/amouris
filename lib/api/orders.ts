@@ -61,30 +61,65 @@ export const createOrder = async (data: any) => {
   const supabase = createClient();
   const { items, ...orderData } = data;
 
+  // Ensure all fields are null if undefined (Supabase accepts null but may reject undefined)
+  const cleanedOrderData = {
+    customer_id: orderData.customer_id ?? null,
+    is_registered_customer: !!orderData.is_registered_customer,
+    guest_first_name: orderData.guest_first_name ?? null,
+    guest_last_name: orderData.guest_last_name ?? null,
+    guest_phone: orderData.guest_phone ?? null,
+    guest_wilaya: orderData.guest_wilaya ?? null,
+    guest_commune: orderData.guest_commune ?? null,
+    total_amount: orderData.total_amount,
+    payment_status: orderData.payment_status || 'unpaid',
+    order_status: orderData.order_status || 'pending',
+    admin_notes: orderData.admin_notes ?? null,
+  };
+
   // 1. Create Order
   const { data: order, error: orderError } = await supabase
     .from('orders')
-    .insert([orderData])
+    .insert([cleanedOrderData])
     .select()
     .single();
 
-  if (orderError) throw orderError;
+  if (orderError) {
+    console.error('Supabase order creation error:', orderError);
+    throw new Error(`Échec de la création de la commande: ${orderError.message}`);
+  }
 
   // 2. Create Order Items
   const orderItems = items.map((item: any) => ({
-    ...item,
-    order_id: order.id
+    order_id: order.id,
+    product_id: item.product_id,
+    product_type: item.product_type,
+    flacon_variant_id: item.flacon_variant_id ?? null,
+    product_name_fr: item.product_name_fr,
+    product_name_ar: item.product_name_ar,
+    variant_label: item.variant_label ?? null,
+    quantity_grams: item.quantity_grams ?? null,
+    quantity_units: item.quantity_units ?? null,
+    unit_price: item.unit_price,
+    total_price: item.total_price
   }));
 
   const { error: itemsError } = await supabase.from('order_items').insert(orderItems);
-  if (itemsError) throw itemsError;
+  if (itemsError) {
+    console.error('Supabase order items error:', itemsError);
+    throw new Error(`Échec de l'ajout des articles: ${itemsError.message}`);
+  }
 
   // 3. Initial history
-  await supabase.from('order_status_history').insert({
+  const { error: historyError } = await supabase.from('order_status_history').insert({
     order_id: order.id,
-    status: orderData.order_status || 'pending',
+    status: cleanedOrderData.order_status,
     note: 'Commande créée'
   });
+
+  if (historyError) {
+    console.warn('Supabase order history error:', historyError);
+    // Historique non-critique pour le succès de la commande, mais on log
+  }
 
   return { ...order, items: orderItems };
 };

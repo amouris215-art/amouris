@@ -15,7 +15,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
       categories(id, name_fr, name_ar),
       brands(id, name, name_ar, logo_url),
       collections(id, name_fr, name_ar),
-      flacon_variants(*),
+      variants:flacon_variants(*),
       product_tags(tag_id)
     `)
     .eq('slug', slug)

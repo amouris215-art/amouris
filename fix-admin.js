@@ -1,3 +1,4 @@
+console.log('Script started...');
 import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
@@ -70,7 +71,9 @@ async function ensureAdmin() {
       id: adminUser.id,
       role: 'admin',
       first_name: 'Admin',
-      last_name: 'Amouris'
+      last_name: 'Amouris',
+      phone: '0000000000',
+      wilaya: 'Alger'
     });
     if (insertError) console.error('Insert error:', insertError);
     else console.log('Admin profile created!');

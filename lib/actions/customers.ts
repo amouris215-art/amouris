@@ -5,6 +5,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { cookies } from 'next/headers';
 import { Customer } from '@/lib/types';
 import { revalidatePath } from 'next/cache';
+import { phoneToEmail } from '@/lib/utils/phone';
 
 export async function getAllCustomers() {
   const cookieStore = cookies();
@@ -79,8 +80,8 @@ export async function registerCustomer(customerData: {
   }
   
   // Créer l'utilisateur Supabase Auth
-  // On utilise phone@amouris-user.dz comme email factice
-  const fakeEmail = `${normalizedPhone}@amouris.dz`;
+  // On utilise phone@amouris.app comme email factice
+  const fakeEmail = phoneToEmail(normalizedPhone);
   
   const { data: authData, error: authError } = await supabase.auth.signUp({
     email: fakeEmail,

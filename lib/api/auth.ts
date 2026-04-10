@@ -1,12 +1,13 @@
 import { createClient } from '@/lib/supabase/client';
+import { phoneToEmail } from '@/lib/utils/phone';
 
 
 export const registerCustomer = async (data: any) => {
   const supabase = createClient();
   const { phone, password, ...profileData } = data;
   
-  // Format fake email: phone@amouris-client.com
-  const email = `${phone}@amouris-client.com`;
+  // Format fake email: phone@amouris.app
+  const email = phoneToEmail(phone);
   const generatedPassword = password || `pwd_${phone}_${Math.random().toString(36).slice(2,8)}`;
 
   const { data: signUpData, error } = await supabase.auth.signUp({
@@ -26,7 +27,7 @@ export const registerCustomer = async (data: any) => {
 
 export const loginCustomer = async (phone: string, password?: string) => {
   const supabase = createClient();
-  const email = `${phone}@amouris-client.com`;
+  const email = phoneToEmail(phone);
   
   const { data, error } = await supabase.auth.signInWithPassword({
     email,

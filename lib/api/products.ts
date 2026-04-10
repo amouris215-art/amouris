@@ -2,17 +2,38 @@ import { createClient } from '@/lib/supabase/client';
 
 
 export const fetchAllProducts = async (options?: { status?: string }) => {
-  
   const supabase = createClient();
+  const isAdmin = options?.status === 'admin';
   
-  let query = supabase.from('products').select(`
-    *,
-    category:categories(*),
-    brand:brands(*),
-    collection:collections(*),
-    variants:flacon_variants(*),
+  // Base selection for storefront
+  let selectQuery = `
+    id, name_fr, name_ar, slug, product_type,
+    price_per_gram, base_price, images, status,
+    category:categories(id, name_fr, name_ar, slug),
+    brand:brands(id, name, name_ar, logo_url),
+    collection:collections(id, name_fr, name_ar),
+    variants:flacon_variants(id, size_ml, color, color_name, shape, price),
     tags:product_tags(tag:tags(*))
-  `).order('created_at', { ascending: false });
+  `;
+
+  // Add stock fields for admin or for stock-check logic
+  if (isAdmin) {
+    selectQuery = `
+      *,
+      category:categories(*),
+      brand:brands(*),
+      collection:collections(*),
+      variants:flacon_variants(*),
+      tags:product_tags(tag:tags(*))
+    `;
+  } else {
+    // We still need to know IF it's in stock for the storefront, 
+    // but the user wants to "ne pas exposer le stock".
+    // I'll select the stock fields but then convert them to booleans before returning.
+    selectQuery += `, stock_grams, variants:flacon_variants(id, size_ml, color, color_name, shape, price, stock_units)`;
+  }
+  
+  let query = supabase.from('products').select(selectQuery).order('created_at', { ascending: false });
 
   if (options?.status && options.status !== 'admin') {
     query = query.eq('status', options.status);
@@ -21,35 +42,75 @@ export const fetchAllProducts = async (options?: { status?: string }) => {
   const { data, error } = await query;
   if (error) throw error;
 
-  return data.map(p => ({
-    ...p,
-    tag_ids: p.tags?.map((t: any) => t.tag?.id).filter(Boolean) || []
-  }));
+  return data.map(p => {
+    const processed = {
+      ...p,
+      tag_ids: p.tags?.map((t: any) => t.tag?.id).filter(Boolean) || []
+    };
+
+    if (!isAdmin) {
+      // Convert quantitative stock to booleans for storefront
+      processed.in_stock = (p.stock_grams || 0) > 0;
+      
+      if (p.variants) {
+        processed.variants = p.variants.map((v: any) => ({
+          ...v,
+          is_available: (v.stock_units || 0) > 0
+        }));
+        
+        // Remove exact unit counts
+        processed.variants.forEach((v: any) => {
+          delete v.stock_units;
+        });
+      }
+      
+      // Remove exact gram counts
+      delete processed.stock_grams;
+    }
+
+    return processed;
+  });
 };
 
-export const fetchProductById = async (id: string) => {
-  
+export const fetchProductById = async (id: string, options?: { isAdmin?: boolean }) => {
   const supabase = createClient();
+  const isAdmin = options?.isAdmin || false;
+
+  let selectQuery = `
+    *,
+    category:categories(*),
+    brand:brands(*),
+    collection:collections(*),
+    variants:flacon_variants(*),
+    tags:product_tags(tag:tags(*))
+  `;
 
   const { data, error } = await supabase
     .from('products')
-    .select(`
-      *,
-      category:categories(*),
-      brand:brands(*),
-      collection:collections(*),
-      variants:flacon_variants(*),
-      tags:product_tags(tag:tags(*))
-    `)
+    .select(selectQuery)
     .eq('id', id)
     .single();
 
   if (error) throw error;
   
-  return {
+  const processed = {
     ...data,
     tag_ids: data.tags?.map((t: any) => t.tag?.id).filter(Boolean) || []
   };
+
+  if (!isAdmin) {
+    processed.in_stock = (data.stock_grams || 0) > 0;
+    if (data.variants) {
+      processed.variants = data.variants.map((v: any) => ({
+        ...v,
+        is_available: (v.stock_units || 0) > 0
+      }));
+      processed.variants.forEach((v: any) => delete v.stock_units);
+    }
+    delete processed.stock_grams;
+  }
+  
+  return processed;
 };
 
 export const createProduct = async (productData: any) => {

@@ -28,6 +28,7 @@ export function MobileHeader() {
     { label: t('nav.shop'), href: '/shop' },
     { label: t('nav.perfumes'), href: '/shop/parfums' },
     { label: t('nav.flacons'), href: '/shop/flacons' },
+    { label: t('nav.accessoires'), href: '/shop/accessoires' },
     { label: t('nav.brands'), href: '/brands' }
   ]
 

@@ -14,7 +14,7 @@ export default async function FlaconsPage() {
   ] = await Promise.all([
     supabase
       .from('products')
-      .select('*, categories(*), brands(*), flacon_variants(*), product_tags(tag_id)')
+      .select('*, categories(*), brands(*), variants:flacon_variants(*), product_tags(tag_id)')
       .eq('product_type', 'flacon')
       .eq('status', 'active'),
     supabase.from('categories').select('*'),

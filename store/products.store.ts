@@ -62,7 +62,8 @@ const mapProductFromDb = (p: any): Product => {
 
   return {
     ...p,
-    tag_ids: tag_ids.length > 0 ? tag_ids : (p.tag_ids || [])
+    tag_ids: tag_ids.length > 0 ? tag_ids : (p.tag_ids || []),
+    variants: p.flacon_variants || p.variants || []
   };
 };
 
