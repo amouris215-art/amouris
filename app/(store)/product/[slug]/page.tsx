@@ -1,40 +1,54 @@
-import { createClient } from '@/lib/supabase/server';
-import { cookies } from 'next/headers';
-import { notFound } from 'next/navigation';
-import ProductClient from './ProductClient';
+import { createClient } from '@/lib/supabase/server'
+import { notFound } from 'next/navigation'
+import ProductClient from './ProductClient'
 
-export default async function ProductPage({ params }: { params: { slug: string } }) {
-  const { slug } = params;
-  const cookieStore = cookies();
-  const supabase = createClient(cookieStore);
-  
-  const { data: product } = await supabase
+export const dynamic = 'force-dynamic'
+
+export default async function ProductPage({
+  params
+}: {
+  params: { slug: string }
+}) {
+  const supabase = await createClient()
+  const { slug } = await params
+
+  const { data: product, error } = await supabase
     .from('products')
     .select(`
-      *,
-      categories(id, name_fr, name_ar),
-      brands(id, name, name_ar, logo_url),
-      collections(id, name_fr, name_ar),
-      variants:flacon_variants(*),
-      product_tags(tag_id)
+      id, name_fr, name_ar, slug, product_type,
+      description_fr, description_ar,
+      price_per_gram, base_price, images,
+      categories ( id, name_fr, name_ar, slug ),
+      brands ( id, name, name_ar ),
+      collections ( id, name_fr, name_ar ),
+      flacon_variants ( id, size_ml, color, color_name, shape, price, stock_units ),
+      product_tags ( tags ( id, name_fr, name_ar, slug ) )
     `)
     .eq('slug', slug)
     .eq('status', 'active')
-    .single();
+    .maybeSingle()
 
-  if (!product) {
-    notFound();
+  if (error) {
+    console.error('Product fetch error:', error)
   }
 
-  // Pre-process for UI compatibility if needed
-  // In our schema product_tags returns { tag_id }, but UI might expect tags directly.
-  // We'll also fetch all tags to match the filter logic in ProductClient
-  const { data: allTags } = await supabase.from('tags').select('*');
+  if (!product) {
+    notFound()
+  }
 
-  return (
-    <ProductClient 
-      initialProduct={product as any} 
-      initialTags={allTags || []}
-    />
-  );
+  // Passer au composant client SANS les valeurs de stock exactes
+  const productForClient = {
+    ...product,
+    in_stock: product.product_type === 'perfume'
+      ? ((product as any).stock_grams ?? 0) > 0
+      : true,
+    // Pour les flacons, remplacer stock_units par in_stock dans chaque variante
+    flacon_variants: product.flacon_variants?.map((v: any) => ({
+      ...v,
+      in_stock: v.stock_units > 0,
+      stock_units: undefined, // Ne pas exposer la quantité exacte
+    }))
+  }
+
+  return <ProductClient initialProduct={productForClient as any} initialTags={[]} />
 }

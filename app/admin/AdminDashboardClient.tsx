@@ -1,139 +1,115 @@
-'use client'
-import { ShoppingBag, Users, TrendingUp, Package, Clock, ArrowRight } from 'lucide-react'
+import { ShoppingBag, Users, TrendingUp, Package, AlertTriangle, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
-import { Order, Customer, Product } from '@/lib/types'
-import { useI18n } from '@/i18n/i18n-context'
-import { getOrderStatusLabel } from '@/lib/status-helpers'
 
-interface AdminDashboardClientProps {
-  orders: Order[]
-  customers: Customer[]
-  products: Product[]
-  adminEmail?: string
+function StatusBadge({ status }: { status: string }) {
+  const map: Record<string, string> = {
+    pending: 'bg-yellow-100 text-yellow-800',
+    confirmed: 'bg-blue-100 text-blue-800',
+    preparing: 'bg-purple-100 text-purple-800',
+    shipped: 'bg-indigo-100 text-indigo-800',
+    delivered: 'bg-green-100 text-green-800',
+    cancelled: 'bg-red-100 text-red-800',
+  }
+  const labels: Record<string, string> = {
+    pending: 'En attente', confirmed: 'Confirmé', preparing: 'En préparation',
+    shipped: 'Expédié', delivered: 'Livré', cancelled: 'Annulé',
+  }
+  return (
+    <span className={`text-[10px] px-3 py-1 rounded-full font-black uppercase tracking-widest ${map[status] || 'bg-gray-100 text-gray-800'}`}>
+      {labels[status] || status}
+    </span>
+  )
 }
 
-export default function AdminDashboardClient({ orders, customers, products, adminEmail }: AdminDashboardClientProps) {
-  const { t, language } = useI18n()
-  const totalRevenue = orders.reduce((s, o) => s + o.total, 0)
-  const activeProducts = products.filter(p => p.status === 'active').length
-
-  const stats = [
-    { label: t('admin.dashboard.stats.active_products'), value: activeProducts, icon: Package, color: 'bg-emerald-50 text-emerald-700' },
-    { label: t('admin.dashboard.stats.total_orders'), value: orders.length, icon: ShoppingBag, color: 'bg-blue-50 text-blue-700' },
-    { label: t('admin.dashboard.stats.total_customers'), value: customers.length, icon: Users, color: 'bg-purple-50 text-purple-700' },
-    { label: t('admin.dashboard.stats.total_revenue'), value: totalRevenue.toLocaleString(), icon: TrendingUp, color: 'bg-amber-50 text-amber-700' },
+export default function AdminDashboardClient({ stats, recentOrders }: { stats: any, recentOrders: any[] }) {
+  const statsList = [
+    { label: 'Produits actifs', value: stats.totalProducts, icon: Package, color: 'bg-emerald-50 text-emerald-700' },
+    { label: 'Commandes totales', value: stats.totalOrders, icon: ShoppingBag, color: 'bg-blue-50 text-blue-700' },
+    { label: 'Clients inscrits', value: stats.totalCustomers, icon: Users, color: 'bg-purple-50 text-purple-700' },
+    { label: 'Revenu du mois', value: `${stats.totalRevenue.toLocaleString()} DZD`, icon: TrendingUp, color: 'bg-amber-50 text-amber-700' },
   ]
 
-  const recentOrders = orders.slice(0, 8)
-
   return (
-    <div className="space-y-8">
-      <div className="flex justify-between items-end">
+    <div className="space-y-8 pb-20">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
         <div>
-          <h1 className="text-3xl font-bold text-emerald-950 font-serif">{t('admin.dashboard.title')}</h1>
-          <p className="text-emerald-950/40 text-sm mt-1">{t('admin.dashboard.subtitle').replace('{email}', adminEmail || '')}</p>
+          <h1 className="text-4xl font-black text-gray-900 font-serif tracking-tight">Vue d&apos;ensemble</h1>
         </div>
-        <div className="flex gap-4">
-            <Link href="/admin/orders" className="text-xs font-bold bg-white px-4 py-2 border border-emerald-50 rounded-lg shadow-sm hover:bg-emerald-50 transition-colors uppercase tracking-widest">{t('admin.dashboard.orders.view_all')}</Link>
-            <Link href="/admin/products" className="text-xs font-bold bg-white px-4 py-2 border border-emerald-50 rounded-lg shadow-sm hover:bg-emerald-50 transition-colors uppercase tracking-widest text-emerald-900">{t('nav.shop')}</Link>
+        <div className="flex gap-4 w-full md:w-auto">
+            <Link href="/admin/orders" className="flex-1 md:flex-none text-center text-[10px] font-black bg-white px-6 py-4 border border-emerald-50 rounded-2xl shadow-sm hover:bg-emerald-50 transition-all uppercase tracking-widest">Commandes</Link>
+            <Link href="/admin/products" className="flex-1 md:flex-none text-center text-[10px] font-black bg-emerald-950 text-white px-6 py-4 rounded-2xl shadow-xl shadow-emerald-900/20 hover:scale-[1.02] active:scale-95 transition-all uppercase tracking-widest">Produits</Link>
         </div>
       </div>
 
-      {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map(({ label, value, icon: Icon, color }) => (
-          <div key={label} className="bg-white rounded-[2rem] border border-emerald-50 p-8 shadow-sm hover:shadow-xl hover:shadow-black/5 transition-all group">
-            <div className={`inline-flex p-4 rounded-2xl ${color} mb-6 transition-transform group-hover:scale-110`}>
+        {statsList.map(({ label, value, icon: Icon, color }) => (
+          <div key={label} className="bg-white rounded-[2.5rem] border border-emerald-50 p-8 shadow-sm hover:shadow-xl hover:shadow-emerald-900/5 transition-all group overflow-hidden relative">
+            <div className={`absolute -right-4 -top-4 p-12 opacity-[0.03] group-hover:scale-110 transition-transform ${color.split(' ')[1]}`}>
+                <Icon size={120} />
+            </div>
+            <div className={`inline-flex p-4 rounded-2xl ${color} mb-6 transition-transform group-hover:scale-110 relative z-10`}>
               <Icon size={24} />
             </div>
-            <div className="text-3xl font-black text-emerald-950 font-sans tracking-tight">{value}</div>
-            <div className="text-[10px] uppercase font-black tracking-[0.2em] text-emerald-950/20 mt-2">{label}</div>
+            <div className="text-2xl font-semibold text-gray-900 font-sans tracking-tight relative z-10">{value}</div>
+            <div className="text-sm font-medium text-gray-500 mt-2 relative z-10">{label}</div>
           </div>
         ))}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Commandes récentes */}
-        <div className="lg:col-span-2 bg-white rounded-[2rem] border border-emerald-50 overflow-hidden shadow-sm">
-            <div className="p-8 border-b border-emerald-50 flex items-center justify-between">
-                <h2 className="text-xl font-bold text-emerald-950 font-serif">{t('admin.dashboard.orders.recent')}</h2>
-                <Link href="/admin/orders" className="text-xs font-black text-amber-600 hover:text-amber-500 flex items-center gap-2 uppercase tracking-widest">
-                    {t('admin.dashboard.orders.view_all')} <ArrowRight size={14} />
-                </Link>
-            </div>
-            <div className="divide-y divide-emerald-50">
-                {recentOrders.length > 0 ? (
-                    recentOrders.map(order => (
-                        <div key={order.id} className="flex items-center justify-between p-8 hover:bg-emerald-50/20 transition-all group">
-                            <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-900 font-bold group-hover:bg-emerald-900 group-hover:text-white transition-colors">
-                                    <ShoppingBag size={20} />
+        <div className="lg:col-span-2 space-y-8">
+          <div className="bg-white rounded-[2.5rem] border border-emerald-50 overflow-hidden shadow-sm">
+              <div className="p-8 border-b border-emerald-50 flex items-center justify-between">
+                  <h2 className="text-xl font-bold text-emerald-950 font-serif">Dernières commandes</h2>
+                  <Link href="/admin/orders" className="text-xs font-black text-amber-600 hover:text-amber-500 flex items-center gap-2 uppercase tracking-widest">
+                      Tout voir <ArrowRight size={14} />
+                  </Link>
+              </div>
+              <div className="divide-y divide-emerald-50">
+                  {recentOrders && recentOrders.length > 0 ? (
+                      recentOrders.map(order => {
+                          const name = order.guest_first_name
+                            ? `${order.guest_first_name} ${order.guest_last_name}`
+                            : (order.profiles ? `${order.profiles.first_name} ${order.profiles.last_name}` : 'Client Web');
+                          return (
+                            <div key={order.id} className="flex items-center justify-between p-8 hover:bg-emerald-50/20 transition-all group">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-900 font-bold group-hover:bg-emerald-900 group-hover:text-white transition-colors">
+                                        <ShoppingBag size={20} />
+                                    </div>
+                                    <div>
+                                        <p className="font-black text-emerald-950 font-mono text-sm tracking-tight">{order.order_number}</p>
+                                        <p className="text-xs text-emerald-950/30 font-medium">{name}</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <p className="font-black text-emerald-950 font-mono text-sm tracking-tight">{order.order_number}</p>
-                                    <p className="text-xs text-emerald-950/30 font-medium whitespace-nowrap overflow-hidden text-ellipsis max-w-[150px]">
-                                      {order.is_registered_customer 
-                                        ? customers.find(c => c.id === order.customer_id)?.first_name || 'Client'
-                                        : `${order.guest_first_name || ''} ${order.guest_last_name || ''}`.trim() || 'Invité'}
-                                    </p>
+                                <div className="flex items-center gap-6">
+                                    <div className="text-right hidden sm:block">
+                                        <p className="text-sm font-black text-emerald-900">{order.total_amount?.toLocaleString() || 0} <span className="text-[10px] font-normal">DZD</span></p>
+                                        <p className="text-[10px] text-emerald-950/20 font-medium">{new Date(order.created_at).toLocaleDateString()}</p>
+                                    </div>
+                                    <StatusBadge status={order.order_status} />
                                 </div>
                             </div>
-                            <div className="flex items-center gap-6">
-                                <div className="text-right">
-                                    <p className="text-sm font-black text-emerald-900">{order.total_amount.toLocaleString()} <span className="text-[10px] font-normal">{t('common.dzd')}</span></p>
-                                    <p className="text-[10px] text-emerald-950/20 font-medium">{new Date(order.created_at).toLocaleDateString()}</p>
-                                </div>
-                                <StatusBadge status={order.order_status} locale={language} />
-                            </div>
-                        </div>
-                    ))
-                ) : (
-                    <div className="p-12 text-center text-emerald-950/20 font-serif text-lg">{t('admin.dashboard.orders.none')}</div>
-                )}
-            </div>
+                          );
+                      })
+                  ) : (
+                      <div className="p-12 text-center text-emerald-950/20 font-serif text-lg">Aucune commande pour le moment</div>
+                  )}
+              </div>
+          </div>
         </div>
-
-        {/* Nouveaux Clients */}
-        <div className="bg-white rounded-[2rem] border border-emerald-50 p-8 shadow-sm">
-            <h2 className="text-xl font-bold text-emerald-950 font-serif mb-8 text-center">{t('admin.dashboard.customers.new')}</h2>
-            <div className="space-y-6">
-                {customers.slice(0, 8).map(customer => (
-                    <div key={customer.id} className="flex items-center gap-4 group">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold group-hover:scale-110 transition-all ${customer.status === 'frozen' ? 'bg-rose-50 text-rose-300' : 'bg-amber-50 text-amber-700'}`}>
-                            {(customer.firstName || customer.phoneNumber).charAt(0)}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                            <p className="text-sm font-bold text-emerald-950 truncate">{customer.firstName} {customer.lastName}</p>
-                            <p className="text-[10px] text-emerald-950/30 uppercase tracking-widest font-black">{customer.wilaya}</p>
-                        </div>
-                        <Link href="/admin/customers" className="text-emerald-900/10 hover:text-emerald-900 transition-colors">
-                            <ArrowRight size={16} />
-                        </Link>
-                    </div>
-                ))}
-                {customers.length === 0 && (
-                   <p className="text-center text-emerald-950/20 py-8">{t('admin.dashboard.customers.none')}</p>
-                )}
+        <div>
+          <div className="bg-[#0a3d2e] rounded-[2.5rem] p-8 text-white relative overflow-hidden group">
+            <div className="absolute -right-10 -bottom-10 opacity-10 group-hover:scale-120 transition-transform duration-1000">
+              <TrendingUp size={240} />
             </div>
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-emerald-400 mb-2">Total Revenu Global</p>
+            <h3 className="text-4xl font-black font-sans tracking-tighter mb-6">{stats.totalRevenue.toLocaleString()} <span className="text-sm opacity-50">DZD</span></h3>
+            <div className="h-1 w-12 bg-emerald-400 mb-6 rounded-full" />
+            <p className="text-xs text-white/50 leading-relaxed">Revenu cumulé de toutes les commandes.</p>
+          </div>
         </div>
       </div>
     </div>
-  )
-}
-
-function StatusBadge({ status, locale }: { status: string, locale: string }) {
-  const map: Record<string, string> = {
-    pending: 'bg-amber-100 text-amber-700',
-    confirmed: 'bg-emerald-100 text-emerald-700',
-    preparing: 'bg-purple-100 text-purple-700',
-    shipped: 'bg-blue-100 text-blue-700',
-    delivered: 'bg-emerald-900 text-white',
-    cancelled: 'bg-rose-100 text-rose-700',
-  }
-  
-  return (
-    <span className={`text-[10px] px-3 py-1 rounded-full font-black uppercase tracking-widest ${map[status] || 'bg-gray-100 text-gray-600'}`}>
-      {getOrderStatusLabel(status, locale)}
-    </span>
   )
 }

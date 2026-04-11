@@ -6,6 +6,7 @@ export async function middleware(request: NextRequest) {
     request,
   })
 
+  // Le middleware doit rafraîchir la session Supabase à chaque requête
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -27,12 +28,9 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  // refreshing the auth token
   const { data: { user } } = await supabase.auth.getUser()
 
-  // --- ROUTE PROTECTION ---
-
-  // 1. Protect /admin/* (except /admin/login)
+  // Protéger /admin/*
   if (request.nextUrl.pathname.startsWith('/admin') && request.nextUrl.pathname !== '/admin/login') {
     if (!user) {
       const url = request.nextUrl.clone()
@@ -40,26 +38,20 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(url)
     }
 
-    // Check role in profile
-    const { data: profile, error } = await supabase
+    const { data: profile } = await supabase
       .from('profiles')
       .select('role')
       .eq('id', user.id)
       .single()
 
-    if (error || !profile || profile.role !== 'admin') {
+    if (profile?.role !== 'admin') {
       const url = request.nextUrl.clone()
       url.pathname = '/admin/login'
-      url.searchParams.set('error', 'unauthorized')
-      // Clear session if not admin trying to access admin
-      if (profile && profile.role !== 'admin') {
-        await supabase.auth.signOut()
-      }
       return NextResponse.redirect(url)
     }
   }
 
-  // 2. Protect /account/*
+  // Protéger /account/*
   if (request.nextUrl.pathname.startsWith('/account')) {
     if (!user) {
       const url = request.nextUrl.clone()
@@ -73,13 +65,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * Feel free to modify this pattern to include more paths.
-     */
     '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }
