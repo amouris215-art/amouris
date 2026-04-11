@@ -41,15 +41,20 @@ export async function middleware(request: NextRequest) {
     }
 
     // Check role in profile
-    const { data: profile } = await supabase
+    const { data: profile, error } = await supabase
       .from('profiles')
       .select('role')
       .eq('id', user.id)
       .single()
 
-    if (!profile || profile.role !== 'admin') {
+    if (error || !profile || profile.role !== 'admin') {
       const url = request.nextUrl.clone()
       url.pathname = '/admin/login'
+      url.searchParams.set('error', 'unauthorized')
+      // Clear session if not admin trying to access admin
+      if (profile && profile.role !== 'admin') {
+        await supabase.auth.signOut()
+      }
       return NextResponse.redirect(url)
     }
   }

@@ -4,19 +4,33 @@ import { phoneToEmail } from '@/lib/utils/phone';
 
 export const registerCustomer = async (data: any) => {
   const supabase = createClient();
-  const { phone, password, ...profileData } = data;
+  const { phone, password, firstName, lastName, shopName, wilaya, commune } = data;
   
+  // 1. Check if phone already exists using secure RPC
+  const { data: exists, error: checkError } = await supabase.rpc('check_phone_exists', { p_phone: phone });
+  if (checkError) {
+    console.error('Check phone error:', checkError);
+  } else if (exists) {
+    return { ok: false, error: 'Ce numéro est déjà enregistré' };
+  }
+
   // Format fake email: phone@amouris.app
   const email = phoneToEmail(phone);
   const generatedPassword = password || `pwd_${phone}_${Math.random().toString(36).slice(2,8)}`;
 
+  // 2. Map data for trigger (ensuring snake_case for DB)
   const { data: signUpData, error } = await supabase.auth.signUp({
     email,
     password: generatedPassword,
     options: {
       data: {
         phone,
-        ...profileData
+        first_name: firstName,
+        last_name: lastName,
+        shop_name: shopName || null,
+        wilaya: wilaya || 'Alger',
+        commune: commune || null,
+        role: 'customer'
       }
     }
   });

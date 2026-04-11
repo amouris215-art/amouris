@@ -14,6 +14,15 @@ export default function AdminLoginPage() {
   const [loading, setLoading] = useState(false)
   const router = useRouter()
 
+  // Detect error from middleware redirect
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const urlError = searchParams.get('error');
+    if (urlError === 'unauthorized') {
+      setError('Accès non autorisé : Vous n\'avez pas les droits d\'administrateur.');
+    }
+  }, []);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError('')

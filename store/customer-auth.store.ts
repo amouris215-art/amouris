@@ -62,9 +62,15 @@ export const useCustomerAuthStore = create<CustomerAuthStore>()(
       register: async (data) => {
         set({ isLoading: true, error: null })
         try {
-          const { ok, error } = await registerCustomer(data)
+          const { ok, error, data: authData } = await registerCustomer(data)
           if (!ok) throw new Error(error)
-          await get().login(data.phone, data.password)
+          
+          // Auto-login after registration
+          if (authData?.user) {
+            await get().login(data.phone, data.password)
+          } else {
+            throw new Error('Erreur lors de la création du compte')
+          }
         } catch (err: any) {
           set({ error: err.message, isLoading: false })
           throw err

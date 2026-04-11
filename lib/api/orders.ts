@@ -84,8 +84,11 @@ export const createOrder = async (data: any) => {
     .single();
 
   if (orderError) {
-    console.error('Supabase order creation error:', orderError);
-    throw new Error(`Échec de la création de la commande: ${orderError.message}`);
+    console.error('CRITICAL: Supabase order creation error:', {
+      error: orderError,
+      data_sent: cleanedOrderData
+    });
+    throw new Error(`Échec de la création de la commande: ${orderError.message || 'Erreur inconnue'}`);
   }
 
   // 2. Create Order Items
