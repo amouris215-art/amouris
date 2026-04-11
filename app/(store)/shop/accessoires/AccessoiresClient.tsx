@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import { useI18n } from '@/i18n/i18n-context';
 import { ProductCard } from '@/components/store/product-card';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, Filter, X, Pipette } from 'lucide-react';
+import { ChevronDown, Filter, X, Pipette, Search } from 'lucide-react';
 
 interface AccessoiresClientProps {
   initialProducts: any[];
@@ -29,11 +29,16 @@ export default function AccessoiresClient({
   const [selectedTag, setSelectedTag] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('newest');
   const [showFilters, setShowFilters] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const isAr = language === 'ar';
 
   const filteredProducts = useMemo(() => {
     let result = products.filter(p => {
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        if (!p.name_fr?.toLowerCase().includes(query) && !p.name_ar?.toLowerCase().includes(query)) return false;
+      }
       if (selectedCategory !== 'all' && p.category_id !== selectedCategory) return false;
       if (selectedTag !== 'all' && !p.tag_ids.includes(selectedTag)) return false;
       return true;
@@ -108,8 +113,20 @@ export default function AccessoiresClient({
           {/* Grid Area */}
           <main className="flex-1">
             <div className="flex justify-between items-center mb-12">
-              <div>
-                <span className="text-xs uppercase font-black tracking-widest text-[#3d1a1a]/40">{filteredProducts.length} Références trouvées</span>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-4 flex-1">
+                <span className="text-xs uppercase font-black tracking-widest text-[#3d1a1a]/40 shrink-0">{filteredProducts.length} Références trouvées</span>
+                <div className="relative group/sort flex-1 max-w-sm">
+                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                     <Search size={14} className="text-[#3d1a1a]/40" />
+                   </div>
+                   <input
+                     type="text"
+                     placeholder={isAr ? 'ابحث...' : 'Rechercher...'}
+                     value={searchQuery}
+                     onChange={e => setSearchQuery(e.target.value)}
+                     className="bg-white border border-[#3d1a1a]/5 pl-9 pr-4 py-2 pb-2.5 rounded-xl text-xs font-medium focus:outline-none w-full"
+                   />
+                </div>
               </div>
               
               <div className="flex items-center gap-4">

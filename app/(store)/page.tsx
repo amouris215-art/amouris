@@ -44,10 +44,10 @@ export default async function HomePage() {
       .select(`
         products (
           id, name_fr, name_ar, slug, product_type,
-          price_per_gram, base_price, images, status,
+          price_per_gram, base_price, images, status, stock_grams,
           categories ( name_fr, name_ar ),
           brands ( name ),
-          flacon_variants ( id, price, color, color_name )
+          flacon_variants ( id, price, color, color_name, stock_units )
         )
       `)
       .eq('tag_id', tag.id)
@@ -82,7 +82,6 @@ export default async function HomePage() {
 
   return (
     <main className="min-h-screen">
-      <AnnouncementBar announcements={announcements ?? []} />
       <HeroSection />
       <ShopCards
         parfumsCount={parfumsCount ?? 0}

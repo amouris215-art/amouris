@@ -24,8 +24,8 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
 
   // Feature 6: Check availability instead of quantity
   const isAvailable = product.product_type === 'perfume' 
-    ? (product as any).in_stock 
-    : product.variants?.some((v: any) => v.is_available)
+    ? ((product as any).in_stock ?? ((product as any).stock_grams ?? 0) > 0)
+    : (product.variants?.some((v: any) => v.is_available || (v.stock_units ?? 0) > 0) || (product as any).flacon_variants?.some((v: any) => v.is_available || (v.stock_units ?? 0) > 0))
 
   const handleQuickAdd = (e: React.MouseEvent) => {
     e.preventDefault()

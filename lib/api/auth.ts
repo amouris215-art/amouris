@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/client';
 import { phoneToEmail } from '@/lib/utils/phone';
 
+import { adminRegisterCustomer } from '@/lib/actions/auth.actions';
 
 export const registerCustomer = async (data: any) => {
   const supabase = createClient();
@@ -18,25 +19,20 @@ export const registerCustomer = async (data: any) => {
   const email = phoneToEmail(phone);
   const generatedPassword = password || `pwd_${phone}_${Math.random().toString(36).slice(2,8)}`;
 
-  // 2. Map data for trigger (ensuring snake_case for DB)
-  const { data: signUpData, error } = await supabase.auth.signUp({
-    email,
-    password: generatedPassword,
-    options: {
-      data: {
-        phone,
-        first_name: firstName,
-        last_name: lastName,
-        shop_name: shopName || null,
-        wilaya: wilaya || 'Alger',
-        commune: commune || null,
-        role: 'customer'
-      }
-    }
-  });
+  const userData = {
+    phone,
+    first_name: firstName,
+    last_name: lastName,
+    shop_name: shopName || null,
+    wilaya: wilaya || 'Alger',
+    commune: commune || null,
+    role: 'customer'
+  };
 
-  if (error) return { ok: false, error: error.message };
-  return { ok: true, data: signUpData };
+  const response = await adminRegisterCustomer(email, generatedPassword, userData);
+  if (response.error) return { ok: false, error: response.error };
+
+  return { ok: true, data: { user: response.user } };
 };
 
 export const loginCustomer = async (phone: string, password?: string) => {

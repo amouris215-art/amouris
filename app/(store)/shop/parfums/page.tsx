@@ -10,7 +10,7 @@ export default async function ParfumsPage() {
     .from('products')
     .select(`
       id, name_fr, name_ar, slug, product_type,
-      price_per_gram, images,
+      price_per_gram, images, stock_grams,
       categories ( id, name_fr, name_ar ),
       brands ( id, name, name_ar ),
       product_tags ( tags ( id, name_fr, name_ar ) )

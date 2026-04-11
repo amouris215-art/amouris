@@ -118,3 +118,22 @@ export async function logoutAction() {
   await supabase.auth.signOut()
   redirect('/')
 }
+
+import { createAdminClient } from '@/lib/supabase/admin'
+
+export async function adminRegisterCustomer(email: string, password: string, userData: any) {
+  const admin = createAdminClient()
+  const { data, error } = await admin.auth.admin.createUser({
+    email,
+    password,
+    user_metadata: userData,
+    email_confirm: true,
+  })
+  
+  if (error) {
+    console.error('Admin create user error:', error)
+    return { error: error.message }
+  }
+  
+  return { user: data.user }
+}

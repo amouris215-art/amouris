@@ -5,7 +5,7 @@ import { useI18n } from '@/i18n/i18n-context';
 import { ProductCard } from '@/components/store/product-card';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Slider } from '@/components/ui/slider';
-import { ChevronDown, Filter, X } from 'lucide-react';
+import { ChevronDown, Filter, X, Search } from 'lucide-react';
 
 interface FlaconsClientProps {
   initialProducts: any[];
@@ -35,6 +35,7 @@ export default function FlaconsClient({
   const [maxPrice, setMaxPrice] = useState<number>(10000);
   const [sortBy, setSortBy] = useState<string>('newest');
   const [showFilters, setShowFilters] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const isAr = language === 'ar';
 
@@ -61,6 +62,10 @@ export default function FlaconsClient({
 
   const filteredProducts = useMemo(() => {
     let result = products.filter(p => {
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        if (!p.name_fr?.toLowerCase().includes(query) && !p.name_ar?.toLowerCase().includes(query)) return false;
+      }
       // For flacons, we look if ANY variant matches the filters
       const matchesVariant = p.variants?.some(v => {
         const sizeMatch = selectedSize === 'all' || `${v.size_ml}ml` === selectedSize;
@@ -187,8 +192,20 @@ export default function FlaconsClient({
           <main className="flex-1">
              {/* Header bar */}
              <div className="flex justify-between items-center mb-12">
-              <div>
-                <span className="text-xs uppercase font-black tracking-widest text-emerald-950/50">{filteredProducts.length} Modèles trouvés</span>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-4 flex-1">
+                <span className="text-xs uppercase font-black tracking-widest text-emerald-950/50 shrink-0">{filteredProducts.length} Modèles trouvés</span>
+                <div className="relative group/sort flex-1 max-w-sm">
+                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                     <Search size={14} className="text-emerald-950/40" />
+                   </div>
+                   <input
+                     type="text"
+                     placeholder={isAr ? 'ابحث...' : 'Rechercher...'}
+                     value={searchQuery}
+                     onChange={e => setSearchQuery(e.target.value)}
+                     className="bg-white border border-emerald-950/5 pl-9 pr-4 py-2 pb-2.5 rounded-xl text-xs font-medium focus:outline-none w-full"
+                   />
+                </div>
               </div>
               
               <div className="flex items-center gap-4">

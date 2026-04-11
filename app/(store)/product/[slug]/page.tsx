@@ -42,7 +42,11 @@ export default async function ProductPage({
     in_stock: product.product_type === 'perfume'
       ? ((product as any).stock_grams ?? 0) > 0
       : true,
-    // Pour les flacons, remplacer stock_units par in_stock dans chaque variante
+    // Pour les flacons, exposer un tableau variants avec is_available pour le frontend
+    variants: product.flacon_variants?.map((v: any) => ({
+      ...v,
+      is_available: v.stock_units > 0,
+    })),
     flacon_variants: product.flacon_variants?.map((v: any) => ({
       ...v,
       in_stock: v.stock_units > 0,
