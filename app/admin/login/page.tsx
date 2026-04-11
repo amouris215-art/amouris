@@ -36,7 +36,7 @@ export default function AdminLoginPage() {
         throw new Error(loginError || 'Identifiants invalides')
       }
 
-      router.replace('/admin')
+      window.location.href = '/admin'
     } catch (err: any) {
       setError(err.message || 'Erreur lors de la connexion')
     } finally {

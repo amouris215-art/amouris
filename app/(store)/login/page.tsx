@@ -67,7 +67,7 @@ export default function LoginPage() {
 
         // Accès OK
         setCustomer(profile as any)
-        router.replace('/account')
+        window.location.href = '/account'
       }
     } catch (err: any) {
       setError(err.message || 'Identifiants incorrects')

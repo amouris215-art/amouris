@@ -1,13 +1,25 @@
 import { fetchOrderById } from '@/lib/api/orders';
-import { getCurrentUser } from '@/lib/api/auth';
+import { createClient } from '@/lib/supabase/server';
 import { redirect, notFound } from 'next/navigation';
 import OrderDetailClient from './OrderDetailClient';
 
 export default async function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
-  const session = await getCurrentUser();
-  if (!session || !session.profile) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect('/login');
+  }
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', user.id)
+    .single();
+
+  if (!profile) {
     redirect('/login');
   }
 

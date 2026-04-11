@@ -73,7 +73,7 @@ export default function RegisterPage() {
 
     try {
       await registerUser(form)
-      router.replace('/account')
+      window.location.href = '/account'
     } catch (err: any) {
       console.error('Registration error:', err)
       setGlobalError(err.message || 'Échec de la création du compte')

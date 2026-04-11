@@ -17,7 +17,7 @@ export default async function ProductPage({
     .select(`
       id, name_fr, name_ar, slug, product_type,
       description_fr, description_ar,
-      price_per_gram, base_price, images,
+      price_per_gram, base_price, images, stock_grams,
       categories ( id, name_fr, name_ar, slug ),
       brands ( id, name, name_ar ),
       collections ( id, name_fr, name_ar ),

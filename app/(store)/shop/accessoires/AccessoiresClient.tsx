@@ -20,6 +20,7 @@ export default function AccessoiresClient({
   const { language, t } = useI18n();
   const products = useMemo(() => initialProducts.map(p => ({
     ...p,
+    variants: p.flacon_variants?.map((v: any) => ({...v, is_available: v.stock_units > 0})) || [],
     tag_ids: p.product_tags?.map((pt: any) => pt.tag_id) || []
   })), [initialProducts]);
   const categories = initialCategories;
