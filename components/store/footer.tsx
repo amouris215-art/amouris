@@ -21,7 +21,7 @@ export function Footer() {
       id: 'shop',
       title: t('nav.shop'),
       links: [
-        { label: t('nav.perfumes'), href: '/shop/perfumes' },
+        { label: t('nav.perfumes'), href: '/shop/parfums' },
         { label: t('nav.flacons'), href: '/shop/flacons' },
         { label: t('nav.accessoires'), href: '/shop/accessoires' },
         { label: t('nav.brands'), href: '/brands' },

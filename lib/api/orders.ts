@@ -61,8 +61,15 @@ export const createOrder = async (data: any) => {
   const supabase = createClient();
   const { items, ...orderData } = data;
 
+  // Generate a unique order number client-side as a failsafe
+  // (the DB trigger may also generate one, but this ensures the NOT NULL constraint is satisfied)
+  const timestamp = Date.now().toString(36).toUpperCase();
+  const randomPart = Math.floor(Math.random() * 900000 + 100000);
+  const fallbackOrderNumber = `AM-${randomPart}`;
+
   // Ensure all fields are null if undefined (Supabase accepts null but may reject undefined)
   const cleanedOrderData = {
+    order_number: fallbackOrderNumber,
     customer_id: orderData.customer_id ?? null,
     is_registered_customer: !!orderData.is_registered_customer,
     guest_first_name: orderData.guest_first_name ?? null,
