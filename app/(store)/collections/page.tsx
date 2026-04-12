@@ -23,7 +23,7 @@ export default function CollectionsPage() {
           name_fr: c.nameFR,
           name_ar: c.nameAR,
           description_fr: '',
-          cover_url: c.coverImage || null
+          cover_image: c.coverImage || null
         }));
         seed(adaptedData);
       } catch (err) {
@@ -68,7 +68,7 @@ export default function CollectionsPage() {
             >
               <div 
                 className="absolute inset-0 bg-cover bg-center group-hover:scale-110 transition-transform duration-700 opacity-60" 
-                style={{ backgroundImage: `url(${collection.cover_url || 'https://images.unsplash.com/photo-1546190255-451a91afc548?q=80&w=800'})` }}
+                style={{ backgroundImage: `url(${collection.cover_image || 'https://images.unsplash.com/photo-1546190255-451a91afc548?q=80&w=800'})` }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-emerald-950 via-transparent to-transparent opacity-80" />
               

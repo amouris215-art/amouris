@@ -28,16 +28,16 @@ export const INITIAL_BRANDS = [
 ]
 
 export const INITIAL_COLLECTIONS = [
-  { id: 'col-01', name_fr: 'Collection Royale', name_ar: 'المجموعة الملكية', description_fr: 'Les essences les plus précieuses, dignes des rois.', cover_url: null },
-  { id: 'col-02', name_fr: 'Été Arabe', name_ar: 'الصيف العربي', description_fr: 'Légèreté et fraîcheur pour l\'été.', cover_url: null },
-  { id: 'col-03', name_fr: 'Nuit de Sahara', name_ar: 'ليلة الصحراء', description_fr: 'Profondeur et mystère du désert.', cover_url: null },
-  { id: 'col-04', name_fr: 'Prestige', name_ar: 'بريستيج', description_fr: 'Notre sélection premium.', cover_url: null },
-  { id: 'col-05', name_fr: 'Bakhoor Heritage', name_ar: 'تراث البخور', description_fr: 'L\'art ancestral du bakhoor.', cover_url: null },
-  { id: 'col-06', name_fr: 'Oud Signature', name_ar: 'توقيع العود', description_fr: 'La quintessence de l\'oud.', cover_url: null },
-  { id: 'col-07', name_fr: 'Fleurs d\'Orient', name_ar: 'أزهار الشرق', description_fr: 'Les fleurs rares de la péninsule arabique.', cover_url: null },
-  { id: 'col-08', name_fr: 'Masculin Intense', name_ar: 'رجولي مكثف', description_fr: 'Compositions intenses pour homme.', cover_url: null },
-  { id: 'col-09', name_fr: 'Féminité Dorée', name_ar: 'أنوثة ذهبية', description_fr: 'Douceur, fleur et musc pour elle.', cover_url: null },
-  { id: 'col-10', name_fr: 'Zen & Méditation', name_ar: 'زن وتأمل', description_fr: 'Sérénité et notes apaisantes.', cover_url: null },
+  { id: 'col-01', name_fr: 'Collection Royale', name_ar: 'المجموعة الملكية', description_fr: 'Les essences les plus précieuses, dignes des rois.', cover_image: null },
+  { id: 'col-02', name_fr: 'Été Arabe', name_ar: 'الصيف العربي', description_fr: 'Légèreté et fraîcheur pour l\'été.', cover_image: null },
+  { id: 'col-03', name_fr: 'Nuit de Sahara', name_ar: 'ليلة الصحراء', description_fr: 'Profondeur et mystère du désert.', cover_image: null },
+  { id: 'col-04', name_fr: 'Prestige', name_ar: 'بريستيج', description_fr: 'Notre sélection premium.', cover_image: null },
+  { id: 'col-05', name_fr: 'Bakhoor Heritage', name_ar: 'تراث البخور', description_fr: 'L\'art ancestral du bakhoor.', cover_image: null },
+  { id: 'col-06', name_fr: 'Oud Signature', name_ar: 'توقيع العود', description_fr: 'La quintessence de l\'oud.', cover_image: null },
+  { id: 'col-07', name_fr: 'Fleurs d\'Orient', name_ar: 'أزهار الشرق', description_fr: 'Les fleurs rares de la péninsule arabique.', cover_image: null },
+  { id: 'col-08', name_fr: 'Masculin Intense', name_ar: 'رجولي مكثف', description_fr: 'Compositions intenses pour homme.', cover_image: null },
+  { id: 'col-09', name_fr: 'Féminité Dorée', name_ar: 'أنوثة ذهبية', description_fr: 'Douceur, fleur et musc pour elle.', cover_image: null },
+  { id: 'col-10', name_fr: 'Zen & Méditation', name_ar: 'زن وتأمل', description_fr: 'Sérénité et notes apaisantes.', cover_image: null },
 ]
 
 export const INITIAL_TAGS = [

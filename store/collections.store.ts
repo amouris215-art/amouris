@@ -7,7 +7,7 @@ export interface Collection {
   name_fr: string
   name_ar: string
   description_fr: string
-  cover_url: string | null
+  cover_image: string | null
 }
 
 export interface CollectionsStore {
