@@ -7,7 +7,7 @@ import {
   AlertTriangle, CreditCard, Loader2, 
   Plus, Trash2, Megaphone,
   LogOut, User, ExternalLink,
-  Check, Camera, ShieldCheck, ArrowUpRight, Globe
+  Check, Camera, ShieldCheck, ArrowUpRight
 } from 'lucide-react'
 import Link from 'next/link'
 import { toast } from 'sonner'
