@@ -7,7 +7,8 @@ import {
   AlertTriangle, CreditCard, Loader2, 
   Plus, Trash2, Megaphone,
   LogOut, User, ExternalLink,
-  Check, Camera, ShieldCheck, ArrowUpRight
+  Check, Camera, ShieldCheck, ArrowUpRight,
+  Instagram, Facebook
 } from 'lucide-react'
 import Link from 'next/link'
 import { toast } from 'sonner'
@@ -195,7 +196,7 @@ export default function AdminSettingsClient({ initialSettings, initialAnnounceme
                          <label className="text-[9px] font-black uppercase tracking-widest text-emerald-950/30 px-1">Lien Instagram</label>
                          <div className="flex gap-4">
                             <div className="relative flex-1">
-                               <ExternalLink className="absolute left-4 top-1/2 -translate-y-1/2 text-rose-500" size={16} />
+                               <Instagram className="absolute left-4 top-1/2 -translate-y-1/2 text-rose-500" size={16} />
                                <input type="url" name="instagram" value={formData.instagram} onChange={handleChange} placeholder="https://instagram.com/..." className="w-full h-12 pl-12 bg-neutral-50 border border-emerald-950/5 rounded-xl text-emerald-950 outline-none focus:border-rose-500 transition-all" />
                             </div>
                          </div>
@@ -204,7 +205,7 @@ export default function AdminSettingsClient({ initialSettings, initialAnnounceme
                          <label className="text-[9px] font-black uppercase tracking-widest text-emerald-950/30 px-1">Lien Facebook</label>
                          <div className="flex gap-4">
                             <div className="relative flex-1">
-                               <Globe className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-600" size={16} />
+                               <Facebook className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-600" size={16} />
                                <input type="url" name="facebook" value={formData.facebook} onChange={handleChange} placeholder="https://facebook.com/..." className="w-full h-12 pl-12 bg-neutral-50 border border-emerald-950/5 rounded-xl text-emerald-950 outline-none focus:border-blue-500 transition-all" />
                             </div>
                          </div>
