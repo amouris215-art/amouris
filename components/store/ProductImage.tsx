@@ -55,7 +55,10 @@ export function ProductImage({
           priority={priority}
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           className="object-cover transition-transform duration-1000 group-hover:scale-110"
-          onError={() => setError(true)}
+          onError={() => {
+            console.error(`[IMAGE DEBUG] Failed to load product image for ${productName}:`, images[0]);
+            setError(true);
+          }}
         />
       </div>
     )

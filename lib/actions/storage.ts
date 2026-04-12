@@ -38,9 +38,11 @@ export async function uploadImage(formData: FormData) {
       .from(bucket)
       .getPublicUrl(filePath);
     
+    console.log(`[STORAGE DEBUG] Uploaded to bucket: ${bucket}, filePath: ${filePath}, publicUrl: ${publicUrl}`);
+    
     return publicUrl;
   } catch (error: any) {
-    console.error('Storage action error:', error);
+    console.error('[STORAGE DEBUG] ERROR:', error);
     throw error;
   }
 }

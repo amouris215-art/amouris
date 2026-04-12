@@ -38,6 +38,8 @@ export async function createProductAction(formData: any) {
       .select()
       .single()
 
+    console.log('[PRODUCTS DEBUG] Created product with images:', formData.images);
+
     if (productError) {
       console.error('INSERT ERROR:', JSON.stringify(productError, null, 2))
       return { success: false, error: productError.message }
@@ -112,6 +114,8 @@ export async function updateProductAction(id: string, formData: any) {
       .eq('id', id)
       .select()
       .single()
+
+    console.log('[PRODUCTS DEBUG] Updated product with images:', updatePayload.images);
 
     if (error) {
       console.error('UPDATE ERROR:', JSON.stringify(error, null, 2))
