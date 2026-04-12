@@ -161,6 +161,7 @@ export function ShopContent({ initialProducts, categories, brands, initialType }
             {t('shop.filter_type')}
           </h3>
         </div>
+        <div className="flex flex-col gap-2">
           {(['all', 'perfume', 'flacon', 'accessory'] as const).map(type => (
             <FilterChip 
               key={type}
