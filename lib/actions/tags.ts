@@ -4,6 +4,8 @@ import { createClient } from '@/lib/supabase/server';
 import { cookies } from 'next/headers';
 import { Tag, Product, ProductType } from '@/lib/types';
 import { mapDbProductToFrontend } from '@/lib/supabase/utils';
+import { createAdminClient } from '@/lib/supabase/admin';
+import { revalidatePath } from 'next/cache';
 
 export async function getHomepageTags() {
   const cookieStore = cookies();
@@ -81,9 +83,6 @@ export async function getProductsByTag(tagId: string, limit = 8) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return (data || []).map((item: { product: any }) => mapDbProductToFrontend(item.product));
 }
-
-import { createAdminClient } from '@/lib/supabase/admin';
-import { revalidatePath } from 'next/cache';
 
 export async function createTagAction(tag: any) {
   try {

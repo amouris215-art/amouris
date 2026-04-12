@@ -113,7 +113,7 @@ export default function AdminCustomersClient({ initialCustomers }: AdminCustomer
       XLSX.writeFile(workbook, `Amouris_Clients_${new Date().toISOString().split('T')[0]}.xlsx`)
       toast.success('Fichier Excel généré avec succès')
     } catch (err: any) {
-      toast.error('Erreur lors de l\\'export: ' + err.message)
+      toast.error("Erreur lors de l'export: " + err.message)
     }
   }
 

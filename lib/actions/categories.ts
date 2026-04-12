@@ -3,6 +3,8 @@
 import { createClient } from '@/lib/supabase/server';
 import { cookies } from 'next/headers';
 import { Category } from '@/lib/types';
+import { createAdminClient } from '@/lib/supabase/admin';
+import { revalidatePath } from 'next/cache';
 
 export async function getCategories() {
   const cookieStore = cookies();
@@ -23,10 +25,8 @@ export async function getCategories() {
     nameAR: c.name_ar,
     nameFR: c.name_fr,
     slug: c.slug,
+  }));
 }
-
-import { createAdminClient } from '@/lib/supabase/admin';
-import { revalidatePath } from 'next/cache';
 
 export async function createCategoryAction(category: any) {
   try {

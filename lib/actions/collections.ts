@@ -3,6 +3,8 @@
 import { createClient } from '@/lib/supabase/server';
 import { cookies } from 'next/headers';
 import { Collection } from '@/lib/types';
+import { createAdminClient } from '@/lib/supabase/admin';
+import { revalidatePath } from 'next/cache';
 
 export async function getCollections(): Promise<Collection[]> {
   const cookieStore = cookies();
@@ -23,10 +25,8 @@ export async function getCollections(): Promise<Collection[]> {
     nameAR: c.name_ar,
     nameFR: c.name_fr,
     coverImage: c.cover_image,
+  }));
 }
-
-import { createAdminClient } from '@/lib/supabase/admin';
-import { revalidatePath } from 'next/cache';
 
 export async function createCollectionAction(collection: any) {
   try {

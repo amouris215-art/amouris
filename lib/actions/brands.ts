@@ -3,6 +3,8 @@
 import { createClient } from '@/lib/supabase/server';
 import { cookies } from 'next/headers';
 import { Brand } from '@/lib/types';
+import { createAdminClient } from '@/lib/supabase/admin';
+import { revalidatePath } from 'next/cache';
 
 export async function getBrands() {
   const cookieStore = cookies();
@@ -25,9 +27,6 @@ export async function getBrands() {
     logo: b.logo_url,
   }));
 }
-
-import { createAdminClient } from '@/lib/supabase/admin';
-import { revalidatePath } from 'next/cache';
 
 export async function createBrand(brand: any) {
   try {
