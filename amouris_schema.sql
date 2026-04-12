@@ -98,7 +98,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
     wilaya TEXT,
     commune TEXT,
     is_frozen BOOLEAN DEFAULT false,
-    is_admin BOOLEAN DEFAULT false,
+    role TEXT DEFAULT 'customer',
     created_at TIMESTAMPTZ DEFAULT now(),
     updated_at TIMESTAMPTZ DEFAULT now()
 );
