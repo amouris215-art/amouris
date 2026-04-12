@@ -26,7 +26,8 @@ export function CollectionModal({ collection, isOpen, onClose }: CollectionModal
     name_fr: '',
     name_ar: '',
     description_fr: '',
-    cover_url: ''
+    description_ar: '',
+    cover_image: ''
   });
 
   useEffect(() => {
@@ -35,14 +36,16 @@ export function CollectionModal({ collection, isOpen, onClose }: CollectionModal
         name_fr: collection.name_fr || '',
         name_ar: collection.name_ar || '',
         description_fr: collection.description_fr || '',
-        cover_url: collection.cover_url || ''
+        description_ar: collection.description_ar || '',
+        cover_image: collection.cover_image || ''
       });
     } else if (isOpen) {
       setFormData({
         name_fr: '',
         name_ar: '',
         description_fr: '',
-        cover_url: ''
+        description_ar: '',
+        cover_image: ''
       });
     }
   }, [collection, isOpen]);
@@ -71,7 +74,7 @@ export function CollectionModal({ collection, isOpen, onClose }: CollectionModal
         .from('collections')
         .getPublicUrl(filename);
 
-      setFormData(prev => ({ ...prev, cover_url: urlData.publicUrl }));
+      setFormData(prev => ({ ...prev, cover_image: urlData.publicUrl }));
       toast.success('Image de couverture prête');
     } catch (err: any) {
       toast.error("Échec du transfert: " + err.message);
@@ -82,9 +85,9 @@ export function CollectionModal({ collection, isOpen, onClose }: CollectionModal
   };
 
   const handleDeleteImage = async () => {
-    if (!formData.cover_url) return;
+    if (!formData.cover_image) return;
     try {
-      const urlObj = new URL(formData.cover_url);
+      const urlObj = new URL(formData.cover_image);
       const path = urlObj.pathname.split('/storage/v1/object/public/collections/')[1];
       if (path) {
         await supabase.storage.from('collections').remove([path]);
@@ -92,7 +95,7 @@ export function CollectionModal({ collection, isOpen, onClose }: CollectionModal
     } catch (e) {
       console.error("Failed to delete from storage", e);
     }
-    setFormData(prev => ({ ...prev, cover_url: '' }));
+    setFormData(prev => ({ ...prev, cover_image: '' }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -187,9 +190,18 @@ export function CollectionModal({ collection, isOpen, onClose }: CollectionModal
                     <label className="text-xs font-bold text-gray-700 flex items-center gap-2"><Info size={12} /> Description Narratibe (FR)</label>
                     <textarea 
                       value={formData.description_fr} onChange={e => setFormData({...formData, description_fr: e.target.value})}
-                      rows={4}
+                      rows={3}
                       placeholder="Racontez l'histoire de cette collection..."
                       className="w-full p-4 rounded-xl border border-gray-100 bg-gray-50 focus:bg-white focus:border-emerald-500 outline-none transition-all resize-none text-sm leading-relaxed italic"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-gray-700 text-right flex items-center justify-end gap-2">الوصف بالعربية <Globe size={12} /></label>
+                    <textarea 
+                      dir="rtl" value={formData.description_ar} onChange={e => setFormData({...formData, description_ar: e.target.value})}
+                      rows={3}
+                      placeholder="رواية قصة هذه المجموعة..."
+                      className="w-full p-4 rounded-xl border border-gray-100 bg-gray-50 focus:bg-white focus:border-emerald-500 outline-none transition-all resize-none font-arabic text-lg text-right italic"
                     />
                   </div>
                 </motion.div>
@@ -200,9 +212,9 @@ export function CollectionModal({ collection, isOpen, onClose }: CollectionModal
                 >
                    <div className="aspect-[21/9] rounded-3xl overflow-hidden border-2 border-dashed border-gray-100 bg-gray-50 relative group">
                       <AnimatePresence mode="wait">
-                        {formData.cover_url ? (
+                        {formData.cover_image ? (
                           <motion.div key="img" className="w-full h-full relative">
-                            <img src={formData.cover_url} alt="Cover" className="w-full h-full object-cover" />
+                            <img src={formData.cover_image} alt="Cover" className="w-full h-full object-cover" />
                             <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all">
                               <button type="button" onClick={handleDeleteImage} className="w-12 h-12 bg-rose-500 text-white rounded-2xl hover:scale-110 transition-transform flex items-center justify-center">
                                 <Trash2 size={24} />

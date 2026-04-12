@@ -26,7 +26,8 @@ export function BrandModal({ brand, isOpen, onClose }: BrandModalProps) {
     name: '',
     name_ar: '',
     logo_url: '',
-    description_fr: ''
+    description_fr: '',
+    description_ar: ''
   });
 
   useEffect(() => {
@@ -35,14 +36,16 @@ export function BrandModal({ brand, isOpen, onClose }: BrandModalProps) {
         name: brand.name || '',
         name_ar: brand.name_ar || '',
         logo_url: brand.logo_url || '',
-        description_fr: brand.description_fr || ''
+        description_fr: brand.description_fr || '',
+        description_ar: brand.description_ar || ''
       });
     } else if (isOpen) {
       setFormData({
         name: '',
         name_ar: '',
         logo_url: '',
-        description_fr: ''
+        description_fr: '',
+        description_ar: ''
       });
     }
     setActiveTab('details');
@@ -187,12 +190,21 @@ export function BrandModal({ brand, isOpen, onClose }: BrandModalProps) {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-xs font-bold text-gray-700 flex items-center gap-2"><Info size={12} /> Histoire de la Marque</label>
+                    <label className="text-xs font-bold text-gray-700 flex items-center gap-2"><Info size={12} /> Histoire de la Marque (FR)</label>
                     <textarea 
                       value={formData.description_fr} onChange={e => setFormData({...formData, description_fr: e.target.value})}
-                      rows={4}
+                      rows={3}
                       placeholder="Décrivez l'univers et l'héritage de cette maison..."
                       className="w-full p-4 rounded-xl border border-gray-100 bg-gray-50 focus:bg-white focus:border-emerald-500 outline-none transition-all resize-none text-sm leading-relaxed italic"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-gray-700 text-right flex items-center justify-end gap-2">قصة الدار بالعربية <Globe size={12} /></label>
+                    <textarea 
+                      dir="rtl" value={formData.description_ar} onChange={e => setFormData({...formData, description_ar: e.target.value})}
+                      rows={3}
+                      placeholder="وصف تاريخ وعالم هذه الدار..."
+                      className="w-full p-4 rounded-xl border border-gray-100 bg-gray-50 focus:bg-white focus:border-emerald-500 outline-none transition-all resize-none font-arabic text-lg text-right italic"
                     />
                   </div>
                 </motion.div>

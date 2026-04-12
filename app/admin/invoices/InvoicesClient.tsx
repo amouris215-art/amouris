@@ -4,7 +4,6 @@ import { useState, useMemo } from 'react';
 import { FileText, Search, Download, Trash2, Loader2, Receipt, ArrowRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { generateInvoicePDF } from '@/lib/utils/invoice-generator';
-import { deleteInvoiceAction } from '@/lib/actions/invoices';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 
@@ -52,21 +51,6 @@ export default function InvoicesClient({ initialOrders, settings }: InvoicesClie
     }
   };
 
-  const handleDelete = async (order: any) => {
-    if (!confirm(`Voulez-vous supprimer l'enregistrement de la facture pour la commande ${order.order_number} ?`)) return;
-    
-    setIsDeleting(order.id);
-    const toastId = toast.loading('Suppression en cours...');
-    try {
-      await deleteInvoiceAction(order.id);
-      router.refresh();
-      toast.success('Facture réinitialisée', { id: toastId });
-    } catch (err: any) {
-      toast.error('Erreur: ' + err.message, { id: toastId });
-    } finally {
-      setIsDeleting(null);
-    }
-  };
 
   return (
     <div className="space-y-16 pb-32">
@@ -184,14 +168,6 @@ export default function InvoicesClient({ initialOrders, settings }: InvoicesClie
                                 title="Télécharger la facture"
                              >
                                 <Download size={20} className="group-hover/btn:scale-110 transition-transform" />
-                             </button>
-                             <button 
-                                onClick={() => handleDelete(order)}
-                                disabled={isDeleting === order.id}
-                                className="w-14 h-14 rounded-2xl bg-white border border-emerald-950/5 flex items-center justify-center text-rose-200 hover:text-rose-600 hover:border-rose-100 transition-all shadow-sm hover:shadow-xl group/del"
-                                title="Supprimer la facture"
-                             >
-                                {isDeleting === order.id ? <Loader2 size={18} className="animate-spin" /> : <Trash2 size={20} className="group-del/del:scale-110 transition-transform" />}
                              </button>
                           </div>
                        </td>

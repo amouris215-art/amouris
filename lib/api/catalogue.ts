@@ -21,7 +21,9 @@ const createItem = async (table: string, data: any) => {
 
 const updateItem = async (table: string, id: string, data: any) => {
   const admin = createAdminClient();
-  const { data: item, error } = await admin.from(table).update(data).eq('id', id).select().single();
+  // Ensure we don't try to update the ID
+  const { id: _, ...updateData } = data;
+  const { data: item, error } = await admin.from(table).update(updateData).eq('id', id).select().single();
   if (error) throw error;
   return item;
 };
