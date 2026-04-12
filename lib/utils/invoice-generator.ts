@@ -29,15 +29,9 @@ export const generateInvoicePDF = async (order: Order, settings: StoreSettings) 
   doc.rect(0, 0, 210, 50, 'F')
   
   // Header Content
-  try {
-    // Attempt to add logo if it exists in public
-    doc.addImage('/logo.png', 'PNG', 14, 10, 30, 30)
-  } catch (e) {
-    // Fallback to text logo
-    doc.setFontSize(28)
-    doc.setTextColor(255, 255, 255)
-    doc.text('AMOURIS', 14, 25)
-  }
+  doc.setFontSize(28)
+  doc.setTextColor(255, 255, 255)
+  doc.text('AMOURIS', 14, 25)
   
   // Store Name & Slogan
   doc.setFont('helvetica', 'bold')
@@ -96,9 +90,7 @@ export const generateInvoicePDF = async (order: Order, settings: StoreSettings) 
   const storeInfo = [
     safeSettings.address || 'Quartier El Yasmine, Alger',
     `Tél: ${safeSettings.phone || '+213 550 00 00 00'}`,
-    `Email: ${safeSettings.email || 'contact@amouris-parfums.com'}`,
-    `RC: 23/00-1234567B22 | NIF: 002231012345678`,
-    `AI: 16101234567`
+    `Email: ${safeSettings.email || 'contact@amouris-parfums.com'}`
   ]
   doc.text(storeInfo, 110, 80)
 
@@ -220,36 +212,6 @@ export const generateInvoicePDF = async (order: Order, settings: StoreSettings) 
   doc.text('NET À PAYER:', summaryX, finalY + 45)
   doc.text(`${reste.toLocaleString()} DZD`, 196, finalY + 45, { align: 'right' })
   
-  // Bank Info
-  doc.setTextColor(...TEXT_DARK as [number, number, number])
-  doc.setFontSize(8)
-  doc.setFont('helvetica', 'bold')
-  doc.text('COORDONNÉES BANCAIRES', 14, finalY + 15)
-  doc.setFont('helvetica', 'normal')
-  doc.setTextColor(...TEXT_GRAY as [number, number, number])
-  doc.text(`RIB: 007 99999 0000000000 00`, 14, finalY + 20)
-  doc.text(`Banque: BNA - Alger Central`, 14, finalY + 24)
-
-  // Bottom Signature Area
-  doc.setDrawColor(230, 230, 230)
-  doc.line(14, finalY + 60, 196, finalY + 60)
-  
-  doc.setFontSize(8)
-  doc.setTextColor(...TEXT_GRAY as [number, number, number])
-  doc.text('Cachet et Signature de l\'Entreprise', 14, finalY + 70)
-  doc.rect(14, finalY + 74, 50, 25)
-  
-  doc.text('Signature du Client', 150, finalY + 70)
-  doc.rect(140, finalY + 74, 56, 25)
-
-  // Luxury Background Element (Watermark/Seal)
-  try {
-    doc.setGState(new (doc as any).GState({ opacity: 0.05 }))
-    doc.addImage('/logo.png', 'PNG', 60, 100, 90, 90)
-    doc.setGState(new (doc as any).GState({ opacity: 1 }))
-  } catch (e) {
-    // Watermark ignored if logo fails
-  }
 
   // Footer
   doc.setFontSize(8)
