@@ -61,12 +61,11 @@ export function CollectionModal({ collection, isOpen, onClose, onSave }: Collect
 
     setIsUploading(true);
     try {
-      const buffer = await file.arrayBuffer();
-      const publicUrl = await uploadImage({
-        name: file.name,
-        type: file.type,
-        buffer
-      }, 'collections');
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('bucket', 'collections');
+
+      const publicUrl = await uploadImage(formData);
 
       setFormData(prev => ({ ...prev, cover_image: publicUrl }));
       toast.success('Image de couverture prête');

@@ -62,12 +62,11 @@ export function BrandModal({ brand, isOpen, onClose, onSave }: BrandModalProps) 
 
     setIsUploading(true);
     try {
-      const buffer = await file.arrayBuffer();
-      const publicUrl = await uploadImage({
-        name: file.name,
-        type: file.type,
-        buffer
-      }, 'brands');
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('bucket', 'brands');
+
+      const publicUrl = await uploadImage(formData);
 
       setFormData(prev => ({ ...prev, logo_url: publicUrl }));
       toast.success('Logo de la maison enregistré');

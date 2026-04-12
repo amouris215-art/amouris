@@ -131,12 +131,11 @@ export function ProductModal({
 
     setIsUploadingImage(true);
     try {
-      const buffer = await file.arrayBuffer();
-      const publicUrl = await uploadImage({
-        name: file.name,
-        type: file.type,
-        buffer
-      }, 'products');
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('bucket', 'products');
+
+      const publicUrl = await uploadImage(formData);
 
       setFormData(f => ({
         ...f,

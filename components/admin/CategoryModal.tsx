@@ -75,12 +75,11 @@ export function CategoryModal({ category, isOpen, onClose, onSave }: CategoryMod
 
     setIsUploading(true);
     try {
-      const buffer = await file.arrayBuffer();
-      const publicUrl = await uploadImage({
-        name: file.name,
-        type: file.type,
-        buffer
-      }, 'categories');
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('bucket', 'categories');
+
+      const publicUrl = await uploadImage(formData);
 
       setFormData(prev => ({ ...prev, image_url: publicUrl }));
       toast.success('Image de la catégorie chargée');

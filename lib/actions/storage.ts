@@ -3,8 +3,15 @@
 import { createAdminClient } from '@/lib/supabase/admin';
 import { revalidatePath } from 'next/cache';
 
-export async function uploadImage(file: { name: string, type: string, buffer: ArrayBuffer }, bucket: 'products' | 'brands' | 'invoices' | 'collections' | 'categories') {
+export async function uploadImage(formData: FormData) {
   try {
+    const file = formData.get('file') as File;
+    const bucket = formData.get('bucket') as 'products' | 'brands' | 'invoices' | 'collections' | 'categories';
+
+    if (!file || !bucket) {
+      throw new Error('Missing file or bucket in form data');
+    }
+
     const supabase = createAdminClient();
     
     // Create a unique filename
@@ -12,9 +19,11 @@ export async function uploadImage(file: { name: string, type: string, buffer: Ar
     const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
     const filePath = fileName;
 
+    const buffer = Buffer.from(await file.arrayBuffer());
+
     const { data, error } = await supabase.storage
       .from(bucket)
-      .upload(filePath, file.buffer, {
+      .upload(filePath, buffer, {
         contentType: file.type,
         upsert: true,
         cacheControl: '3600'
