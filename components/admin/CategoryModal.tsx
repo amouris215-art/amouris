@@ -76,7 +76,7 @@ export function CategoryModal({ category, isOpen, onClose }: CategoryModalProps)
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-xl max-h-[90vh] p-0 overflow-hidden bg-white rounded-3xl border-none shadow-2xl font-sans">
+      <DialogContent className="sm:max-w-xl max-h-[90vh] p-0 overflow-hidden bg-white rounded-3xl border-none shadow-2xl font-sans flex flex-col">
         {/* Header Vert Émeraude */}
         <div className="bg-[#0a3d2e] p-8 text-white relative overflow-hidden shrink-0">
           <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-400/10 rounded-full blur-3xl -mr-16 -mt-16" />
