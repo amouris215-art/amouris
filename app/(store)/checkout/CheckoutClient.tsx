@@ -102,7 +102,9 @@ export default function CheckoutClient() {
     }
   };
 
-  if (items.length === 0 && !isSubmitting) return null;
+  if (items.length === 0 && !isSubmitting) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-neutral-50/50 py-8 md:py-24" dir={dir}>
@@ -348,6 +350,8 @@ export default function CheckoutClient() {
           </div>
 
         </div>
+      </div>
+      
       {/* Mobile Sticky CTA */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-emerald-950/10 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] pb-safe">
         <div className="px-4 py-4">

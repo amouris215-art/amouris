@@ -123,26 +123,3 @@ export const tags = tagsData;
 export const products = productsData;
 export const customers = customersData;
 export const orders = ordersData;
-, 
-    guest_first_name: null, guest_last_name: null,
-    items: []
-  },
-]
-
-// Named exports asked by the USER
-export const mockCategories = categoriesData;
-export const mockBrands = brandsData;
-export const mockCollections = collectionsData;
-export const mockTags = tagsData;
-export const mockProducts = productsData;
-export const mockCustomers = customersData;
-export const mockOrders = ordersData;
-
-// Aliases for compatibility with existing files
-export const categories = categoriesData;
-export const brands = brandsData;
-export const collections = collectionsData;
-export const tags = tagsData;
-export const products = productsData;
-export const customers = customersData;
-export const orders = ordersData;
