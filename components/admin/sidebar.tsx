@@ -42,6 +42,7 @@ export function AdminSidebar() {
     {
       title: language === 'ar' ? 'نظام الإدارة' : 'Système',
       items: [
+        { name: language === 'ar' ? 'الإشعارات' : 'Notifications', href: '/admin/notifications', icon: Bell },
         { name: language === 'ar' ? 'التحليلات' : 'Analytiques', href: '/admin/analytics', icon: TrendingUp },
         { name: language === 'ar' ? 'تقارير إكسل' : 'Rapports Excel', href: '/admin/reports', icon: FileText },
         { name: language === 'ar' ? 'الإعدادات' : 'Paramètres', href: '/admin/settings', icon: Settings },

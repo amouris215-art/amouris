@@ -433,7 +433,7 @@ export function ProductModal({
                                type="button"
                                onClick={() => setFormData({
                                   ...formData,
-                                  variants: [...formData.variants, { id: `new_${Date.now()}`, size_ml: 50, color: '#000000', color_name: '', shape: '', price: 0, stock_units: 0 }]
+                                  variants: [...formData.variants, { id: `new_${Date.now()}`, size_ml: 50, color: '#000000', color_name: '', shape: '', price: 0, stock_units: 0, carton_quantity: 0, carton_price: 0 }]
                                })}
                                className="flex items-center gap-2 px-4 py-2 bg-emerald-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-800 transition-all"
                             >
@@ -450,7 +450,7 @@ export function ProductModal({
                             )}
                             {formData.variants.map((v: any, idx: number) => (
                                <div key={v.id || idx} className="p-6 bg-gray-50 rounded-2xl border border-gray-100 space-y-4 relative group">
-                                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                  <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
                                      {formData.product_type === 'flacon' && (
                                         <div className="space-y-1">
                                            <label className="text-[9px] font-black uppercase tracking-widest text-gray-400">ML</label>
@@ -461,14 +461,53 @@ export function ProductModal({
                                            }} className="w-full h-10 px-3 bg-white rounded-lg border border-transparent focus:border-emerald-500 outline-none text-xs font-bold" />
                                         </div>
                                      )}
-                                     <div className="space-y-1">
+                                     
+                                     <div className="space-y-1 lg:col-span-2">
                                         <label className="text-[9px] font-black uppercase tracking-widest text-gray-400">Style / Coul.</label>
-                                        <input type="text" value={v.color_name} onChange={e => {
-                                           const newV = [...formData.variants];
-                                           newV[idx].color_name = e.target.value;
-                                           setFormData({...formData, variants: newV});
-                                        }} className="w-full h-10 px-3 bg-white rounded-lg border border-transparent focus:border-emerald-500 outline-none text-xs font-bold" />
+                                        <div className="flex gap-2">
+                                           <div className="relative w-10 h-10 shrink-0">
+                                              <input 
+                                                 type="color" 
+                                                 value={v.color || '#000000'} 
+                                                 onChange={e => {
+                                                    const newV = [...formData.variants];
+                                                    newV[idx].color = e.target.value;
+                                                    setFormData({...formData, variants: newV});
+                                                 }}
+                                                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" 
+                                              />
+                                              <div 
+                                                 className="w-full h-full rounded-lg border border-white shadow-sm"
+                                                 style={{ backgroundColor: v.color || '#000000' }}
+                                              />
+                                           </div>
+                                           <input 
+                                              type="text" 
+                                              placeholder="Ex: Or, Argent..."
+                                              value={v.color_name} 
+                                              onChange={e => {
+                                                 const newV = [...formData.variants];
+                                                 newV[idx].color_name = e.target.value;
+                                                 const colors: Record<string, string> = {
+                                                    'blanc': '#FFFFFF', 'white': '#FFFFFF',
+                                                    'noir': '#000000', 'black': '#000000',
+                                                    'rouge': '#FF0000', 'red': '#FF0000',
+                                                    'bleu': '#0000FF', 'blue': '#0000FF',
+                                                    'vert': '#008000', 'green': '#008000',
+                                                    'jaune': '#FFFF00', 'yellow': '#FFFF00',
+                                                    'or': '#FFD700', 'gold': '#FFD700',
+                                                    'argent': '#C0C0C0', 'silver': '#C0C0C0'
+                                                 };
+                                                 const detected = colors[e.target.value.toLowerCase().trim()];
+                                                 if (detected) newV[idx].color = detected;
+                                                 
+                                                 setFormData({...formData, variants: newV});
+                                              }} 
+                                              className="flex-1 h-10 px-3 bg-white rounded-lg border border-transparent focus:border-emerald-500 outline-none text-xs font-bold" 
+                                           />
+                                        </div>
                                      </div>
+
                                      <div className="space-y-1">
                                         <label className="text-[9px] font-black uppercase tracking-widest text-gray-400">Prix DZD</label>
                                         <input type="number" value={v.price} onChange={e => {
@@ -478,12 +517,42 @@ export function ProductModal({
                                         }} className="w-full h-10 px-3 bg-white rounded-lg border border-transparent focus:border-emerald-500 outline-none text-xs font-bold text-emerald-700" />
                                      </div>
                                      <div className="space-y-1">
-                                        <label className="text-[9px] font-black uppercase tracking-widest text-gray-400">Unités</label>
+                                        <label className="text-[9px] font-black uppercase tracking-widest text-gray-400">Stock</label>
                                         <input type="number" value={v.stock_units} onChange={e => {
                                            const newV = [...formData.variants];
                                            newV[idx].stock_units = +e.target.value;
                                            setFormData({...formData, variants: newV});
                                         }} className="w-full h-10 px-3 bg-white rounded-lg border border-transparent focus:border-emerald-500 outline-none text-xs font-bold" />
+                                     </div>
+
+                                     {/* Carton / Complete Box Integration */}
+                                     <div className="col-span-2 md:col-span-4 lg:col-span-6 grid grid-cols-2 md:grid-cols-3 gap-4 p-4 bg-emerald-50/50 rounded-xl border border-emerald-100/50">
+                                        <div className="col-span-full mb-1">
+                                           <p className="text-[9px] font-black uppercase tracking-widest text-emerald-900/40">Option Carton (كرطون)</p>
+                                        </div>
+                                        <div className="space-y-1">
+                                           <label className="text-[9px] font-black uppercase tracking-widest text-emerald-700/60">Qté par Carton</label>
+                                           <input type="number" placeholder="Ex: 12" value={v.carton_quantity || ''} onChange={e => {
+                                              const newV = [...formData.variants];
+                                              newV[idx].carton_quantity = e.target.value ? +e.target.value : 0;
+                                              setFormData({...formData, variants: newV});
+                                           }} className="w-full h-10 px-3 bg-white rounded-lg border border-emerald-100 focus:border-emerald-500 outline-none text-xs font-bold" />
+                                        </div>
+                                        <div className="space-y-1">
+                                           <label className="text-[9px] font-black uppercase tracking-widest text-emerald-700/60">Prix Carton DZD</label>
+                                           <input type="number" placeholder="Ex: 5000" value={v.carton_price || ''} onChange={e => {
+                                              const newV = [...formData.variants];
+                                              newV[idx].carton_price = e.target.value ? +e.target.value : 0;
+                                              setFormData({...formData, variants: newV});
+                                           }} className="w-full h-10 px-3 bg-white rounded-lg border border-emerald-100 focus:border-emerald-500 outline-none text-xs font-bold text-emerald-700" />
+                                        </div>
+                                        <div className="hidden md:flex flex-col justify-center">
+                                           {v.carton_quantity > 0 && v.carton_price > 0 && (
+                                              <p className="text-[9px] text-emerald-900/40 italic">
+                                                 Soit {(v.carton_price / v.carton_quantity).toFixed(2)} DZD / unité
+                                              </p>
+                                           )}
+                                        </div>
                                      </div>
                                   </div>
                                   <button 

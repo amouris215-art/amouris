@@ -32,7 +32,12 @@ export default function CartDrawer({ open, onOpenChange }: { open: boolean, onOp
     if (!product) return undefined;
     if (item.product_type === 'perfume') return product.stock_grams;
     const variant = product.variants?.find(v => v.id === item.flacon_variant_id);
-    return variant?.stock_units;
+    if (!variant) return undefined;
+    
+    if (item.is_carton && item.carton_quantity > 0) {
+      return Math.floor(variant.stock_units / item.carton_quantity);
+    }
+    return variant.stock_units;
   };
 
   return (

@@ -1,7 +1,9 @@
 import { ShoppingBag, Users, TrendingUp, Package, AlertTriangle, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
+import { useI18n } from '@/i18n/i18n-context'
 
 function StatusBadge({ status }: { status: string }) {
+  const { language } = useI18n()
   const map: Record<string, string> = {
     pending: 'bg-yellow-100 text-yellow-800',
     confirmed: 'bg-blue-100 text-blue-800',
@@ -11,8 +13,12 @@ function StatusBadge({ status }: { status: string }) {
     cancelled: 'bg-red-100 text-red-800',
   }
   const labels: Record<string, string> = {
-    pending: 'En attente', confirmed: 'Confirmé', preparing: 'En préparation',
-    shipped: 'Expédié', delivered: 'Livré', cancelled: 'Annulé',
+    pending: language === 'ar' ? 'قيد الانتظار' : 'En attente',
+    confirmed: language === 'ar' ? 'تم التأكيد' : 'Confirmé',
+    preparing: language === 'ar' ? 'قيد التحضير' : 'En préparation',
+    shipped: language === 'ar' ? 'تم الشحن' : 'Expédié',
+    delivered: language === 'ar' ? 'تم التوصيل' : 'Livré',
+    cancelled: language === 'ar' ? 'ملغى' : 'Annulé',
   }
   return (
     <span className={`text-[10px] px-3 py-1 rounded-full font-black uppercase tracking-widest ${map[status] || 'bg-gray-100 text-gray-800'}`}>
@@ -22,6 +28,7 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 export default function AdminDashboardClient({ stats, recentOrders }: { stats: any, recentOrders: any[] }) {
+  const { language } = useI18n()
   const statsList = [
     { label: 'Produits actifs', value: stats.totalProducts, icon: Package, color: 'bg-emerald-50 text-emerald-700' },
     { label: 'Commandes totales', value: stats.totalOrders, icon: ShoppingBag, color: 'bg-blue-50 text-blue-700' },

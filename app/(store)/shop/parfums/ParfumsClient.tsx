@@ -76,8 +76,8 @@ export default function ParfumsClient({
           </h1>
           <p className="text-emerald-100/70 font-light text-sm md:text-lg max-w-2xl mx-auto italic">
             {isAr 
-              ? 'أفخر الزيوت العطرية العالمية - الحد الأدنى للطلب 100 جرام' 
-              : 'Les plus grandes références de la parfumerie mondiale - Commande min. 100g'}
+              ? 'أفخر الزيوت العطرية العالمية - الحد الأدنى للطلب 50 جرام' 
+              : 'Les plus grandes références de la parfumerie mondiale - Commande min. 50g'}
           </p>
         </div>
       </section>

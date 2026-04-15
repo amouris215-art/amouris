@@ -59,7 +59,7 @@
     "filter": "تصفية",
     "sort": "ترتيب",
     "per_gram": "/ غرام",
-    "min_order_grams": "الحد الأدنى للطلب 100غ",
+    "min_order_grams": "ابتداءً من 50غ",
     "min_order_units": "الحد الأدنى قارورة واحدة",
     "in_stock": "متوفر",
     "out_of_stock": "نفد المخزون",
@@ -111,12 +111,17 @@
     "back_to_shop": "العودة إلى المتجر",
     "packaging_elite": "تغليف فاخر",
     "quantity_grams": "الكمية بالجرام",
-    "min_stock_info": "الحد الأدنى 100غ",
+    "min_stock_info": "الحد الأدنى 50غ",
+    "surcharge_50g_note": "(+100 دج لـ 50غ)",
     "choice_model": "اختيار الموديل",
     "units_to_order": "الكمية المطلوبة",
     "stock_pcs": "المخزون: {count} قطعة",
     "total_selection": "إجمالي اختيارك",
     "unit_price": "سعر الوحدة",
+    "by_unit": "بالوحدة",
+    "by_carton": "بالكرطون",
+    "carton": "كرطون",
+    "in_carton": "في الكرطون",
     "packaging_info": "تعبئة يدوية بوزن دقيق جداً",
     "brand_collection": "الماركة / المجموعة",
     "universe": "التصنيف",
@@ -307,7 +312,12 @@
     "perfume": "عطر",
     "flacon": "قارورة"
   },
-  "admin": {
+    "admin": {
+    "common": {
+      "portal_title": "لوحة الإدارة",
+      "open_sidebar": "فتح القائمة",
+      "view_notifications": "عرض التنبيهات"
+    },
     "dashboard": {
       "title": "نظرة عامة",
       "subtitle": "منصة Amouris Parfums — المسؤول : {email}",

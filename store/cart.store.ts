@@ -16,6 +16,8 @@ export interface CartItem {
   quantity_grams?: number; // for perfumes
   quantity_units?: number; // for flacons
   total_price: number;
+  is_carton?: boolean;
+  carton_quantity?: number;
 }
 
 interface CartStore {
@@ -38,7 +40,8 @@ export const useCartStore = create<CartStore>()(
         const existingIndex = state.items.findIndex(
           (i) => 
             i.product_id === item.product_id && 
-            (item.product_type === 'perfume' ? true : i.flacon_variant_id === item.flacon_variant_id)
+            (item.product_type === 'perfume' ? true : i.flacon_variant_id === item.flacon_variant_id) &&
+            i.is_carton === item.is_carton
         );
 
         if (existingIndex > -1) {
@@ -54,13 +57,18 @@ export const useCartStore = create<CartStore>()(
             } else {
               existing.quantity_grams = newGrams;
             }
-            existing.total_price = existing.unit_price * (existing.quantity_grams / 100); // Assuming unit_price is per 100g or similar
+            existing.total_price = existing.quantity_grams === 50 
+              ? (existing.unit_price / 2) + 100 
+              : existing.unit_price * (existing.quantity_grams / 100); 
           } else {
             const addedUnits = item.quantity_units || 0;
             const newUnits = (existing.quantity_units || 0) + addedUnits;
-            // Respect stock limit if provided
-            if (item.stock !== undefined && newUnits > item.stock) {
-              existing.quantity_units = item.stock;
+            // Respect stock limit if provided (convert carton to units if needed for stock check)
+            const unitsInCarton = item.is_carton ? (item.carton_quantity || 1) : 1;
+            const totalRequestedUnits = newUnits * unitsInCarton;
+
+            if (item.stock !== undefined && totalRequestedUnits > item.stock) {
+              existing.quantity_units = Math.floor(item.stock / unitsInCarton);
             } else {
               existing.quantity_units = newUnits;
             }
@@ -73,7 +81,9 @@ export const useCartStore = create<CartStore>()(
         // Calculate initial total price for new item
         let initialTotal = 0;
         if (item.product_type === 'perfume') {
-          initialTotal = item.unit_price * ((item.quantity_grams || 0) / 100);
+          initialTotal = item.quantity_grams === 50 
+            ? (item.unit_price / 2) + 100 
+            : item.unit_price * ((item.quantity_grams || 0) / 100);
         } else {
           initialTotal = item.unit_price * (item.quantity_units || 0);
         }
@@ -94,14 +104,16 @@ export const useCartStore = create<CartStore>()(
       updateGrams: (id, grams, stock) => set((state) => ({
         items: state.items.map((i) => {
           if (i.id !== id) return i;
-          let newGrams = Math.max(100, grams); // Minimum 100g
+          let newGrams = Math.max(50, grams); // Minimum 50g
           if (stock !== undefined) {
             newGrams = Math.min(newGrams, stock); // Respect stock
           }
           return { 
             ...i, 
             quantity_grams: newGrams, 
-            total_price: i.unit_price * (newGrams / 100) 
+            total_price: newGrams === 50 
+              ? (i.unit_price / 2) + 100 
+              : i.unit_price * (newGrams / 100) 
           };
         }),
       })),

@@ -27,6 +27,7 @@ export default function ProductClient({ initialProduct, initialTags }: ProductCl
   const [quantity, setQuantity] = useState(1);
   const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null);
   const [added, setAdded] = useState(false);
+  const [saleMode, setSaleMode] = useState<'unit' | 'carton'>('unit');
 
   const isAr = language === 'ar';
 
@@ -42,6 +43,13 @@ export default function ProductClient({ initialProduct, initialTags }: ProductCl
   const selectedVariant = useMemo(() => {
     return product?.variants?.find(v => v.id === selectedVariantId) || null;
   }, [product, selectedVariantId]);
+
+  // Reset sale mode when variant changes if new variant doesn't have carton
+  useEffect(() => {
+    if (selectedVariant && saleMode === 'carton' && !selectedVariant.carton_price) {
+      setSaleMode('unit');
+    }
+  }, [selectedVariant, saleMode]);
 
   if (!product) {
     return (
@@ -64,13 +72,27 @@ export default function ProductClient({ initialProduct, initialTags }: ProductCl
 
   const isPerfume = product.product_type === 'perfume';
   const isAccessory = product.product_type === 'accessory';
-  const unitPrice = isPerfume ? (product.price_per_gram || 0) : (selectedVariant?.price || 0);
-  const total = isPerfume ? unitPrice * grams : unitPrice * quantity;
+  
+  const hasCartonOption = selectedVariant?.carton_price > 0 && selectedVariant?.carton_quantity > 0;
+  
+  const unitPrice = isPerfume 
+    ? (product.price_per_gram || 0) 
+    : (saleMode === 'carton' ? selectedVariant.carton_price : (selectedVariant?.price || 0));
+    
+  // Logic: unitPrice is for 100g. 
+  // If 50g, it's (unitPrice / 2) + 100 DZD surcharge.
+  const total = isPerfume 
+    ? (grams === 50 ? (unitPrice / 2) + 100 : (unitPrice * grams) / 100)
+    : unitPrice * quantity;
 
   // Feature 6: Verification de stock client-side basée sur les flags passés par l'API
   const inStock = isPerfume ? product.in_stock : selectedVariant?.is_available;
 
   const handleAddToCart = () => {
+    const variantLabel = selectedVariant 
+      ? `${selectedVariant.size_ml > 0 ? selectedVariant.size_ml + 'ml — ' : ''}${selectedVariant.color_name || selectedVariant.color || 'Standard'}`
+      : undefined;
+
     addItem({
       product_id: product.id,
       product_type: product.product_type,
@@ -79,12 +101,17 @@ export default function ProductClient({ initialProduct, initialTags }: ProductCl
       slug: product.slug,
       image_url: product.images?.[0],
       flacon_variant_id: selectedVariantId || undefined,
-      variant_label: selectedVariant ? `${selectedVariant.size_ml > 0 ? selectedVariant.size_ml + 'ml — ' : ''}${selectedVariant.color_name || selectedVariant.color || 'Standard'}` : undefined,
+      variant_label: saleMode === 'carton' 
+        ? `${variantLabel ? variantLabel + ' — ' : ''}${t('product.carton')} (${selectedVariant.carton_quantity} pcs)`
+        : variantLabel,
       unit_price: unitPrice,
       quantity_grams: isPerfume ? grams : undefined,
       quantity_units: !isPerfume ? quantity : undefined,
       total_price: total,
-    });
+      // Pass metadata for carton
+      is_carton: saleMode === 'carton',
+      carton_quantity: selectedVariant?.carton_quantity
+    } as any);
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
   };
@@ -175,7 +202,7 @@ export default function ProductClient({ initialProduct, initialTags }: ProductCl
                    
                     <div className="flex items-center bg-white border border-emerald-950/5 rounded-2xl p-1 shadow-sm">
                         <button 
-                          onClick={() => setGrams(Math.max(100, grams - 50))} 
+                          onClick={() => setGrams(Math.max(50, grams - 50))} 
                           className="w-12 h-12 md:w-14 md:h-14 rounded-xl hover:bg-emerald-50 text-emerald-950 transition-colors flex items-center justify-center"
                         >
                           <Minus size={18} />
@@ -183,7 +210,7 @@ export default function ProductClient({ initialProduct, initialTags }: ProductCl
                         <input 
                            type="number" 
                            value={grams}
-                           onChange={(e) => setGrams(Math.max(100, +e.target.value))}
+                           onChange={(e) => setGrams(Math.max(50, +e.target.value))}
                            className="w-16 md:w-24 text-center font-serif text-xl md:text-2xl text-emerald-950 bg-transparent outline-none"
                         />
                         <button 
@@ -195,12 +222,31 @@ export default function ProductClient({ initialProduct, initialTags }: ProductCl
                       </div>
                       <span className="text-emerald-950/20 font-serif text-lg md:text-2xl italic">{t('common.grams')}</span>
                    </div>
-                </div>
               ) : (
                 /* Flacon / Accessory: Variant Selector */
                 <div className="space-y-8 md:space-y-12">
                   <div className="space-y-4 md:space-y-6">
-                    <h3 className="text-[10px] uppercase font-black tracking-[0.3em] text-emerald-950/20 shadow-none border-b border-emerald-950/5 pb-4">{t('product.choice_model')}</h3>
+                    <div className="flex items-center justify-between border-b border-emerald-950/5 pb-4">
+                       <h3 className="text-[10px] uppercase font-black tracking-[0.3em] text-emerald-950/20">{t('product.choice_model')}</h3>
+                       
+                       {hasCartonOption && (
+                          <div className="flex p-1 bg-emerald-50 rounded-xl border border-emerald-100">
+                             <button 
+                               onClick={() => setSaleMode('unit')}
+                               className={`px-4 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${saleMode === 'unit' ? 'bg-white text-emerald-900 shadow-sm' : 'text-emerald-900/40 hover:text-emerald-900'}`}
+                             >
+                                {t('product.by_unit')}
+                             </button>
+                             <button 
+                               onClick={() => setSaleMode('carton')}
+                               className={`px-4 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${saleMode === 'carton' ? 'bg-white text-emerald-900 shadow-sm' : 'text-emerald-900/40 hover:text-emerald-900'}`}
+                             >
+                                {t('product.by_carton')}
+                             </button>
+                          </div>
+                       )}
+                    </div>
+                    
                     <div className="flex flex-col gap-3 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-4">
                       {product.variants?.map(v => (
                         <button 
@@ -215,10 +261,15 @@ export default function ProductClient({ initialProduct, initialTags }: ProductCl
                           <p className={`text-[9px] md:text-[10px] uppercase font-bold tracking-tight ${selectedVariantId === v.id ? 'text-[#C9A84C]' : 'text-emerald-950/20'}`}>
                              {v.color_name || v.color || 'Standard'} {v.shape ? `— ${v.shape}` : ''}
                           </p>
-                          <div className="mt-2">
+                          <div className="mt-2 flex items-center justify-between">
                              <span className={`text-[8px] font-black uppercase tracking-widest ${v.is_available ? 'text-emerald-500' : 'text-rose-400'}`}>
                                 {v.is_available ? t('common.available') : t('common.sold_out')}
                              </span>
+                             {saleMode === 'carton' && v.carton_quantity > 0 && (
+                                <span className="text-[8px] font-black uppercase bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded">
+                                   {v.carton_quantity} pcs
+                                </span>
+                             )}
                           </div>
                           {selectedVariantId === v.id && (
                              <div className="absolute top-3 right-3 md:top-4 md:right-4 text-[#C9A84C]">
@@ -231,20 +282,33 @@ export default function ProductClient({ initialProduct, initialTags }: ProductCl
                   </div>
 
                   <div className="space-y-6 md:space-y-8">
-                    <h3 className="text-[10px] uppercase font-black tracking-[0.3em] text-emerald-950/20 border-b border-emerald-950/5 pb-4">{t('product.units_to_order')}</h3>
-                    <div className="flex items-center gap-4 md:gap-6">
-                       <div className="flex items-center bg-white border border-emerald-950/5 rounded-2xl p-1 shadow-sm w-fit">
-                          <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="w-12 h-12 md:w-14 md:h-14 rounded-xl hover:bg-emerald-50 text-emerald-950 transition-colors flex items-center justify-center"><Minus size={18} /></button>
-                          <span className="w-14 md:w-20 text-center font-serif text-xl md:text-2xl text-emerald-950">{quantity}</span>
-                          <button 
-                            onClick={() => setQuantity(quantity + 1)} 
-                            className="w-12 h-12 md:w-14 md:h-14 rounded-xl hover:bg-emerald-50 text-emerald-950 transition-colors flex items-center justify-center"
-                          >
-                            <Plus size={18} />
-                          </button>
+                    <h3 className="text-[10px] uppercase font-black tracking-[0.3em] text-emerald-950/20 border-b border-emerald-950/5 pb-4">
+                       {saleMode === 'carton' ? t('product.carton') : t('product.units_to_order')}
+                    </h3>
+                    <div className="flex flex-col gap-4">
+                       <div className="flex items-center gap-4 md:gap-6">
+                          <div className="flex items-center bg-white border border-emerald-950/5 rounded-2xl p-1 shadow-sm w-fit">
+                             <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="w-12 h-12 md:w-14 md:h-14 rounded-xl hover:bg-emerald-50 text-emerald-950 transition-colors flex items-center justify-center"><Minus size={18} /></button>
+                             <span className="w-14 md:w-20 text-center font-serif text-xl md:text-2xl text-emerald-950">{quantity}</span>
+                             <button 
+                               onClick={() => setQuantity(quantity + 1)} 
+                               className="w-12 h-12 md:w-14 md:h-14 rounded-xl hover:bg-emerald-50 text-emerald-950 transition-colors flex items-center justify-center"
+                             >
+                               <Plus size={18} />
+                             </button>
+                          </div>
+                          <span className="text-emerald-950/20 font-serif text-lg md:text-2xl italic">
+                             {saleMode === 'carton' ? t('product.carton') : t('common.units')}
+                          </span>
                        </div>
+                       {saleMode === 'carton' && selectedVariant && (
+                          <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest flex items-center gap-2">
+                             <Info size={14} /> {selectedVariant.carton_quantity * quantity} {t('common.units')} {t('product.in_carton')}
+                          </p>
+                       )}
                     </div>
                   </div>
+
                 </div>
               )}
             </div>
@@ -255,6 +319,11 @@ export default function ProductClient({ initialProduct, initialTags }: ProductCl
                   <p className="text-[10px] font-black uppercase tracking-[0.3em] text-emerald-950/20 mb-2">{t('product.total_selection')}</p>
                   <p className="font-serif text-4xl text-emerald-950">
                     {total.toLocaleString()} <span className="text-sm font-normal text-emerald-950/40 italic">{t('common.dzd')}</span>
+                    {isPerfume && grams === 50 && (
+                      <span className="block text-[10px] font-bold text-[#C9A84C] mt-1 animate-pulse">
+                        {t('product.surcharge_50g_note')}
+                      </span>
+                    )}
                   </p>
                </div>
                <div className="text-right">

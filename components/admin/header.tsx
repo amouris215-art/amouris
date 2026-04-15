@@ -26,71 +26,83 @@ export function AdminHeader() {
   const supabase = createClient();
 
   const fetchNotifications = async () => {
-    // 1. Fetch pending orders count
-    const { count: ordCount, error: ordError } = await supabase
-      .from('orders')
-      .select('*', { count: 'exact', head: true })
-      .eq('order_status', 'pending');
-    
-    // 2. Fetch low stock items
-    // Parfums < 500g
-    const { data: lowStockPerfumes } = await supabase
-      .from('products')
-      .select('id, name_fr, stock_grams')
-      .eq('product_type', 'perfume')
-      .lt('stock_grams', 500);
+    try {
+      // 1. Fetch pending orders count
+      const { count: ordCount, error: ordError } = await supabase
+        .from('orders')
+        .select('*', { count: 'exact', head: true })
+        .eq('order_status', 'pending');
+      
+      if (ordError) throw ordError;
 
-    // Flacons < 10 units
-    const { data: lowStockVariants } = await supabase
-      .from('flacon_variants')
-      .select('id, size_ml, color_name, stock_units, products(name_fr)')
-      .lt('stock_units', 10);
+      // 2. Fetch low stock items
+      // Parfums < 500g
+      const { data: lowStockPerfumes, error: perfumeError } = await supabase
+        .from('products')
+        .select('id, name_fr, stock_grams')
+        .eq('product_type', 'perfume')
+        .lt('stock_grams', 500);
 
-    const stockCount = (lowStockPerfumes?.length || 0) + (lowStockVariants?.length || 0);
-    setPendingCount((ordCount || 0) + stockCount);
+      if (perfumeError) throw perfumeError;
 
-    // 3. Fetch latest 10 notifications (orders + stock)
-    const notifications: any[] = [];
+      // Flacons < 10 units
+      const { data: lowStockVariants, error: variantError } = await supabase
+        .from('flacon_variants')
+        .select('id, size_ml, color, stock_units, products(name_fr)')
+        .lt('stock_units', 10);
 
-    // Add orders
-    const { data: orders } = await supabase
-      .from('orders')
-      .select('id, order_number, created_at, guest_first_name, guest_last_name, total_amount, order_status')
-      .order('created_at', { ascending: false })
-      .limit(5);
-    
-    if (orders) {
-      orders.forEach(o => notifications.push({
-        type: 'order',
-        id: o.id,
-        title: o.guest_first_name ? `${o.guest_first_name} ${o.guest_last_name}` : `Commande ${o.order_number}`,
-        subtitle: `${o.order_number} • ${o.total_amount.toLocaleString()} DZD`,
-        date: o.created_at,
-        status: o.order_status,
-        link: `/admin/orders/${o.id}`
+      if (variantError) throw variantError;
+
+      const stockCount = (lowStockPerfumes?.length || 0) + (lowStockVariants?.length || 0);
+      setPendingCount((ordCount || 0) + stockCount);
+
+      // 3. Fetch latest 10 notifications (orders + stock)
+      const notifications: any[] = [];
+
+      // Add orders
+      const { data: orders, error: ordersError } = await supabase
+        .from('orders')
+        .select('id, order_number, created_at, guest_first_name, guest_last_name, total_amount, order_status')
+        .order('created_at', { ascending: false })
+        .limit(5);
+      
+      if (ordersError) throw ordersError;
+      
+      if (orders) {
+        orders.forEach(o => notifications.push({
+          type: 'order',
+          id: o.id,
+          title: o.guest_first_name ? `${o.guest_first_name} ${o.guest_last_name}` : `Commande ${o.order_number}`,
+          subtitle: `${o.order_number} • ${o.total_amount.toLocaleString()} DZD`,
+          date: o.created_at,
+          status: o.order_status,
+          link: `/admin/orders/${o.id}`
+        }));
+      }
+
+      // Add stock alerts
+      lowStockPerfumes?.forEach(p => notifications.push({
+        type: 'stock',
+        id: p.id,
+        title: `Stock Bas: ${p.name_fr}`,
+        subtitle: `${p.stock_grams}g restant`,
+        date: new Date().toISOString(),
+        link: `/admin/products`
       }));
+
+      lowStockVariants?.forEach(v => notifications.push({
+        type: 'stock',
+        id: v.id,
+        title: `Stock Bas: ${v.products?.name_fr}`,
+        subtitle: `${v.size_ml}ml - ${v.color} (${v.stock_units} unités)`,
+        date: new Date().toISOString(),
+        link: `/admin/products`
+      }));
+
+      setLatestOrders(notifications.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 10));
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
     }
-
-    // Add stock alerts
-    lowStockPerfumes?.forEach(p => notifications.push({
-      type: 'stock',
-      id: p.id,
-      title: `Stock Bas: ${p.name_fr}`,
-      subtitle: `${p.stock_grams}g restant`,
-      date: new Date().toISOString(),
-      link: `/admin/products`
-    }));
-
-    lowStockVariants?.forEach(v => notifications.push({
-      type: 'stock',
-      id: v.id,
-      title: `Stock Bas: ${v.products?.name_fr}`,
-      subtitle: `${v.size_ml}ml - ${v.color_name} (${v.stock_units} unités)`,
-      date: new Date().toISOString(),
-      link: `/admin/products`
-    }));
-
-    setLatestOrders(notifications.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 10));
   };
 
   useEffect(() => {
@@ -146,40 +158,61 @@ export function AdminHeader() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-80 p-0 rounded-2xl border-emerald-950/5 shadow-2xl overflow-hidden">
-               <div className="bg-[#0a3d2e] p-4 text-white">
-                  <DropdownMenuLabel className="font-serif text-lg py-0">Notifications</DropdownMenuLabel>
-                  <p className="text-[10px] uppercase font-black tracking-widest text-emerald-400 mt-1">
-                    {pendingCount} Alerte(s) nécessitant votre attention
-                  </p>
+               <div className="bg-[#0a3d2e] p-5 text-white flex items-center justify-between">
+                  <div>
+                    <DropdownMenuLabel className="font-serif text-xl py-0">Notifications</DropdownMenuLabel>
+                    <p className="text-[10px] uppercase font-black tracking-widest text-emerald-400 mt-1">
+                      {pendingCount} Alerte(s) active(s)
+                    </p>
+                  </div>
+                  {pendingCount > 0 && (
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="text-[9px] uppercase font-bold tracking-tighter text-emerald-200 hover:text-white hover:bg-white/10 h-8 px-2 rounded-lg"
+                      onClick={() => setLatestOrders([])}
+                    >
+                      Effacer
+                    </Button>
+                  )}
                </div>
                
                <ScrollArea className="h-[350px]">
                   {latestOrders.length > 0 ? (
-                    <div className="p-2 space-y-1">
-                      {latestOrders.map((notif, idx) => (
-                        <DropdownMenuItem key={`${notif.id}-${idx}`} asChild className="p-0 focus:bg-emerald-50 rounded-xl">
-                          <Link href={notif.link} className="flex items-start gap-4 p-4 transition-colors">
-                             <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${notif.type === 'order' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>
-                                {notif.type === 'order' ? <ShoppingBag size={18} /> : <Bell size={18} />}
-                             </div>
-                             <div className="space-y-1 overflow-hidden">
-                                <p className="text-sm font-bold text-emerald-950 truncate">
-                                   {notif.title}
-                                </p>
-                                <p className="text-[10px] font-medium text-emerald-950/50 flex items-center gap-1">
-                                   <Clock size={10} /> {new Date(notif.date).toLocaleTimeString(language === 'ar' ? 'ar-DZ' : 'fr-FR', { hour: '2-digit', minute: '2-digit' })}
-                                   <span className="mx-1">•</span>
-                                   {notif.subtitle}
-                                </p>
-                                {notif.status && (
-                                  <p className={`text-[9px] font-black uppercase tracking-widest pt-1 ${notif.status === 'pending' ? 'text-[#C9A84C]' : 'text-emerald-600'}`}>
-                                     {notif.status}
-                                  </p>
-                                )}
-                             </div>
-                          </Link>
-                        </DropdownMenuItem>
-                      ))}
+                    <div className="p-3 space-y-2">
+                       {latestOrders.map((notif, idx) => (
+                         <DropdownMenuItem key={`${notif.id}-${idx}`} asChild className="p-0 focus:bg-emerald-50 rounded-2xl border border-transparent hover:border-emerald-100 transition-all">
+                           <Link href={notif.link} className="flex items-start gap-4 p-4">
+                              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-sm ${notif.type === 'order' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>
+                                 {notif.type === 'order' ? <ShoppingBag size={20} /> : <Bell size={20} />}
+                              </div>
+                              <div className="space-y-1 overflow-hidden flex-1">
+                                 <div className="flex items-center justify-between gap-2">
+                                    <p className="text-sm font-bold text-emerald-950 truncate">
+                                       {notif.title}
+                                    </p>
+                                    <p className="text-[10px] whitespace-nowrap font-medium text-emerald-950/40 flex items-center gap-1">
+                                       <Clock size={10} /> {new Date(notif.date).toLocaleTimeString(language === 'ar' ? 'ar-DZ' : 'fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                                    </p>
+                                 </div>
+                                 <p className="text-[11px] font-medium text-emerald-950/60 leading-relaxed truncate">
+                                    {notif.subtitle}
+                                 </p>
+                                 {notif.status && (
+                                   <div className="pt-2 flex items-center gap-2">
+                                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest ${
+                                        notif.status === 'pending' ? 'bg-amber-100 text-amber-700' : 
+                                        notif.status === 'confirmed' ? 'bg-blue-100 text-blue-700' :
+                                        'bg-emerald-100 text-emerald-700'
+                                      }`}>
+                                         {notif.status}
+                                      </span>
+                                   </div>
+                                 )}
+                              </div>
+                           </Link>
+                         </DropdownMenuItem>
+                       ))}
                     </div>
                   ) : (
                     <div className="py-20 text-center space-y-4">
@@ -193,8 +226,8 @@ export function AdminHeader() {
                
                <DropdownMenuSeparator className="m-0 bg-emerald-950/5" />
                <div className="p-2">
-                 <Link href="/admin/orders" className="flex items-center justify-center w-full py-3 text-[10px] font-black uppercase tracking-widest text-emerald-950/40 hover:text-emerald-950 transition-colors">
-                    Voir toutes les commandes
+                 <Link href="/admin/notifications" className="flex items-center justify-center w-full py-3 text-[10px] font-black uppercase tracking-widest text-emerald-950/40 hover:text-emerald-950 transition-colors">
+                    {language === 'ar' ? 'عرض كل الإشعارات' : 'Voir toutes les notifications'}
                  </Link>
                </div>
             </DropdownMenuContent>
