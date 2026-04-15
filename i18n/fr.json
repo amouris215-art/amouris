@@ -855,7 +855,6 @@
       "units_label": "UNITÉS",
       "grams_label": "GRAMMES"
     },
-    },
     "invoices": {
       "title": "Comptabilité",
       "subtitle": "Gestion & Reporting des Flux Financiers",
@@ -879,8 +878,6 @@
       "remaining_label": "Reste:",
       "ref_label": "REF:",
       "algeria": "Algérie"
-    },
-    },
     },
     "settings": {
       "title": "Paramètres Système",
@@ -922,7 +919,6 @@
       "error_too_short": "Le mot de passe doit contenir au moins 6 caractères",
       "saving": "Enregistrement...",
       "save": "Enregistrer"
-    }
     }
   }
 }
