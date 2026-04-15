@@ -328,7 +328,7 @@ export default function AdminProductsClient({
                       <td className="px-10 py-6">
                         <div className="space-y-1.5">
                            <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[8px] font-black uppercase tracking-widest ${isPerfume ? 'bg-emerald-50 text-emerald-700' : product.product_type === 'accessory' ? 'bg-rose-50 text-rose-700' : 'bg-amber-50 text-amber-700'}`}>
-                             {isPerfume ? <Droplets size={10} /> : product.product_type === 'accessory' ? <Plus size={10} /> : <Box size={10} />}
+                             {isPerfume ? <Droplet size={10} /> : product.product_type === 'accessory' ? <Plus size={10} /> : <Package size={10} />}
                              {isPerfume ? 'Huile' : product.product_type === 'accessory' ? 'Accessoire' : 'Flacon'}
                            </span>
                            <p className="text-[10px] font-bold text-emerald-950/60 uppercase tracking-widest">
