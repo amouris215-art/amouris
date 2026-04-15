@@ -65,38 +65,38 @@ export default function HomeClient({ categories, brands, tagSections }: HomeClie
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             
             {/* Colonne texte */}
-            <div className="text-center lg:text-start order-2 lg:order-1">
-              <p className="text-amber-400 text-xs tracking-[0.4em] uppercase mb-6 font-light">
+            <div className="text-center lg:text-start order-2 lg:order-1 px-5 py-14 md:px-0 md:py-0">
+              <p className="text-amber-400 text-[10px] md:text-xs tracking-[0.4em] uppercase mb-6 font-light">
                 Amouris Parfums — B2B
               </p>
               
               <h1 className="font-serif text-white leading-none mb-6">
-                <span className="block text-5xl md:text-6xl lg:text-7xl font-light mb-2">
+                <span className="block text-[2.5rem] md:text-6xl lg:text-7xl font-light mb-2">
                   {t('home.hero_title_1')}
                 </span>
-                <span className="block text-5xl md:text-6xl lg:text-7xl text-amber-400 font-light mb-2">
+                <span className="block text-[2.5rem] md:text-6xl lg:text-7xl text-amber-400 font-light mb-2">
                   {t('home.hero_title_2')}
                 </span>
-                <span className="block text-5xl md:text-6xl lg:text-7xl font-light">
+                <span className="block text-[2.5rem] md:text-6xl lg:text-7xl font-light">
                   {t('home.hero_title_3')}
                 </span>
               </h1>
               
-              <p className="text-emerald-200/60 text-base lg:text-lg font-light leading-relaxed mb-10 max-w-lg mx-auto lg:mx-0">
+              <p className="text-emerald-200/60 text-sm md:text-base lg:text-lg font-light leading-relaxed mb-10 max-w-lg mx-auto lg:mx-0 px-4 md:px-0">
                 {t('home.hero_subtitle')}
               </p>
               
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                 <Link
                   href="/shop"
-                  className="inline-flex items-center justify-center gap-2 bg-amber-400 text-emerald-950 px-8 py-4 font-medium text-sm uppercase tracking-wider hover:bg-amber-300 transition-colors group"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-amber-400 text-emerald-950 px-8 py-4 font-medium text-sm uppercase tracking-wider hover:bg-amber-300 transition-colors group"
                 >
                   {t('home.hero_cta_primary')}
                   <ChevronRight size={16} className="group-hover:translate-x-1 transition-transform" />
                 </Link>
                 <Link
                   href="/register"
-                  className="inline-flex items-center justify-center border border-white/20 text-white px-8 py-4 font-light text-sm uppercase tracking-wider hover:border-white/40 hover:bg-white/5 transition-all"
+                  className="w-full sm:w-auto inline-flex items-center justify-center border border-white/20 text-white px-8 py-4 font-light text-sm uppercase tracking-wider hover:border-white/40 hover:bg-white/5 transition-all"
                 >
                   {t('home.hero_cta_secondary')}
                 </Link>
@@ -134,15 +134,15 @@ export default function HomeClient({ categories, brands, tagSections }: HomeClie
           </div>
 
           {/* Stats bar */}
-          <div className="mt-16 pt-8 border-t border-white/10 grid grid-cols-3 gap-4 text-center">
+          <div className="mt-16 pt-8 border-t border-white/10 grid grid-cols-3 gap-2 md:gap-4 text-center">
             {[
               { value: '500+', label: t('home.stats_references') },
               { value: '48', label: t('home.stats_wilayas') },
               { value: 'B2B', label: t('home.stats_b2b') },
             ].map(({ value, label }) => (
               <div key={label}>
-                <div className="text-3xl font-serif text-amber-400 font-light">{value}</div>
-                <div className="text-xs text-emerald-200/40 uppercase tracking-widest mt-1">{label}</div>
+                <div className="text-xl md:text-3xl font-serif text-amber-400 font-light">{value}</div>
+                <div className="text-[8px] md:text-xs text-emerald-200/40 uppercase tracking-widest mt-1">{label}</div>
               </div>
             ))}
           </div>
@@ -192,10 +192,10 @@ export default function HomeClient({ categories, brands, tagSections }: HomeClie
             </div>
 
             {/* Mobile Scroll Row */}
-            <div className="md:hidden overflow-x-auto -mx-4 px-4 pb-4 no-scrollbar scroll-smooth snap-x snap-mandatory flex gap-4">
+            <div className="md:hidden overflow-x-auto -mx-4 px-4 pb-4 scrollbar-hide scroll-smooth snap-x snap-mandatory flex gap-3">
               {section.products.map((product) => (
-                <div key={product.id} className="snap-start flex-shrink-0 w-[240px]">
-                  <ProductCard product={product} />
+                <div key={product.id} className="snap-start flex-shrink-0 w-[200px]">
+                  <ProductCard product={product} compact />
                 </div>
               ))}
             </div>
@@ -231,29 +231,27 @@ export default function HomeClient({ categories, brands, tagSections }: HomeClie
             {language === 'ar' ? 'تسوق حسب الفئة' : 'Explorer par catégorie'}
           </h2>
           
-          <div className="md:hidden overflow-x-auto -mx-4 px-4 pb-4 no-scrollbar scroll-smooth snap-x snap-mandatory flex gap-4">
+          <div className="md:hidden grid grid-cols-2 gap-3 pb-4">
             {categories.map((category, i) => {
               const gradients = ['from-amber-950 to-amber-900', 'from-rose-950 to-rose-900', 'from-emerald-950 to-emerald-900', 'from-sky-950 to-sky-900', 'from-stone-800 to-stone-900'];
               return (
-                <div key={category.id} className="snap-start flex-shrink-0 w-[200px]">
-                   <Link href={`/shop?category=${category.id}`} className="block relative h-64 overflow-hidden group rounded-2xl">
-                     {category.image ? (
-                       <Image 
-                         src={category.image} 
-                         alt={category.nameFR}
-                         fill
-                         className="object-cover transition-transform duration-700 group-hover:scale-110"
-                       />
-                     ) : (
-                       <div className={`absolute inset-0 bg-gradient-to-br ${gradients[i % gradients.length]}`} />
-                     )}
-                     <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors duration-500" />
-                     <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center z-10">
-                        <h3 className="text-lg font-serif text-white">{language === 'ar' ? category.nameAR : category.nameFR}</h3>
-                        <p className="text-white/40 text-[10px] uppercase tracking-widest mt-2">{language === 'ar' ? 'اكتشف' : 'Visiter'}</p>
-                     </div>
-                   </Link>
-                </div>
+                <Link key={category.id} href={`/shop?category=${category.id}`} className="block relative h-48 overflow-hidden group rounded-2xl">
+                  {category.image ? (
+                    <Image 
+                      src={category.image} 
+                      alt={category.nameFR}
+                      fill
+                      className="object-cover transition-transform duration-700 group-hover:scale-110"
+                    />
+                  ) : (
+                    <div className={`absolute inset-0 bg-gradient-to-br ${gradients[i % gradients.length]}`} />
+                  )}
+                  <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors duration-500" />
+                  <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center z-10">
+                    <h3 className="text-sm font-serif text-white">{language === 'ar' ? category.nameAR : category.nameFR}</h3>
+                    <p className="text-white/40 text-[8px] uppercase tracking-widest mt-1">{language === 'ar' ? 'اكتشف' : 'Visiter'}</p>
+                  </div>
+                </Link>
               );
             })}
           </div>

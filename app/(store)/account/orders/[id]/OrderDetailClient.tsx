@@ -8,6 +8,8 @@ import { generateInvoicePDF } from '@/lib/utils/invoice-generator';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
 import OrderInvoice from '@/components/store/OrderInvoice';
+import { toast } from 'sonner';
+import { Loader2 } from 'lucide-react';
 
 interface OrderDetailClientProps {
   order: any;
@@ -15,8 +17,9 @@ interface OrderDetailClientProps {
 }
 
 export default function OrderDetailClient({ order, settings }: OrderDetailClientProps) {
-  const { language } = useI18n();
+  const { language, t } = useI18n();
   const [showInvoice, setShowInvoice] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
   const isAr = language === 'ar';
 
   const statuses = ['pending', 'confirmed', 'preparing', 'shipped', 'delivered'];
@@ -32,7 +35,24 @@ export default function OrderDetailClient({ order, settings }: OrderDetailClient
     'cancelled': { ar: 'ملغى', fr: 'Annulé' },
   };
 
+
   const remaining = order.total_amount - (order.amount_paid || 0);
+
+  const handleDownload = async () => {
+    const toastId = toast.loading(isAr ? 'جاري تحضير الفاتورة...' : 'Génération de la facture...');
+    try {
+      setIsDownloading(true);
+      const doc = await generateInvoicePDF(order, settings || {});
+      const filename = isAr ? `فاتورة_${order.order_number}.pdf` : `Facture_${order.order_number}.pdf`;
+      doc.save(filename);
+      toast.success(isAr ? 'تم تحميل الفاتورة بنجاح' : 'Facture téléchargée avec succès', { id: toastId });
+    } catch (err: any) {
+      console.error(err);
+      toast.error(isAr ? 'حدث خطأ أثناء تحميل الفاتورة' : 'Erreur lors du téléchargement della facture', { id: toastId });
+    } finally {
+      setIsDownloading(false);
+    }
+  };
 
   return (
     <div className="space-y-12">
@@ -66,10 +86,15 @@ export default function OrderDetailClient({ order, settings }: OrderDetailClient
             </Button>
             <Button 
               variant="outline" 
-              className="rounded-2xl border-emerald-950/10 text-emerald-900 hover:bg-[#0a3d2e] hover:text-white uppercase tracking-widest text-[10px] font-black px-8 py-6 h-auto"
-              onClick={() => generateInvoicePDF(order, settings)}
+              className="rounded-2xl border-emerald-950/10 text-emerald-900 hover:bg-[#0a3d2e] hover:text-white uppercase tracking-widest text-[10px] font-black px-8 py-6 h-auto disabled:opacity-50"
+              onClick={handleDownload}
+              disabled={isDownloading}
             >
-              <FileText className="w-4 h-4 mr-3 rtl:ml-3 rtl:mr-0" />
+              {isDownloading ? (
+                <Loader2 className="w-4 h-4 mr-3 rtl:ml-3 rtl:mr-0 animate-spin" />
+              ) : (
+                <FileText className="w-4 h-4 mr-3 rtl:ml-3 rtl:mr-0" />
+              )}
               {isAr ? 'تحميل (PDF)' : 'Télécharger PDF'}
             </Button>
           </div>

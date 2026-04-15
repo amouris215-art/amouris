@@ -19,6 +19,7 @@ import { ProductModal } from '@/components/admin/ProductModal';
 import { ProductImage } from '@/components/store/ProductImage';
 import { deleteProductAction, updateProductAction } from '@/lib/actions/products.actions';
 import { useRouter } from 'next/navigation';
+import { useProductsStore } from '@/store/products.store';
 
 interface AdminProductsClientProps {
   initialProducts: any[];
@@ -26,6 +27,15 @@ interface AdminProductsClientProps {
   brands: any[];
   collections: any[];
   tags: any[];
+}
+
+function StatusBadge({ status }: { status: string }) {
+  const isActive = status === 'active';
+  return (
+    <span className={`text-[8px] px-2 py-0.5 rounded-full font-black uppercase tracking-widest ${isActive ? 'bg-emerald-100 text-emerald-700' : 'bg-neutral-100 text-neutral-400'}`}>
+      {isActive ? 'Actif' : 'Brouillon'}
+    </span>
+  );
 }
 
 export default function AdminProductsClient({ 
@@ -37,6 +47,7 @@ export default function AdminProductsClient({
 }: AdminProductsClientProps) {
   const router = useRouter();
   const [search, setSearch] = useState('');
+  const invalidateCache = useProductsStore(s => s.invalidateCache);
   const [typeFilter, setTypeFilter] = useState<'all' | 'perfume' | 'flacon' | 'accessory'>('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [brandFilter, setBrandFilter] = useState('all');
@@ -81,6 +92,7 @@ export default function AdminProductsClient({
       try {
         const result = await deleteProductAction(id);
         if (result.success) {
+          invalidateCache();
           router.refresh();
         } else {
           alert('Erreur lors de la suppression: ' + result.error);
@@ -96,6 +108,7 @@ export default function AdminProductsClient({
     try {
       const result = await updateProductAction(product.id, { status: newStatus });
       if (result.success) {
+        invalidateCache();
         router.refresh();
       } else {
         alert('Erreur lors du changement de statut: ' + result.error);
@@ -193,7 +206,78 @@ export default function AdminProductsClient({
       </section>
 
       <div className="luxury-card overflow-hidden">
-        <div className="overflow-x-auto no-scrollbar">
+        {/* Mobile View: Cards */}
+        <div className="lg:hidden divide-y divide-emerald-950/5">
+          {filtered.map((product) => {
+            const isPerfume = product.product_type === 'perfume';
+            return (
+              <div key={product.id} className="p-5 space-y-4 hover:bg-neutral-50 active:bg-neutral-100 transition-colors">
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 bg-neutral-100 rounded-2xl flex items-center justify-center overflow-hidden border border-emerald-950/5">
+                    <ProductImage 
+                      images={product.images} 
+                      productName={product.name_fr} 
+                      categoryId={product.category_id} 
+                      productType={product.product_type}
+                      className="w-full h-full"
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-serif text-lg text-emerald-950 font-bold truncate leading-tight">{product.name_fr}</h3>
+                    <div className="flex items-center gap-2 mt-1">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-[#C9A84C] italic">/{product.slug}</p>
+                      <StatusBadge status={product.status === 'active' ? 'active' : 'draft'} />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-emerald-950/40">
+                   <div className="space-y-1">
+                      <p>{product.categories?.name_fr || 'Sans catégorie'}</p>
+                      <p className="text-emerald-950/20">{product.brands?.name || product.brands?.name_fr || 'Sans marque'}</p>
+                   </div>
+                   <div className="text-right">
+                      <p className="text-emerald-950 font-mono text-sm">
+                        {isPerfume ? `${product.stock_grams?.toLocaleString()}g` : `${product.flacon_variants?.length || 0} Modèles`}
+                      </p>
+                      <p className="text-[#C9A84C] mt-1">
+                        {isPerfume ? `${product.price_per_gram} DZD/g` : (
+                          (product.flacon_variants?.length > 0) 
+                            ? `${Math.min(...product.flacon_variants.map((v: any) => v.price)).toLocaleString()} DZD`
+                            : `${(product.base_price || 0).toLocaleString()} DZD`
+                        )}
+                      </p>
+                   </div>
+                </div>
+
+                <div className="flex gap-2 pt-2">
+                   <button 
+                     onClick={() => handleEdit(product)}
+                     className="flex-1 h-12 rounded-xl bg-white border border-emerald-950/10 text-emerald-950 text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2"
+                   >
+                     <Edit2 size={14} /> Modifier
+                   </button>
+                   <button 
+                     onClick={() => toggleStatus(product)}
+                     className="flex-1 h-12 rounded-xl bg-white border border-emerald-950/10 text-emerald-950 text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2"
+                   >
+                     {product.status === 'active' ? <EyeOff size={14} /> : <Eye size={14} />} 
+                     {product.status === 'active' ? 'Masquer' : 'Publier'}
+                   </button>
+                   <button 
+                     onClick={() => handleDelete(product.id)}
+                     className="w-12 h-12 rounded-xl bg-rose-50 text-rose-500 flex items-center justify-center"
+                   >
+                     <Trash2 size={16} />
+                   </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Desktop View: Table */}
+        <div className="hidden lg:block overflow-x-auto no-scrollbar">
           <table className="w-full border-collapse">
             <thead>
               <tr className="border-b border-emerald-950/5 bg-neutral-50/50">
@@ -319,6 +403,7 @@ export default function AdminProductsClient({
         collections={collections}
         tags={tags}
         onSave={() => {
+          invalidateCache();
           setModalOpen(false);
           router.refresh();
         }}

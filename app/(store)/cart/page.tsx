@@ -6,6 +6,7 @@ import { useI18n } from '@/i18n/i18n-context';
 import { Button } from '@/components/ui/button';
 import { Trash2, Plus, Minus, ShoppingBag } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Image from 'next/image';
 
 export default function CartPage() {
   const { items, removeItem, updateGrams, updateUnits, getTotal } = useCartStore();
@@ -52,8 +53,17 @@ export default function CartPage() {
                     key={item.id} 
                     className="flex flex-col sm:flex-row items-start sm:items-center gap-6 bg-white border border-emerald-950/5 rounded-[2.5rem] p-6 shadow-sm hover:shadow-xl hover:shadow-emerald-950/5 transition-all group"
                   >
-                    <div className="w-24 h-24 bg-neutral-100 rounded-3xl flex items-center justify-center shrink-0 border border-emerald-950/5 text-emerald-950/10 font-serif text-4xl select-none group-hover:bg-emerald-50 group-hover:text-[#0a3d2e] transition-colors">
-                      {item.name_fr.charAt(0)}
+                    <div className="w-24 h-24 bg-neutral-100 rounded-3xl flex items-center justify-center shrink-0 border border-emerald-950/5 overflow-hidden relative group-hover:bg-emerald-50 transition-colors">
+                      {item.image_url ? (
+                        <Image 
+                          src={item.image_url} 
+                          alt={item.name_fr}
+                          fill
+                          className="object-cover"
+                        />
+                      ) : (
+                        <span className="text-emerald-950/10 font-serif text-4xl select-none group-hover:text-[#0a3d2e] transition-colors">{item.name_fr.charAt(0)}</span>
+                      )}
                     </div>
                     
                     <div className="flex-1 min-w-0 flex flex-col justify-between w-full">

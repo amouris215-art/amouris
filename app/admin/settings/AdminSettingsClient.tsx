@@ -181,6 +181,30 @@ export default function AdminSettingsClient({ initialSettings, initialAnnounceme
                        </div>
                     </div>
                   </section>
+
+                  <section className="space-y-6">
+                    <div className="flex items-center gap-4 border-b border-emerald-950/5 pb-4">
+                       <Megaphone size={18} className="text-[#C9A84C]" />
+                       <h3 className="font-serif text-xl font-bold text-emerald-950">Affichage Storefront</h3>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                       <div className="bg-neutral-50/50 p-6 rounded-2xl border border-emerald-950/5 flex items-center justify-between">
+                         <div className="space-y-1">
+                           <p className="text-sm font-bold text-emerald-950">Barre d'Annonce</p>
+                           <p className="text-[10px] text-emerald-950/40 uppercase tracking-widest">Activer la barre en haut du site</p>
+                         </div>
+                         <label className="relative inline-flex items-center cursor-pointer">
+                           <input 
+                             type="checkbox" 
+                             className="sr-only peer"
+                             checked={formData.show_announcement_bar !== false}
+                             onChange={e => setFormData(prev => ({ ...prev, show_announcement_bar: e.target.checked }))}
+                           />
+                           <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+                         </label>
+                       </div>
+                    </div>
+                  </section>
                 </div>
               )}
 

@@ -44,7 +44,7 @@ export interface InvoiceData {
 export interface OrderItem {
   id?: string
   product_id: string
-  product_type: 'perfume' | 'flacon'
+  product_type: 'perfume' | 'flacon' | 'accessory'
   flacon_variant_id: string | null
   product_name_fr: string
   product_name_ar: string

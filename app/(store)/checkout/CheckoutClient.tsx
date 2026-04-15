@@ -85,7 +85,7 @@ export default function CheckoutClient() {
       for (const item of orderItems) {
         if (item.product_type === 'perfume' && item.quantity_grams) {
           updateStockGrams(item.product_id, -item.quantity_grams);
-        } else if (item.product_type === 'flacon' && item.flacon_variant_id && item.quantity_units) {
+        } else if ((item.product_type === 'flacon' || item.product_type === 'accessory') && item.flacon_variant_id && item.quantity_units) {
           updateVariantStock(item.product_id, item.flacon_variant_id, -item.quantity_units);
         }
       }
@@ -105,7 +105,7 @@ export default function CheckoutClient() {
   if (items.length === 0 && !isSubmitting) return null;
 
   return (
-    <div className="min-h-screen bg-neutral-50/50 py-12 md:py-24" dir={dir}>
+    <div className="min-h-screen bg-neutral-50/50 py-8 md:py-24" dir={dir}>
       <div className="container mx-auto px-6 max-w-7xl">
         
         <header className="mb-16 text-start">
@@ -114,7 +114,7 @@ export default function CheckoutClient() {
             <ChevronRight size={12} className="rtl:rotate-180" />
             <span className="text-gray-900 font-black uppercase">{t('checkout.title')}</span>
           </div>
-          <h1 className="font-serif text-4xl md:text-6xl text-gray-900">{t('checkout.confirmation')}</h1>
+          <h1 className="font-serif text-[2rem] md:text-6xl text-gray-900 leading-tight">{t('checkout.confirmation')}</h1>
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-start">
@@ -260,6 +260,24 @@ export default function CheckoutClient() {
                 {t('checkout.cod_desc')}
               </p>
             </section>
+            
+            {/* Summary on Mobile (before confirmation button) */}
+            <div className="lg:hidden space-y-6">
+               <h2 className="font-serif text-2xl text-emerald-950 px-4">{t('checkout.summary')}</h2>
+               <div className="bg-white p-6 rounded-[2rem] border border-emerald-950/5 shadow-sm space-y-4">
+                  {items.map(item => (
+                    <div key={item.id} className="flex justify-between items-start gap-4">
+                      <div className="flex-1">
+                        <p className="text-sm font-bold text-gray-900 leading-tight">{isAr ? item.name_ar : item.name_fr}</p>
+                        <p className="text-[10px] text-gray-400 uppercase tracking-widest mt-1">
+                           {item.product_type === 'perfume' ? `${item.quantity_grams}g` : `${item.quantity_units}x ${item.variant_label}`}
+                        </p>
+                      </div>
+                      <p className="text-sm font-bold text-emerald-900 shrink-0">{item.total_price.toLocaleString()} {t('common.dzd')}</p>
+                    </div>
+                  ))}
+               </div>
+            </div>
           </div>
 
           {/* Right: Summary */}
@@ -330,7 +348,32 @@ export default function CheckoutClient() {
           </div>
 
         </div>
+      {/* Mobile Sticky CTA */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-emerald-950/10 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] pb-safe">
+        <div className="px-4 py-4">
+           <div className="flex items-center justify-between mb-4">
+              <span className="text-[10px] font-black uppercase tracking-widest text-emerald-950/40">{t('checkout.total')}</span>
+              <span className="font-serif text-2xl text-emerald-950">{totalAmount.toLocaleString()} <span className="text-sm font-normal text-emerald-950/40 italic">{t('common.dzd')}</span></span>
+           </div>
+           <button 
+              onClick={handleConfirm}
+              disabled={isSubmitting}
+              className="w-full h-14 bg-[#0a3d2e] text-white rounded-xl font-black uppercase tracking-[0.2em] text-[10px] flex items-center justify-center gap-3 active:scale-95 transition-all shadow-xl shadow-emerald-900/20"
+           >
+             {isSubmitting ? (
+                <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+             ) : (
+                <>
+                  {t('checkout.confirm_order')}
+                  <ArrowRight size={16} className={isRtl ? "rotate-180" : ""} />
+                </>
+             )}
+           </button>
+        </div>
       </div>
+      
+      {/* Mobile Spacer */}
+      <div className="lg:hidden h-32" />
     </div>
   );
 }

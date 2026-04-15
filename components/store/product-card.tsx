@@ -14,9 +14,10 @@ import { toast } from 'sonner'
 interface ProductCardProps {
   product: Product & { in_stock?: boolean; variants?: any[] }
   index?: number
+  compact?: boolean
 }
 
-export function ProductCard({ product, index = 0 }: ProductCardProps) {
+export function ProductCard({ product, index = 0, compact = false }: ProductCardProps) {
   const { t, language } = useI18n()
   const addItem = useCartStore(s => s.addItem)
   const { items: wishlistItems, toggleItem } = useWishlistStore()
@@ -26,12 +27,16 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
 
   const price = product.product_type === 'perfume' 
     ? product.price_per_gram 
-    : product.variants?.[0]?.price || 0
+    : (product.variants?.[0]?.price || product.base_price || 0)
 
   // Feature 6: Check availability instead of quantity
+  const hasVariants = (product.variants?.length || 0) > 0 || (product as any).flacon_variants?.length > 0
   const isAvailable = product.product_type === 'perfume' 
     ? ((product as any).in_stock ?? ((product as any).stock_grams ?? 0) > 0)
-    : (product.variants?.some((v: any) => v.is_available || (v.stock_units ?? 0) > 0) || (product as any).flacon_variants?.some((v: any) => v.is_available || (v.stock_units ?? 0) > 0))
+    : hasVariants 
+        ? (product.variants?.some((v: any) => v.is_available || (v.stock_units ?? 0) > 0) || (product as any).flacon_variants?.some((v: any) => v.is_available || (v.stock_units ?? 0) > 0))
+        : true // If no variants, assume available for now if product is active
+
 
   const handleQuickAdd = (e: React.MouseEvent) => {
     e.preventDefault()
@@ -44,6 +49,7 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
         name_fr: product.name_fr,
         name_ar: product.name_ar,
         slug: product.slug,
+        image_url: product.images?.[0],
         unit_price: product.price_per_gram,
         quantity_grams: 100, // Default quick add
         total_price: product.price_per_gram * 100
@@ -131,47 +137,53 @@ export function ProductCard({ product, index = 0 }: ProductCardProps) {
         </div>
 
         {/* Content */}
-        <div className="mt-6 flex-1 flex flex-col px-1">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-amber-500">
-               {product.product_type === 'perfume' ? t('product.huile_badge') : product.product_type === 'accessory' ? t('nav.accessoires') : t('product.packaging_elite')}
-            </span>
-            <div className="h-px w-4 bg-amber-500/20" />
-            {(product as any).brand && (
-              <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest truncate max-w-[100px]">
-                {isAr ? (product as any).brand.name_ar : (product as any).brand.name}
+        <div className={`${compact ? 'mt-3' : 'mt-4 md:mt-6'} flex-1 flex flex-col px-1`}>
+          {!compact && (
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-[9px] font-black uppercase tracking-[0.2em] text-amber-500">
+                {product.product_type === 'perfume' ? t('product.huile_badge') : product.product_type === 'accessory' ? t('nav.accessoires') : t('product.packaging_elite')}
               </span>
-            )}
-          </div>
+              <div className="h-px w-4 bg-amber-500/20" />
+              {(product as any).brand && (
+                <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest truncate max-w-[100px]">
+                  {isAr ? (product as any).brand.name_ar : (product as any).brand.name}
+                </span>
+              )}
+            </div>
+          )}
 
-          <h3 className="font-serif text-xl text-gray-900 mb-1 group-hover:text-amber-600 transition-colors leading-tight">
+          <h3 className={`font-serif ${compact ? 'text-base' : 'text-lg md:text-xl'} text-gray-900 mb-0.5 md:mb-1 group-hover:text-amber-600 transition-colors leading-tight truncate`}>
             {product.name_fr}
           </h3>
-          <p className="text-gray-400 text-xs font-arabic mb-4" dir="rtl">
+          <p className="text-gray-400 text-[10px] md:text-xs font-arabic mb-2 md:mb-4 truncate" dir="rtl">
             {product.name_ar}
           </p>
 
           <div className="mt-auto flex items-end justify-between">
             <div className="flex flex-col">
-              <span className="text-[10px] uppercase font-black tracking-widest text-gray-400 mb-1">
-                {product.product_type === 'perfume' ? t('common.per_gram') : t('common.from')}
-              </span>
-              <p className="font-serif text-2xl text-emerald-950">
-                {price.toLocaleString()} <span className="text-xs font-normal text-gray-400 italic">{t('common.dzd')}</span>
+              {!compact && (
+                <span className="text-[10px] uppercase font-black tracking-widest text-gray-400 mb-1">
+                  {product.product_type === 'perfume' ? t('common.per_gram') : t('common.from')}
+                </span>
+              )}
+              <p className={`font-serif ${compact ? 'text-lg' : 'text-xl md:text-2xl'} text-emerald-950`}>
+                {price.toLocaleString()} <span className={`${compact ? 'text-[10px]' : 'text-xs'} font-normal text-gray-400 italic`}>{t('common.dzd')}</span>
               </p>
             </div>
             
-            <div className="mb-1 text-emerald-950/20 group-hover:text-amber-500/40 transition-colors">
-               {product.product_type === 'perfume' ? (
-                 <div className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest scale-90 origin-right">
-                   <Info size={10} /> {t('common.min_order_grams')}
-                 </div>
-               ) : (
-                 <div className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest scale-90 origin-right">
-                   {product.variants?.length || 0} {t('common.variants')}
-                 </div>
-               )}
-            </div>
+            {!compact && (
+              <div className="mb-1 text-emerald-950/20 group-hover:text-amber-500/40 transition-colors">
+                {product.product_type === 'perfume' ? (
+                  <div className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest scale-90 origin-right">
+                    <Info size={10} /> {t('common.min_order_grams')}
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest scale-90 origin-right">
+                    {product.variants?.length || 0} {t('common.variants')}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </Link>

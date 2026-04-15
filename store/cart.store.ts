@@ -5,10 +5,11 @@ import { persist } from 'zustand/middleware'
 export interface CartItem {
   id: string;
   product_id: string;
-  product_type: 'perfume' | 'flacon';
+  product_type: 'perfume' | 'flacon' | 'accessory';
   name_fr: string;
   name_ar: string;
   slug: string;
+  image_url?: string;
   flacon_variant_id: string | null; // null for perfumes
   variant_label?: string;
   unit_price: number;

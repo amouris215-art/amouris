@@ -5,6 +5,9 @@ import { Order } from '@/store/orders.store';
 import { Printer, Download, Receipt, MapPin, Phone, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { generateInvoicePDF } from '@/lib/utils/invoice-generator';
+import { useState } from 'react';
+import { toast } from 'sonner';
+import { Loader2 } from 'lucide-react';
 
 interface OrderInvoiceProps {
   order: Order | any;
@@ -13,10 +16,27 @@ interface OrderInvoiceProps {
 
 export default function OrderInvoice({ order, settings }: OrderInvoiceProps) {
   const { language } = useI18n();
+  const [isDownloading, setIsDownloading] = useState(false);
   const isAr = language === 'ar';
 
   const invoice = order.invoice_data || order; // Fallback to order if invoice_data is not present
   if (!invoice) return null;
+
+  const handleDownload = async () => {
+    const toastId = toast.loading(isAr ? 'جاري تحضير الفاتورة...' : 'Génération de la facture...');
+    try {
+      setIsDownloading(true);
+      const doc = await generateInvoicePDF(order, settings || {});
+      const filename = isAr ? `فاتورة_${order.order_number}.pdf` : `Facture_${order.order_number}.pdf`;
+      doc.save(filename);
+      toast.success(isAr ? 'تم تحميل الفاتورة بنجاح' : 'Facture téléchargée avec succès', { id: toastId });
+    } catch (err: any) {
+      console.error(err);
+      toast.error(isAr ? 'حدث خطأ أثناء تحميل الفاتورة' : 'Erreur lors du téléchargement della facture', { id: toastId });
+    } finally {
+      setIsDownloading(false);
+    }
+  };
 
   return (
     <div className="bg-white p-8 md:p-12 rounded-[2rem] border border-emerald-950/5 shadow-2xl shadow-emerald-950/5 max-w-4xl mx-auto overflow-hidden relative">
@@ -135,10 +155,15 @@ export default function OrderInvoice({ order, settings }: OrderInvoiceProps) {
           {isAr ? 'طباعة' : 'Imprimer'}
         </Button>
         <Button 
-          className="rounded-xl bg-emerald-900 hover:bg-emerald-800"
-          onClick={() => generateInvoicePDF(order, settings)}
+          className="rounded-xl bg-emerald-900 hover:bg-emerald-800 disabled:opacity-50"
+          onClick={handleDownload}
+          disabled={isDownloading}
         >
-          <Download size={16} className="mr-2" />
+          {isDownloading ? (
+            <Loader2 size={16} className="mr-2 animate-spin" />
+          ) : (
+            <Download size={16} className="mr-2" />
+          )}
           {isAr ? 'تحميل PDF' : 'Télécharger PDF'}
         </Button>
       </div>

@@ -84,22 +84,24 @@ export function Footer() {
             <div key={section.id} className="md:block border-b border-white/10 md:border-0 pb-4 md:pb-0">
               <button 
                 onClick={() => toggleSection(section.id)}
-                className="w-full md:hidden flex items-center justify-between py-2 text-left rtl:text-right"
+                className="w-full md:hidden flex items-center justify-between py-5 text-left rtl:text-right group"
               >
-                <h4 className="font-serif text-lg text-amber-400 uppercase tracking-widest">{section.title}</h4>
-                <ChevronDown className={`transition-transform duration-300 ${openSection === section.id ? 'rotate-180' : ''}`} size={20} />
+                <h4 className="font-serif text-base text-amber-400 uppercase tracking-widest group-hover:text-amber-300 transition-colors">{section.title}</h4>
+                <div className={`w-8 h-8 rounded-full border border-white/10 flex items-center justify-center transition-all duration-300 ${openSection === section.id ? 'rotate-180 bg-white/5 border-white/20' : ''}`}>
+                  <ChevronDown size={16} />
+                </div>
               </button>
               
               <h4 className="hidden md:block font-serif text-lg text-amber-400 uppercase tracking-widest mb-6">{section.title}</h4>
               
               <div className={`${openSection === section.id ? 'block' : 'hidden'} md:block mt-4 md:mt-0`}>
                 {section.links && (
-                  <ul className="space-y-4 text-sm text-emerald-100/60 font-light">
+                  <ul className="space-y-4 text-sm text-emerald-100/60 font-light pb-6 md:pb-0">
                     {section.links.map((link) => (
                       <li key={link.href}>
                         <Link 
                           href={link.href} 
-                          className={`transition-colors ${link.discret ? 'text-emerald-100/20 hover:text-emerald-100/60 text-[10px]' : 'hover:text-amber-400'}`}
+                          className={`block transition-colors min-h-[44px] flex items-center ${link.discret ? 'text-emerald-100/20 hover:text-emerald-100/60 text-[10px]' : 'hover:text-amber-400'}`}
                         >
                           {link.label}
                         </Link>
@@ -108,9 +110,9 @@ export function Footer() {
                   </ul>
                 )}
                 {section.content && (
-                  <ul className="space-y-4 text-sm text-emerald-100/60 font-light">
+                  <ul className="space-y-4 text-sm text-emerald-100/60 font-light pb-6 md:pb-0">
                     {section.content.map((item, idx) => (
-                      <li key={idx} className="flex gap-3">
+                      <li key={idx} className="flex gap-3 min-h-[44px] items-center">
                         <item.icon size={16} className="shrink-0 text-amber-400/50" />
                         <span>{item.text}</span>
                       </li>

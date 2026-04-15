@@ -205,20 +205,23 @@ export function ProductModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] p-0 overflow-hidden bg-white rounded-3xl border-none shadow-2xl font-sans flex flex-col">
+      <DialogContent className="sm:max-w-2xl max-h-[90vh] md:max-h-[85vh] p-0 overflow-hidden bg-white md:rounded-[2.5rem] border-none shadow-2xl font-sans flex flex-col max-sm:fixed max-sm:bottom-0 max-sm:top-auto max-sm:translate-y-0 max-sm:rounded-t-[2.5rem] max-sm:w-full max-sm:max-w-none animate-in slide-in-from-bottom duration-500">
         {/* Header Vert Émeraude */}
-        <div className="bg-[#0a3d2e] p-8 text-white relative overflow-hidden shrink-0">
+        <div className="bg-[#0a3d2e] p-6 md:p-8 text-white relative overflow-hidden shrink-0">
           <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-400/10 rounded-full blur-3xl -mr-16 -mt-16" />
+          {/* Mobile Handle */}
+          <div className="md:hidden w-12 h-1.5 bg-white/20 rounded-full mx-auto mb-6" />
+          
           <div className="relative z-10 flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-md border border-white/10">
-                {formData.product_type === 'perfume' ? <Droplets size={24} className="text-emerald-400" /> : <Box size={24} className="text-amber-400" />}
+            <div className="flex items-center gap-3 md:gap-4">
+              <div className="w-10 h-10 md:w-12 md:h-12 bg-white/10 rounded-xl md:rounded-2xl flex items-center justify-center backdrop-blur-md border border-white/10">
+                {formData.product_type === 'perfume' ? <Droplets size={20} className="text-emerald-400" /> : <Box size={20} className="text-amber-400" />}
               </div>
               <div>
-                <DialogTitle className="text-2xl font-serif font-bold italic">
-                  {product ? 'Modification Boutique' : 'Nouvelle Référence'}
+                <DialogTitle className="text-xl md:text-2xl font-serif font-bold italic">
+                  {product ? 'Modification' : 'Référence'}
                 </DialogTitle>
-                <p className="text-emerald-100/40 text-[10px] uppercase tracking-widest font-black">Gestion Master Catalogue Amouris</p>
+                <p className="text-emerald-100/40 text-[8px] md:text-[10px] uppercase tracking-widest font-black">Catalogue Maître</p>
               </div>
             </div>
             <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors">
@@ -228,7 +231,7 @@ export function ProductModal({
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex border-b border-gray-100 px-6 bg-gray-50/50 shrink-0">
+        <div className="flex border-b border-gray-100 bg-gray-50/50 shrink-0 overflow-x-auto no-scrollbar scroll-smooth snap-x">
           {[
             { id: 'details', label: 'Détails', icon: Info },
             { id: 'taxonomy', label: 'Taxonomie', icon: TagIcon },
@@ -238,7 +241,7 @@ export function ProductModal({
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`flex items-center gap-2 px-6 py-4 text-xs font-bold uppercase tracking-widest transition-all border-b-2 ${
+              className={`flex items-center gap-2 px-6 py-4 text-[10px] md:text-xs font-bold uppercase tracking-widest transition-all border-b-2 snap-start shrink-0 ${
                 activeTab === tab.id 
                   ? 'border-emerald-600 text-emerald-900 bg-white' 
                   : 'border-transparent text-gray-400 hover:text-gray-600 hover:bg-gray-100/50'
@@ -551,8 +554,8 @@ export function ProductModal({
         </div>
 
         {/* Footer */}
-        <div className="p-8 border-t border-gray-100 shrink-0">
-           <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100/50 mb-8">
+        <div className="p-6 md:p-8 border-t border-gray-100 shrink-0 pb-safe">
+           <div className="hidden md:block p-4 bg-amber-50 rounded-2xl border border-amber-100/50 mb-8">
               <p className="text-[10px] font-black uppercase tracking-widest text-amber-800 mb-1 flex items-center gap-2">
                  <Sparkles size={12} className="text-amber-500" /> Conseil Amouris
               </p>
@@ -561,23 +564,23 @@ export function ProductModal({
               </p>
            </div>
 
-           {error && <p className="text-rose-500 text-xs font-bold mb-4 flex items-center gap-2"><Info size={14} /> {error}</p>}
+           {error && <p className="text-rose-500 text-[10px] font-bold mb-4 flex items-center gap-2 uppercase tracking-widest bg-rose-50 p-3 rounded-xl"><Info size={14} /> {error}</p>}
 
-           <div className="flex gap-4">
+           <div className="flex gap-3 md:gap-4">
               <button 
                 type="button" onClick={onClose}
-                className="flex-1 h-14 rounded-xl border border-gray-200 text-gray-400 text-[10px] font-black uppercase tracking-widest hover:bg-gray-50 hover:text-gray-600 transition-all font-sans"
+                className="flex-1 h-12 md:h-14 rounded-xl border border-gray-200 text-gray-400 text-[9px] md:text-[10px] font-black uppercase tracking-widest hover:bg-gray-50 hover:text-gray-600 transition-all font-sans"
               >
                 Annuler
               </button>
               <button 
                 form="product-modal-form" type="submit" disabled={isSubmitting}
-                className="flex-[2] h-14 rounded-xl bg-[#0a3d2e] text-white text-[10px] font-black uppercase tracking-widest shadow-xl shadow-emerald-950/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+                className="flex-[2] h-12 md:h-14 rounded-xl bg-[#0a3d2e] text-white text-[9px] md:text-[10px] font-black uppercase tracking-widest shadow-xl shadow-emerald-950/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
               >
                 {isSubmitting ? <Loader2 className="animate-spin" size={16} /> : (
                   <>
-                    <span>{product ? 'Valider les modifications' : 'Inscrire au Catalogue'}</span>
-                    <ChevronRight size={16} className="text-emerald-400" />
+                    <span className="truncate">{product ? 'Valider' : 'Inscrire'}</span>
+                    <ChevronRight size={16} className="text-emerald-400 hidden sm:block" />
                   </>
                 )}
               </button>

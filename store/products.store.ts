@@ -47,10 +47,12 @@ interface ProductsStore {
   updateStockGrams: (id: string, delta: number) => Promise<void>
   updateVariantStock: (productId: string, variantId: string, delta: number) => Promise<void>
   seed: (products: Product[]) => void
+  invalidateCache: () => void
   getBySlug: (slug: string) => Product | undefined
   getActiveByType: (type: 'perfume' | 'flacon') => Product[]
   getActiveByTag: (tagId: string) => Product[]
 }
+
 
 const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes
 
@@ -181,6 +183,7 @@ export const useProductsStore = create<ProductsStore>()(
       },
 
       seed: (products) => set({ products, lastUpdated: Date.now() }),
+      invalidateCache: () => set({ lastUpdated: null }),
       getBySlug: (slug) => get().products.find((p) => p.slug === slug),
       getActiveByType: (type) => get().products.filter((p) => p.product_type === type && p.status === 'active'),
       getActiveByTag: (tagId) => get().products.filter((p) => p.status === 'active' && p.tag_ids?.includes(tagId)),

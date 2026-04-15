@@ -54,7 +54,7 @@ export async function getAnalyticsData() {
     .select('product_id, products(product_type), total_price');
   
   const catTotals = (catData || []).reduce((acc: any, item: any) => {
-    const type = item.products?.product_type === 'perfume' ? 'Parfums' : 'Flacons';
+    const type = item.products?.product_type === 'perfume' ? 'Parfums' : item.products?.product_type === 'accessory' ? 'Accessoires' : 'Flacons';
     acc[type] = (acc[type] || 0) + Number(item.total_price);
     return acc;
   }, {});
@@ -89,6 +89,7 @@ export async function getAnalyticsData() {
     salesByCategory: salesByCategory.length > 0 ? salesByCategory : [
       { name: 'Parfums', value: 0 },
       { name: 'Flacons', value: 0 },
+      { name: 'Accessoires', value: 0 },
     ],
     kpis: {
       avgCart: `${avgCart.toLocaleString()} DZD`,

@@ -51,12 +51,7 @@ export function AnnouncementBar({ initialAnnouncements = [], settings }: { initi
     const activeOnes = announcements.filter((a: any) => a.is_active !== false);
     
     if (activeOnes.length === 0) {
-      // Fallback if no announcements are configured
-      return [{
-        fr: `Livraison gratuite dès ${freeDeliveryThreshold.toLocaleString()} DZD`,
-        ar: `توصيل مجاني ابتداءً من ${freeDeliveryThreshold.toLocaleString()} دج`,
-        link: "/shop"
-      }];
+      return [];
     }
 
     return activeOnes.map((ann: any) => ({
@@ -105,14 +100,14 @@ export function AnnouncementBar({ initialAnnouncements = [], settings }: { initi
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  if (!isVisible || activeAnnouncements.length === 0) return null;
+  if (!isVisible || activeAnnouncements.length === 0 || settings?.show_announcement_bar === false) return null;
 
   const currentMsg = activeAnnouncements[currentIndex];
   const text = language === 'ar' ? currentMsg.ar : currentMsg.fr;
 
   return (
     <div 
-      className={`bg-emerald-900 text-white py-2 px-4 transition-transform duration-300 relative z-[60] overflow-hidden ${headerVisible ? 'translate-y-0' : '-translate-y-full'}`}
+      className={`bg-emerald-900 text-white py-1.5 md:py-2 px-4 transition-transform duration-300 relative z-[60] overflow-hidden ${headerVisible ? 'translate-y-0' : '-translate-y-full'}`}
     >
       <div className="max-w-7xl mx-auto flex items-center justify-between min-h-[24px]">
         <div className="w-8 hidden sm:block" /> 
@@ -133,10 +128,10 @@ export function AnnouncementBar({ initialAnnouncements = [], settings }: { initi
 
         <button 
           onClick={handleDismiss}
-          className="min-w-[44px] min-h-[44px] flex items-center justify-center hover:bg-white/10 rounded-full transition-colors"
+          className="w-10 h-10 flex items-center justify-center hover:bg-white/10 rounded-full transition-colors"
           aria-label="Fermer l'annonce"
         >
-          <X size={14} className="text-white/60" />
+          <X size={12} className="text-white/60" />
         </button>
       </div>
     </div>

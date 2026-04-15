@@ -77,6 +77,7 @@ export default function ProductClient({ initialProduct, initialTags }: ProductCl
       name_fr: product.name_fr,
       name_ar: product.name_ar,
       slug: product.slug,
+      image_url: product.images?.[0],
       flacon_variant_id: selectedVariantId || undefined,
       variant_label: selectedVariant ? `${selectedVariant.size_ml > 0 ? selectedVariant.size_ml + 'ml — ' : ''}${selectedVariant.color_name || selectedVariant.color || 'Standard'}` : undefined,
       unit_price: unitPrice,
@@ -172,11 +173,10 @@ export default function ProductClient({ initialProduct, initialTags }: ProductCl
                       <span className="text-[10px] font-bold text-[#C9A84C]">{t('product.min_stock_info')}</span>
                    </div>
                    
-                   <div className="flex items-center gap-4 md:gap-6">
-                      <div className="flex items-center bg-white border border-emerald-950/5 rounded-2xl p-1.5 md:p-2 shadow-sm">
+                    <div className="flex items-center bg-white border border-emerald-950/5 rounded-2xl p-1 shadow-sm">
                         <button 
                           onClick={() => setGrams(Math.max(100, grams - 50))} 
-                          className="w-11 h-11 md:w-14 md:h-14 rounded-xl hover:bg-emerald-50 text-emerald-950 transition-colors flex items-center justify-center"
+                          className="w-12 h-12 md:w-14 md:h-14 rounded-xl hover:bg-emerald-50 text-emerald-950 transition-colors flex items-center justify-center"
                         >
                           <Minus size={18} />
                         </button>
@@ -188,7 +188,7 @@ export default function ProductClient({ initialProduct, initialTags }: ProductCl
                         />
                         <button 
                            onClick={() => setGrams(grams + 50)} 
-                           className="w-11 h-11 md:w-14 md:h-14 rounded-xl hover:bg-emerald-50 text-emerald-950 transition-colors flex items-center justify-center"
+                           className="w-12 h-12 md:w-14 md:h-14 rounded-xl hover:bg-emerald-50 text-emerald-950 transition-colors flex items-center justify-center"
                         >
                           <Plus size={18} />
                         </button>
@@ -201,12 +201,12 @@ export default function ProductClient({ initialProduct, initialTags }: ProductCl
                 <div className="space-y-8 md:space-y-12">
                   <div className="space-y-4 md:space-y-6">
                     <h3 className="text-[10px] uppercase font-black tracking-[0.3em] text-emerald-950/20 shadow-none border-b border-emerald-950/5 pb-4">{t('product.choice_model')}</h3>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 md:gap-4">
+                    <div className="flex flex-col gap-3 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-4">
                       {product.variants?.map(v => (
                         <button 
                           key={v.id}
                           onClick={() => setSelectedVariantId(v.id)}
-                          className={`relative p-3 md:p-5 rounded-2xl md:rounded-3xl border-2 transition-all text-left min-h-[44px] ${selectedVariantId === v.id ? 'border-[#C9A84C] bg-white shadow-xl shadow-amber-900/5' : 'border-emerald-950/5 bg-transparent hover:border-emerald-950/10'}`}
+                          className={`relative p-4 md:p-5 rounded-2xl md:rounded-3xl border-2 transition-all text-left min-h-[48px] ${selectedVariantId === v.id ? 'border-[#C9A84C] bg-white shadow-xl shadow-amber-900/5' : 'border-emerald-950/5 bg-transparent hover:border-emerald-950/10'}`}
                         >
                           <div className="flex items-center gap-2 md:gap-3 mb-2 md:mb-3">
                              <div className="w-3.5 h-3.5 md:w-4 md:h-4 rounded-full border border-black/5" style={{ backgroundColor: v.color || '#C9A84C' }} />
@@ -233,12 +233,12 @@ export default function ProductClient({ initialProduct, initialTags }: ProductCl
                   <div className="space-y-6 md:space-y-8">
                     <h3 className="text-[10px] uppercase font-black tracking-[0.3em] text-emerald-950/20 border-b border-emerald-950/5 pb-4">{t('product.units_to_order')}</h3>
                     <div className="flex items-center gap-4 md:gap-6">
-                       <div className="flex items-center bg-white border border-emerald-950/5 rounded-2xl p-1.5 md:p-2 shadow-sm w-fit">
-                          <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="w-11 h-11 md:w-14 md:h-14 rounded-xl hover:bg-emerald-50 text-emerald-950 transition-colors flex items-center justify-center"><Minus size={18} /></button>
+                       <div className="flex items-center bg-white border border-emerald-950/5 rounded-2xl p-1 shadow-sm w-fit">
+                          <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="w-12 h-12 md:w-14 md:h-14 rounded-xl hover:bg-emerald-50 text-emerald-950 transition-colors flex items-center justify-center"><Minus size={18} /></button>
                           <span className="w-14 md:w-20 text-center font-serif text-xl md:text-2xl text-emerald-950">{quantity}</span>
                           <button 
                             onClick={() => setQuantity(quantity + 1)} 
-                            className="w-11 h-11 md:w-14 md:h-14 rounded-xl hover:bg-emerald-50 text-emerald-950 transition-colors flex items-center justify-center"
+                            className="w-12 h-12 md:w-14 md:h-14 rounded-xl hover:bg-emerald-50 text-emerald-950 transition-colors flex items-center justify-center"
                           >
                             <Plus size={18} />
                           </button>
@@ -324,41 +324,37 @@ export default function ProductClient({ initialProduct, initialTags }: ProductCl
       </div>
 
       {/* MOBILE: Fixed Bottom "Add to Cart" Bar */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-emerald-950/10 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] safe-area-bottom">
-        <div className="px-4 pt-3 pb-3">
-          <div className="flex items-center justify-between mb-2.5 rtl:flex-row-reverse">
-            <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">{t('product.total')}</span>
-            <span className="font-serif text-xl text-emerald-950">
-              {total.toLocaleString()} <span className="text-[10px] font-normal text-gray-500">{t('common.dzd')}</span>
-            </span>
-          </div>
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-emerald-950/10 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] pb-safe">
+        <div className="px-4 py-3.5">
           <button 
             onClick={handleAddToCart}
             disabled={added || !inStock}
-            className={`w-full min-h-[48px] rounded-xl font-bold uppercase tracking-[0.2em] text-xs transition-all flex items-center justify-center gap-3 ${
+            className={`w-full h-14 rounded-xl font-medium text-base transition-all flex items-center justify-center gap-3 ${
               !inStock
                 ? 'bg-neutral-100 text-neutral-400'
                 : added 
                 ? 'bg-emerald-100 text-emerald-900 border border-emerald-200' 
-                : 'bg-[#0a3d2e] text-white shadow-lg shadow-emerald-900/30 active:scale-[0.97]'
+                : 'bg-emerald-800 text-white shadow-lg shadow-emerald-900/30 active:scale-[0.97]'
             }`}
           >
             {!inStock ? (
               t('common.out_of_stock')
             ) : added ? (
               <>
-                <CheckCircle size={16} />
+                <CheckCircle size={18} />
                 {t('common.added')}
               </>
             ) : (
               <>
-                <ShoppingCart size={16} />
-                {t('common.add_to_cart')} — {total.toLocaleString()} {t('common.dzd')}
+                Ajouter au panier — {total.toLocaleString()} {t('common.dzd')}
               </>
             )}
           </button>
         </div>
       </div>
+      
+      {/* Spacer for sticky button on mobile */}
+      <div className="md:hidden h-24" />
     </div>
   );
 }

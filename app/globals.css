@@ -142,33 +142,27 @@
   scrollbar-width: none;
 }
 
-/* =============================
-   BLOC 12 — Mobile Responsiveness
-   ============================= */
-
-/* 12.3 / 12.5 — Safe area padding for iPhone (sticky bottom buttons) */
-.safe-area-bottom {
+/* Safe areas padding for iPhone (sticky bottom buttons) */
+.pb-safe {
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
-
-/* 12.4 — Admin table horizontal scroll on mobile */
-.admin-table-wrapper {
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
+.pt-safe {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+.mb-safe {
+  margin-bottom: env(safe-area-inset-bottom, 0px);
 }
 
-.admin-table-wrapper table {
-  min-width: 600px;
+/* Cacher la scrollbar mais garder le scroll */
+.scrollbar-hide {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
 }
 
-/* 12.4 — Admin forms: single column on mobile */
-@media (max-width: 767px) {
-  .admin-form-grid {
-    grid-template-columns: 1fr !important;
-  }
-}
-
-/* 12.5 — Touch targets: enforce minimum 44×44px on all interactive elements */
+/* Touch targets minimum 44px on all interactive elements */
 @media (max-width: 767px) {
   button,
   a,
@@ -196,7 +190,50 @@
   }
 }
 
-/* 12.5 — List item spacing */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Smooth scroll global */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Empêcher scroll horizontal */
+body {
+  overflow-x: hidden;
+}
+
+/* Active state pour les boutons touch */
+@media (hover: none) {
+  button:active, a:active {
+    opacity: 0.7;
+    transform: scale(0.98);
+  }
+}
+
+/* Admin table horizontal scroll on mobile */
+.admin-table-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.admin-table-wrapper table {
+  min-width: 640px;
+}
+
+/* Admin forms: single column on mobile */
+@media (max-width: 767px) {
+  .admin-form-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* List item spacing */
 @media (max-width: 767px) {
   .mobile-list > * + * {
     margin-top: 8px;

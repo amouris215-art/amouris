@@ -8,6 +8,7 @@ import { useI18n } from '@/i18n/i18n-context';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 
 export default function CartDrawer({ open, onOpenChange }: { open: boolean, onOpenChange: (open: boolean) => void }) {
   const { items, removeItem, updateGrams, updateUnits, getTotal } = useCartStore();
@@ -112,9 +113,18 @@ export default function CartDrawer({ open, onOpenChange }: { open: boolean, onOp
                         exit={{ opacity: 0, scale: 0.95 }}
                         className="group relative flex gap-4 bg-white p-4 rounded-3xl border border-emerald-950/5 hover:border-emerald-950/10 transition-all shadow-sm shadow-emerald-900/5"
                       >
-                        {/* Fake Thumb */}
-                        <div className="w-16 h-20 bg-neutral-100 rounded-2xl flex items-center justify-center shrink-0 border border-emerald-950/5">
-                           <span className="text-emerald-950/10 font-serif text-2xl select-none">{item.name_fr.charAt(0)}</span>
+                        {/* Product Image */}
+                        <div className="w-16 h-20 bg-neutral-50 rounded-2xl flex items-center justify-center shrink-0 border border-emerald-950/5 overflow-hidden relative">
+                          {item.image_url ? (
+                            <Image 
+                              src={item.image_url} 
+                              alt={item.name_fr}
+                              fill
+                              className="object-cover"
+                            />
+                          ) : (
+                            <span className="text-emerald-950/10 font-serif text-2xl select-none">{item.name_fr.charAt(0)}</span>
+                          )}
                         </div>
 
                         <div className="flex-1 min-w-0 flex flex-col justify-between py-1">

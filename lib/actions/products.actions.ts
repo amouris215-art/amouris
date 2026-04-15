@@ -47,12 +47,16 @@ export async function createProductAction(formData: any) {
 
     // Insérer les tags
     if (formData.tag_ids && formData.tag_ids.length > 0) {
-      await supabase.from('product_tags').insert(
+      const { error: tagError } = await supabase.from('product_tags').insert(
         formData.tag_ids.map((tagId: string) => ({
           product_id: product.id,
           tag_id: tagId,
         }))
       )
+      if (tagError) {
+        console.error('TAG INSERT ERROR:', JSON.stringify(tagError, null, 2))
+        return { success: false, error: 'Produit créé mais erreur lors de l\'ajout des tags: ' + tagError.message }
+      }
     }
 
     // Insérer les variantes (flacons et accessoires)
@@ -69,7 +73,11 @@ export async function createProductAction(formData: any) {
         }
         return payload;
       });
-      await supabase.from('flacon_variants').insert(variantsToInsert);
+      const { error: variantError } = await supabase.from('flacon_variants').insert(variantsToInsert);
+      if (variantError) {
+        console.error('VARIANT INSERT ERROR:', JSON.stringify(variantError, null, 2))
+        return { success: false, error: 'Produit créé mais erreur lors de l\'ajout des variantes: ' + variantError.message }
+      }
     }
 
     revalidatePath('/shop')
@@ -126,9 +134,10 @@ export async function updateProductAction(id: string, formData: any) {
     if (formData.tag_ids !== undefined) {
       await supabase.from('product_tags').delete().eq('product_id', id)
       if (formData.tag_ids.length > 0) {
-        await supabase.from('product_tags').insert(
+        const { error: tagError } = await supabase.from('product_tags').insert(
           formData.tag_ids.map((tagId: string) => ({ product_id: id, tag_id: tagId }))
         )
+        if (tagError) return { success: false, error: 'Erreur lors de la mise à jour des tags' }
       }
     }
 
@@ -142,7 +151,8 @@ export async function updateProductAction(id: string, formData: any) {
       // Deletions
       const toDelete = existingIds.filter(vId => !incomingIds.includes(vId));
       if (toDelete.length > 0) {
-        await supabase.from('flacon_variants').delete().in('id', toDelete);
+        const { error: delError } = await supabase.from('flacon_variants').delete().in('id', toDelete);
+        if (delError) return { success: false, error: 'Erreur lors de la suppression d\'anciennes variantes' }
       }
 
       // Upsertions
@@ -150,15 +160,18 @@ export async function updateProductAction(id: string, formData: any) {
         const { isNew, ...vData } = v;
         if (!v.id || v.id.startsWith('new_') || v.id.startsWith('v_')) {
           const { id: _, ...insertData } = vData;
-          await supabase.from('flacon_variants').insert({
+          const { error: insError } = await supabase.from('flacon_variants').insert({
             ...insertData,
             product_id: id
           });
+          if (insError) return { success: false, error: 'Erreur lors de l\'ajout d\'une nouvelle variante' }
         } else {
-          await supabase.from('flacon_variants').update(vData).eq('id', v.id);
+          const { error: updError } = await supabase.from('flacon_variants').update(vData).eq('id', v.id);
+          if (updError) return { success: false, error: 'Erreur lors de la modification d\'une variante' }
         }
       }
     }
+
 
     revalidatePath('/admin/products')
     revalidatePath('/')

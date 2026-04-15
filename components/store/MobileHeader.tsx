@@ -24,7 +24,19 @@ export function MobileHeader() {
   const router = useRouter()
   const isAr = language === 'ar'
   
+  const [isVisible, setIsVisible] = useState(true)
+  const [lastScrollY, setLastScrollY] = useState(0)
   const [mounted, setMounted] = useState(false)
+  
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentY = window.scrollY
+      setIsVisible(currentY < lastScrollY || currentY < 60)
+      setLastScrollY(currentY)
+    }
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [lastScrollY])
   
   const navLinks = [
     { label: t('nav.shop'), href: '/shop' },
@@ -50,7 +62,9 @@ export function MobileHeader() {
 
   return (
     <>
-      <header className="md:hidden sticky top-0 z-50 bg-white border-b border-gray-100" dir={dir}>
+      <header className={`md:hidden fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-100 transition-transform duration-300 ${dir === 'rtl' ? 'rtl' : 'ltr'} ${
+        isVisible ? 'translate-y-0' : '-translate-y-full'
+      }`} dir={dir}>
         <div className="flex items-center justify-between h-14 px-4">
           <button
             onClick={() => setIsOpen(true)}
@@ -109,13 +123,13 @@ export function MobileHeader() {
         <div className="flex flex-col h-full">
           {/* Drawer header */}
           <div className="flex items-center justify-between p-4 border-b border-gray-100">
-            <span className="font-serif text-xl">
+            <span className="font-serif text-lg">
               <span className="text-emerald-800">Amouris</span>
-              <span className="text-amber-500"> {t('common.brand_suffix')}</span>
+              <span className="text-amber-500"> Parfums</span>
             </span>
             <button 
               onClick={() => setIsOpen(false)} 
-              className="min-w-[44px] min-h-[44px] flex items-center justify-center"
+              className="w-10 h-10 flex items-center justify-center text-gray-500 hover:text-gray-700"
             >
               <X size={20} />
             </button>
@@ -155,18 +169,15 @@ export function MobileHeader() {
           </nav>
 
           {/* Footer of drawer */}
-          <div className="p-4 border-t border-gray-100 space-y-3">
-            <div className="py-2">
-               <LanguageToggle />
-            </div>
-            
+          <div className="p-4 border-t border-gray-100 space-y-2">
+            <LanguageToggle />
             <Link 
               href={mounted && user ? "/account" : "/login"} 
               onClick={() => setIsOpen(false)} 
-              className="flex items-center gap-2 min-h-[44px] text-sm text-gray-500"
+              className="flex items-center gap-2 h-11 px-3 text-sm text-gray-600 rounded-lg hover:bg-gray-50"
             >
               <User size={16} />
-              <span className="text-start">
+              <span>
                 {mounted && user 
                   ? t('nav.account') 
                   : t('nav.login')
@@ -180,10 +191,10 @@ export function MobileHeader() {
                   logout()
                   setIsOpen(false)
                 }}
-                className="flex items-center gap-2 min-h-[44px] text-sm text-rose-500 w-full"
+                className="flex items-center gap-2 h-11 px-3 text-sm text-rose-500 hover:bg-rose-50 rounded-lg w-full text-start"
               >
                 <X size={16} />
-                <span className="font-bold text-start">
+                <span className="font-medium">
                   {t('nav.logout')}
                 </span>
               </button>

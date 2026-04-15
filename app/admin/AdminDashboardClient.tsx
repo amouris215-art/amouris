@@ -31,38 +31,41 @@ export default function AdminDashboardClient({ stats, recentOrders }: { stats: a
 
   return (
     <div className="space-y-8 pb-20">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
-        <div>
-          <h1 className="text-4xl font-black text-gray-900 font-serif tracking-tight">Vue d&apos;ensemble</h1>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-8 md:mb-12">
+        <div className="px-1">
+          <h1 className="text-3xl md:text-4xl lg:text-5xl font-black text-gray-900 font-serif tracking-tight leading-none leading-tight">{language === 'ar' ? 'نظرة عامة' : 'Vue d\'ensemble'}</h1>
+          <p className="text-[10px] md:text-xs font-black uppercase tracking-[0.3em] text-amber-600 mt-2">{language === 'ar' ? 'بوابة المسؤول' : 'Portail Administrateur'}</p>
         </div>
-        <div className="flex gap-4 w-full md:w-auto">
-            <Link href="/admin/orders" className="flex-1 md:flex-none text-center text-[10px] font-black bg-white px-6 py-4 border border-emerald-50 rounded-2xl shadow-sm hover:bg-emerald-50 transition-all uppercase tracking-widest">Commandes</Link>
-            <Link href="/admin/products" className="flex-1 md:flex-none text-center text-[10px] font-black bg-emerald-950 text-white px-6 py-4 rounded-2xl shadow-xl shadow-emerald-900/20 hover:scale-[1.02] active:scale-95 transition-all uppercase tracking-widest">Produits</Link>
+        <div className="flex gap-3 w-full md:w-auto">
+            <Link href="/admin/orders" className="flex-1 md:flex-none text-center text-[10px] font-black bg-white px-6 py-4 border border-emerald-950/5 rounded-2xl shadow-sm hover:bg-emerald-50 transition-all uppercase tracking-widest">{language === 'ar' ? 'الطلبات' : 'Commandes'}</Link>
+            <Link href="/admin/products" className="flex-1 md:flex-none text-center text-[10px] font-black bg-emerald-950 text-white px-6 py-4 rounded-2xl shadow-xl shadow-emerald-900/20 hover:scale-[1.02] active:scale-95 transition-all uppercase tracking-widest">{language === 'ar' ? 'المنتجات' : 'Produits'}</Link>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
         {statsList.map(({ label, value, icon: Icon, color }) => (
-          <div key={label} className="bg-white rounded-[2.5rem] border border-emerald-50 p-8 shadow-sm hover:shadow-xl hover:shadow-emerald-900/5 transition-all group overflow-hidden relative">
+          <div key={label} className="bg-white rounded-[2rem] md:rounded-[2.5rem] border border-emerald-950/5 p-6 md:p-8 shadow-sm hover:shadow-xl hover:shadow-emerald-900/5 transition-all group overflow-hidden relative">
             <div className={`absolute -right-4 -top-4 p-12 opacity-[0.03] group-hover:scale-110 transition-transform ${color.split(' ')[1]}`}>
                 <Icon size={120} />
             </div>
-            <div className={`inline-flex p-4 rounded-2xl ${color} mb-6 transition-transform group-hover:scale-110 relative z-10`}>
-              <Icon size={24} />
+            <div className={`inline-flex p-3 md:p-4 rounded-xl md:rounded-2xl ${color} mb-4 md:mb-6 transition-transform group-hover:scale-110 relative z-10`}>
+              <Icon size={20} className="md:w-6 md:h-6" />
             </div>
-            <div className="text-2xl font-semibold text-gray-900 font-sans tracking-tight relative z-10">{value}</div>
-            <div className="text-sm font-medium text-gray-500 mt-2 relative z-10">{label}</div>
+            <div className="text-xl md:text-2xl font-semibold text-gray-900 font-sans tracking-tight relative z-10">{value}</div>
+            <div className="text-[10px] md:text-sm font-medium text-gray-500 mt-1 md:mt-2 relative z-10 uppercase tracking-widest">{label}</div>
           </div>
         ))}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-8">
-          <div className="bg-white rounded-[2.5rem] border border-emerald-50 overflow-hidden shadow-sm">
-              <div className="p-8 border-b border-emerald-50 flex items-center justify-between">
-                  <h2 className="text-xl font-bold text-emerald-950 font-serif">Dernières commandes</h2>
-                  <Link href="/admin/orders" className="text-xs font-black text-amber-600 hover:text-amber-500 flex items-center gap-2 uppercase tracking-widest">
-                      Tout voir <ArrowRight size={14} />
+          <div className="bg-white rounded-[2rem] md:rounded-[2.5rem] border border-emerald-950/5 overflow-hidden shadow-sm">
+              <div className="p-6 md:p-8 border-b border-emerald-950/5 flex items-center justify-between">
+                  <h2 className="text-lg md:text-xl font-bold text-emerald-950 font-serif">
+                    {language === 'ar' ? 'أحدث الطلبات' : 'Dernières commandes'}
+                  </h2>
+                  <Link href="/admin/orders" className="text-[10px] font-black text-amber-600 hover:text-amber-500 flex items-center gap-2 uppercase tracking-widest">
+                    {language === 'ar' ? 'عرض الكل' : 'Tout voir'} <ArrowRight size={14} className={language === 'ar' ? 'rotate-180' : ''} />
                   </Link>
               </div>
               <div className="divide-y divide-emerald-50">

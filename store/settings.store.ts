@@ -19,6 +19,7 @@ export interface StoreSettings {
   alertStockPerfume: number
   alertStockFlacon: number
   minOrderAmount: number
+  showAnnouncementBar: boolean
 }
 
 interface SettingsStore extends StoreSettings {
@@ -45,6 +46,7 @@ export const useSettingsStore = create<SettingsStore>()(
       alertStockPerfume: 500,
       alertStockFlacon: 10,
       minOrderAmount: 0,
+      showAnnouncementBar: true,
       
       isLoading: false,
       error: null,
@@ -69,6 +71,7 @@ export const useSettingsStore = create<SettingsStore>()(
               alertStockPerfume: val.stock_alert_grams || val.alert_stock_perfume,
               alertStockFlacon: val.stock_alert_units || val.alert_stock_flacon,
               minOrderAmount: val.min_order_amount || 0,
+              showAnnouncementBar: val.show_announcement_bar !== false,
               isLoading: false
             })
           } else {
@@ -104,6 +107,7 @@ export const useSettingsStore = create<SettingsStore>()(
             stock_alert_grams: currentState.alertStockPerfume,
             stock_alert_units: currentState.alertStockFlacon,
             min_order_amount: currentState.minOrderAmount,
+            show_announcement_bar: currentState.showAnnouncementBar,
           }
 
           await updateSettings(newValue)

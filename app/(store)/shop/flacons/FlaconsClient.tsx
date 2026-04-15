@@ -68,15 +68,22 @@ export default function FlaconsClient({
         if (!p.name_fr?.toLowerCase().includes(query) && !p.name_ar?.toLowerCase().includes(query)) return false;
       }
       // For flacons, we look if ANY variant matches the filters
-      const matchesVariant = p.variants?.some(v => {
+      if (!p.variants || p.variants.length === 0) {
+        // If no variants, check if it matches search and generic price/attribute filters
+        const genericPriceMatch = (p.base_price || 0) <= maxPrice;
+        const noSpecificFilters = selectedSize === 'all' && selectedColor === 'all' && selectedShape === 'all';
+        return genericPriceMatch && noSpecificFilters;
+      }
+
+      return p.variants.some(v => {
         const sizeMatch = selectedSize === 'all' || `${v.size_ml}ml` === selectedSize;
         const colorMatch = selectedColor === 'all' || v.color_name === selectedColor;
         const shapeMatch = selectedShape === 'all' || v.shape === selectedShape;
         const priceMatch = v.price <= maxPrice;
         return sizeMatch && colorMatch && shapeMatch && priceMatch;
       });
-      return matchesVariant;
     });
+
 
     if (sortBy === 'price-asc') {
       result.sort((a, b) => {
