@@ -18,7 +18,7 @@ import {
 import { ProductModal } from '@/components/admin/ProductModal';
 import { ProductImage } from '@/components/store/ProductImage';
 import { deleteProductAction, updateProductAction } from '@/lib/actions/products.actions';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useProductsStore } from '@/store/products.store';
 
 interface AdminProductsClientProps {
@@ -46,9 +46,13 @@ export default function AdminProductsClient({
   tags 
 }: AdminProductsClientProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [search, setSearch] = useState('');
   const invalidateCache = useProductsStore(s => s.invalidateCache);
-  const [typeFilter, setTypeFilter] = useState<'all' | 'perfume' | 'flacon' | 'accessory'>('all');
+  const typeFromUrl = searchParams.get('type');
+  const [typeFilter, setTypeFilter] = useState<'all' | 'perfume' | 'flacon' | 'accessory'>(
+    (typeFromUrl === 'perfume' || typeFromUrl === 'flacon' || typeFromUrl === 'accessory') ? typeFromUrl : 'all'
+  );
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [brandFilter, setBrandFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'draft'>('all');

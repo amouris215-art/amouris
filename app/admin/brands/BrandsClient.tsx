@@ -5,7 +5,7 @@ import { Brand } from '@/store/brands.store'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Plus, Search, Edit2, Trash2, Store, Loader2 } from 'lucide-react'
 import { BrandModal } from '@/components/admin/BrandModal'
-import { deleteBrandAction } from '@/lib/actions/brands'
+import { deleteBrand as deleteBrandAction } from '@/lib/actions/brands'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 
