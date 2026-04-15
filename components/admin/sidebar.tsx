@@ -7,7 +7,7 @@ import { useAdminStore } from '@/store/admin-ui.store';
 import { 
   LayoutDashboard, Package, Tag, Users, ShoppingCart, 
   FileText, TrendingUp, Settings, Inbox, Menu, Store, Layers, Bell,
-  Droplets, Box, Puzzle
+  Droplet
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -21,9 +21,9 @@ export function AdminSidebar() {
       title: language === 'ar' ? 'الكتالوج' : 'Catalogue',
       items: [
         { name: language === 'ar' ? 'كل المنتجات' : 'Tous les Produits', href: '/admin/products', icon: Package },
-        { name: language === 'ar' ? 'العطور' : 'Parfums', href: '/admin/products?type=perfume', icon: Droplets },
-        { name: language === 'ar' ? 'القوارير' : 'Flacons', href: '/admin/products?type=flacon', icon: Box },
-        { name: language === 'ar' ? 'الإكسسوارات' : 'Accessoires', href: '/admin/products?type=accessory', icon: Puzzle },
+        { name: language === 'ar' ? 'العطور' : 'Parfums', href: '/admin/products?type=perfume', icon: Droplet },
+        { name: language === 'ar' ? 'القوارير' : 'Flacons', href: '/admin/products?type=flacon', icon: Package },
+        { name: language === 'ar' ? 'الإكسسوارات' : 'Accessoires', href: '/admin/products?type=accessory', icon: Layers },
         { name: language === 'ar' ? 'الأصناف' : 'Catégories', href: '/admin/categories', icon: Tag },
         { name: language === 'ar' ? 'المجموعات' : 'Collections', href: '/admin/collections', icon: Layers },
         { name: language === 'ar' ? 'العلامات' : 'Marques', href: '/admin/brands', icon: Store },

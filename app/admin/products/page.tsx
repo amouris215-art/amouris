@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import AdminProductsClient from './AdminProductsClient'
+import { Suspense } from 'react'
 
 export const dynamic = 'force-dynamic'
 
@@ -32,12 +33,14 @@ export default async function AdminProductsPage() {
   ])
 
   return (
-    <AdminProductsClient
-      initialProducts={products as any ?? []}
-      categories={categories as any ?? []}
-      brands={brands as any ?? []}
-      collections={collections as any ?? []}
-      tags={tags as any ?? []}
-    />
+    <Suspense fallback={<div className="p-8 text-center text-emerald-900 font-bold">Chargement des produits...</div>}>
+      <AdminProductsClient
+        initialProducts={products as any ?? []}
+        categories={categories as any ?? []}
+        brands={brands as any ?? []}
+        collections={collections as any ?? []}
+        tags={tags as any ?? []}
+      />
+    </Suspense>
   )
 }
