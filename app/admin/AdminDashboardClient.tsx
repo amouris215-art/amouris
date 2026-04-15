@@ -1,3 +1,5 @@
+"use client";
+
 import { ShoppingBag, Users, TrendingUp, Package, AlertTriangle, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 import { useI18n } from '@/i18n/i18n-context'

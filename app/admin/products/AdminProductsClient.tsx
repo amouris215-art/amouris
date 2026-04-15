@@ -70,8 +70,8 @@ export default function AdminProductsClient({
 
   const filtered = useMemo(() => {
     return products.filter(p => {
-      const matchSearch = p.name_fr.toLowerCase().includes(search.toLowerCase()) || 
-                          p.name_ar.includes(search);
+      const matchSearch = (p.name_fr?.toLowerCase().includes(search.toLowerCase()) ?? false) || 
+                          (p.name_ar?.includes(search) ?? false);
       const matchType = typeFilter === 'all' || p.product_type === typeFilter;
       const matchCategory = categoryFilter === 'all' || p.category_id === categoryFilter;
       const matchBrand = brandFilter === 'all' || p.brand_id === brandFilter;

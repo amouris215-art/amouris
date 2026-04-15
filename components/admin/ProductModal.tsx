@@ -6,7 +6,7 @@ import { createProductAction, updateProductAction } from '@/lib/actions/products
 import { uploadImage, deleteImage } from '@/lib/actions/storage';
 import { 
   Upload, X, Plus, Trash2, Loader2, Sparkles, 
-  Box, Droplets, Pipette, Eye, EyeOff, 
+  Package, Droplet, Pipette, Eye, EyeOff, 
   ChevronRight, Info, Tag as TagIcon, LayoutGrid, Ruler,
   Palette, Layers
 } from 'lucide-react';
@@ -215,7 +215,7 @@ export function ProductModal({
           <div className="relative z-10 flex items-center justify-between">
             <div className="flex items-center gap-3 md:gap-4">
               <div className="w-10 h-10 md:w-12 md:h-12 bg-white/10 rounded-xl md:rounded-2xl flex items-center justify-center backdrop-blur-md border border-white/10">
-                {formData.product_type === 'perfume' ? <Droplets size={20} className="text-emerald-400" /> : <Box size={20} className="text-amber-400" />}
+                {formData.product_type === 'perfume' ? <Droplet size={20} className="text-emerald-400" /> : <Package size={20} className="text-amber-400" />}
               </div>
               <div>
                 <DialogTitle className="text-xl md:text-2xl font-serif font-bold italic">
