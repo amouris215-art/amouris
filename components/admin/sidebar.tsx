@@ -12,40 +12,40 @@ import { Button } from '@/components/ui/button';
 
 export function AdminSidebar() {
   const pathname = usePathname();
-  const { language, dir } = useI18n();
+  const { language, dir, t } = useI18n();
   const { sidebarOpen, setSidebarOpen } = useAdminStore();
 
   const navGroups = [
     {
-      title: language === 'ar' ? 'الكتالوج' : 'Catalogue',
+      title: t('admin.sidebar.catalogue'),
       items: [
-        { name: language === 'ar' ? 'كل المنتجات' : 'Tous les Produits', href: '/admin/products', icon: Package },
-        { name: language === 'ar' ? 'الأصناف' : 'Catégories', href: '/admin/categories', icon: Tag },
-        { name: language === 'ar' ? 'المجموعات' : 'Collections', href: '/admin/collections', icon: Layers },
-        { name: language === 'ar' ? 'العلامات' : 'Marques', href: '/admin/brands', icon: Store },
+        { name: t('admin.sidebar.all_products'), href: '/admin/products', icon: Package },
+        { name: t('admin.sidebar.categories'), href: '/admin/categories', icon: Tag },
+        { name: t('admin.sidebar.collections'), href: '/admin/collections', icon: Layers },
+        { name: t('admin.sidebar.brands'), href: '/admin/brands', icon: Store },
       ]
     },
     {
-      title: language === 'ar' ? 'المبيعات' : 'Ventes',
+      title: t('admin.sidebar.ventes'),
       items: [
-        { name: language === 'ar' ? 'الطلبات' : 'Commandes', href: '/admin/orders', icon: ShoppingCart },
-        { name: language === 'ar' ? 'الفواتير' : 'Factures', href: '/admin/invoices', icon: FileText },
-        { name: language === 'ar' ? 'العملاء' : 'Clients', href: '/admin/customers', icon: Users },
+        { name: t('admin.sidebar.orders'), href: '/admin/orders', icon: ShoppingCart },
+        { name: t('admin.sidebar.invoices'), href: '/admin/invoices', icon: FileText },
+        { name: t('admin.sidebar.customers'), href: '/admin/customers', icon: Users },
       ]
     },
     {
-      title: language === 'ar' ? 'المخزون' : 'Inventaire',
+      title: t('admin.sidebar.inventory'),
       items: [
-        { name: language === 'ar' ? 'إدارة المخزون' : 'Gestion des stocks', href: '/admin/inventory', icon: Inbox },
+        { name: t('admin.sidebar.inventory_mgmt'), href: '/admin/inventory', icon: Inbox },
       ]
     },
     {
-      title: language === 'ar' ? 'نظام الإدارة' : 'Système',
+      title: t('admin.sidebar.system'),
       items: [
-        { name: language === 'ar' ? 'الإشعارات' : 'Notifications', href: '/admin/notifications', icon: Bell },
-        { name: language === 'ar' ? 'التحليلات' : 'Analytiques', href: '/admin/analytics', icon: TrendingUp },
-        { name: language === 'ar' ? 'تقارير إكسل' : 'Rapports Excel', href: '/admin/reports', icon: FileText },
-        { name: language === 'ar' ? 'الإعدادات' : 'Paramètres', href: '/admin/settings', icon: Settings },
+        { name: t('admin.sidebar.notifications'), href: '/admin/notifications', icon: Bell },
+        { name: t('admin.sidebar.analytics'), href: '/admin/analytics', icon: TrendingUp },
+        { name: t('admin.sidebar.reports'), href: '/admin/reports', icon: FileText },
+        { name: t('admin.sidebar.settings'), href: '/admin/settings', icon: Settings },
       ]
     }
   ];
@@ -86,7 +86,7 @@ export function AdminSidebar() {
                     className={`w-full justify-start min-h-[44px] ${pathname === '/admin' ? 'font-bold text-emerald-900 bg-emerald-50' : 'text-gray-700'}`}
                   >
                 <LayoutDashboard className="mr-3 w-5 h-5 rtl:mr-0 rtl:ml-3" />
-                {language === 'ar' ? 'نظرة عامة' : 'Vue d\'ensemble'}
+                {t('admin.sidebar.overview')}
             </Button>
           </Link>
           
@@ -119,7 +119,7 @@ export function AdminSidebar() {
           <div className="mt-8 border-t pt-4">
              <Link href="/">
                 <Button variant="outline" className="w-full truncate text-ellipsis">
-                  {language === 'ar' ? 'العودة للمتجر' : 'Retour à la boutique'}
+                  {t('admin.sidebar.back_to_shop')}
                 </Button>
              </Link>
           </div>

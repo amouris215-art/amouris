@@ -21,7 +21,7 @@ export default async function ProductPage({
       categories ( id, name_fr, name_ar, slug ),
       brands ( id, name, name_ar ),
       collections ( id, name_fr, name_ar ),
-      flacon_variants ( id, size_ml, color, color_name, shape, price, stock_units ),
+      flacon_variants ( id, size_ml, color, color_name, shape, price, stock_units, carton_quantity, carton_price ),
       product_tags ( tags ( id, name_fr, name_ar, slug ) )
     `)
     .eq('slug', slug)

@@ -44,7 +44,7 @@ interface AdminOrdersClientProps {
 
 export default function AdminOrdersClient({ initialOrders, settings }: AdminOrdersClientProps) {
   const router = useRouter();
-  const { t, language } = useI18n();
+  const { t, language, dir } = useI18n();
 
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -75,7 +75,7 @@ export default function AdminOrdersClient({ initialOrders, settings }: AdminOrde
       doc.save(filename)
     } catch (error) {
       console.error('Error generating PDF:', error)
-      alert('Erreur lors de la génération du PDF')
+      toast.error(t('admin.orders.error_pdf'))
     }
   };
 
@@ -84,8 +84,9 @@ export default function AdminOrdersClient({ initialOrders, settings }: AdminOrde
     try {
       await apiUpdateOrderPayment(orderId, val);
       router.refresh();
+      toast.success(t('admin.orders.detail.payment_updated'));
     } catch (err) {
-      alert('Erreur lors de la mise à jour du paiement');
+      toast.error(t('admin.orders.detail.error_payment_update'));
     }
   };
 
@@ -93,32 +94,33 @@ export default function AdminOrdersClient({ initialOrders, settings }: AdminOrde
     try {
       await apiUpdateOrderStatus(orderId, status);
       router.refresh();
+      toast.success(t('admin.orders.detail.status_updated'));
     } catch (err) {
-      alert('Erreur lors de la mise à jour du statut');
+      toast.error(t('admin.orders.detail.error_status_update'));
     }
   };
 
   const handleDeleteOrder = async (order: any) => {
-    if (!confirm(language === 'ar' ? `هل أنت متأكد من حذف الطلب ${order.order_number}؟` : `Voulez-vous supprimer définitivement la commande ${order.order_number} ?`)) return;
+    if (!confirm(t('admin.orders.delete_confirm', { number: order.order_number }))) return;
     
     setIsDeleting(order.id);
-    const toastId = toast.loading(language === 'ar' ? 'جاري الحذف...' : 'Suppression en cours...');
+    const toastId = toast.loading(t('admin.orders.deleting'));
     try {
       await deleteOrderAction(order.id);
       router.refresh();
-      toast.success(language === 'ar' ? 'تم حذف الطلب بنجاح' : 'Commande supprimée avec succès', { id: toastId });
+      toast.success(t('admin.orders.delete_success'), { id: toastId });
     } catch (err: any) {
-      toast.error('Erreur: ' + err.message, { id: toastId });
+      toast.error(t('common.error') + ': ' + err.message, { id: toastId });
     } finally {
       setIsDeleting(null);
     }
   };
 
   return (
-    <div className="space-y-12 pb-20">
+    <div className="space-y-12 pb-20" dir={dir}>
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-8">
         <motion.div 
-          initial={{ opacity: 0, x: -20 }}
+          initial={{ opacity: 0, x: dir === 'rtl' ? 20 : -20 }}
           animate={{ opacity: 1, x: 0 }}
         >
            <h1 className="font-serif text-5xl text-emerald-950 mb-2 font-bold italic">{t('admin.orders.title')}</h1>
@@ -129,13 +131,13 @@ export default function AdminOrdersClient({ initialOrders, settings }: AdminOrde
       <section className="space-y-6">
         <div className="flex flex-col md:flex-row gap-6">
           <div className="relative flex-1 group">
-             <Search size={18} className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#C9A84C] transition-colors" />
+             <Search size={18} className={`absolute ${dir === 'rtl' ? 'right-6' : 'left-6'} top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#C9A84C] transition-colors`} />
              <input 
                type="text"
                placeholder={t('admin.orders.search_placeholder')}
                value={search}
                onChange={e => setSearch(e.target.value)}
-               className="w-full h-16 pl-16 pr-8 bg-white border border-emerald-950/5 rounded-2xl outline-none focus:border-[#C9A84C] shadow-sm font-medium text-emerald-950 transition-all font-sans"
+               className={`w-full h-16 ${dir === 'rtl' ? 'pr-16 pl-8' : 'pl-16 pr-8'} bg-white border border-emerald-950/5 rounded-2xl outline-none focus:border-[#C9A84C] shadow-sm font-medium text-emerald-950 transition-all font-sans`}
              />
           </div>
           <button 
@@ -158,7 +160,7 @@ export default function AdminOrdersClient({ initialOrders, settings }: AdminOrde
                 <label className="text-[10px] font-black uppercase tracking-widest text-emerald-950/50 px-2">{t('admin.orders.filter_status')}</label>
                 <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="w-full h-14 px-5 rounded-2xl bg-white border border-emerald-950/10 text-[11px] font-bold uppercase outline-none focus:border-[#C9A84C] transition-all">
                   <option value="all">{t('admin.orders.status_all')}</option>
-                  {STATUS_ORDER.map((k) => <option key={k} value={k}>{getOrderStatusLabel(k, language)}</option>)}
+                  {STATUS_ORDER.map((k) => <option key={k} value={k}>{t(`admin.orders.status_${k}`)}</option>)}
                 </select>
               </div>
               <div className="space-y-3">
@@ -187,18 +189,18 @@ export default function AdminOrdersClient({ initialOrders, settings }: AdminOrde
           <table className="w-full border-collapse">
             <thead>
               <tr className="border-b border-emerald-950/5 bg-neutral-50/50">
-                <th className="luxury-table-header">{t('admin.orders.table.id_date')}</th>
-                <th className="luxury-table-header">{t('admin.orders.table.customer')}</th>
-                <th className="luxury-table-header">{t('admin.orders.table.amount_payment')}</th>
-                <th className="luxury-table-header">{t('admin.orders.table.progress')}</th>
-                <th className="luxury-table-header text-right rtl:text-left">{t('admin.orders.table.actions')}</th>
+                <th className={`luxury-table-header ${dir === 'rtl' ? 'text-right' : 'text-left'}`}>{t('admin.orders.table.id_date')}</th>
+                <th className={`luxury-table-header ${dir === 'rtl' ? 'text-right' : 'text-left'}`}>{t('admin.orders.table.customer')}</th>
+                <th className={`luxury-table-header ${dir === 'rtl' ? 'text-right' : 'text-left'}`}>{t('admin.orders.table.amount_payment')}</th>
+                <th className={`luxury-table-header ${dir === 'rtl' ? 'text-right' : 'text-left'}`}>{t('admin.orders.table.progress')}</th>
+                <th className={`luxury-table-header ${dir === 'rtl' ? 'text-left' : 'text-right'}`}>{t('admin.orders.table.actions')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-emerald-950/5">
               <AnimatePresence mode="popLayout">
                 {filtered.map((order) => {
                   const name = order.guest_first_name ? `${order.guest_first_name} ${order.guest_last_name}` : `${t('common.account')} ID: ${order.customer_id?.slice(0, 8)}`;
-                  const reste = order.total_amount - order.amount_paid;
+                  const reste = (order.total_amount || 0) - (order.amount_paid || 0);
                   
                   return (
                     <motion.tr 
@@ -211,32 +213,32 @@ export default function AdminOrdersClient({ initialOrders, settings }: AdminOrde
                     >
                       <td className="px-10 py-8">
                         <div>
-                          <p className="font-serif text-2xl text-emerald-950 font-bold">{order.order_number}</p>
-                          <p className="text-[10px] font-black tracking-widest text-[#C9A84C] uppercase mt-1">
+                          <p className={`font-serif text-2xl text-emerald-950 font-bold ${dir === 'rtl' ? 'text-right' : ''}`}>{order.order_number}</p>
+                          <p className={`text-[10px] font-black tracking-widest text-[#C9A84C] uppercase mt-1 ${dir === 'rtl' ? 'text-right' : ''}`}>
                             {new Date(order.created_at).toLocaleDateString(language === 'ar' ? 'ar-DZ' : 'fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })}
                           </p>
                         </div>
                       </td>
                       <td className="px-10 py-8">
                         <div>
-                          <p className="text-sm font-bold text-emerald-950">{name}</p>
-                          <p className="text-[9px] font-black text-[#C9A84C] uppercase tracking-widest mt-0.5">{order.guest_wilaya || t('admin.orders.no_wilaya')}</p>
+                          <p className={`text-sm font-bold text-emerald-950 ${dir === 'rtl' ? 'text-right' : ''}`}>{name}</p>
+                          <p className={`text-[9px] font-black text-[#C9A84C] uppercase tracking-widest mt-0.5 ${dir === 'rtl' ? 'text-right' : ''}`}>{order.guest_wilaya || t('admin.orders.no_wilaya')}</p>
                         </div>
                       </td>
                       <td className="px-10 py-8">
                         <div className="space-y-3">
-                           <div className="flex items-center gap-3">
-                              <span className="text-lg font-black text-emerald-950">{order.total_amount.toLocaleString()} <span className="text-[10px] font-normal opacity-50">{t('common.dzd')}</span></span>
+                           <div className={`flex items-center gap-3 ${dir === 'rtl' ? 'flex-row-reverse' : ''}`}>
+                              <span className="text-lg font-black text-emerald-950">{(order.total_amount || 0).toLocaleString()} <span className="text-[10px] font-normal opacity-50">{t('common.dzd')}</span></span>
                               <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase border ${PAYMENT_COLORS[order.payment_status]}`}>{getPaymentStatusLabel(order.payment_status, language)}</span>
                            </div>
-                           <div className="flex items-center gap-2">
+                           <div className={`flex items-center gap-2 ${dir === 'rtl' ? 'flex-row-reverse text-right' : ''}`}>
                               <Banknote size={14} className="text-emerald-900/20" />
                               <input 
                                 type="number"
                                 placeholder={t('admin.orders.table.amount_payment')}
                                 defaultValue={order.amount_paid}
                                 onBlur={(e) => handleUpdatePayment(order.id, e.target.value)}
-                                className="w-24 h-9 px-3 bg-neutral-50 border border-emerald-950/10 rounded-lg text-[11px] font-bold outline-none focus:border-[#C9A84C] transition-all"
+                                className={`w-24 h-9 px-3 bg-neutral-50 border border-emerald-950/10 rounded-lg text-[11px] font-bold outline-none focus:border-[#C9A84C] transition-all ${dir === 'rtl' ? 'text-right' : ''}`}
                               />
                               {reste > 0 && <span className="text-[9px] font-bold text-rose-500">(-{reste.toLocaleString()})</span>}
                            </div>
@@ -246,10 +248,10 @@ export default function AdminOrdersClient({ initialOrders, settings }: AdminOrde
                          <select 
                            value={order.order_status}
                            onChange={e => handleStatusChange(order.id, e.target.value as OrderStatus)}
-                           className={`h-10 px-4 rounded-xl text-[9px] font-black uppercase tracking-widest border transition-all cursor-pointer ${STATUS_COLORS[order.order_status]}`}
+                           className={`h-10 px-4 rounded-xl text-[9px] font-black uppercase tracking-widest border transition-all cursor-pointer ${STATUS_COLORS[order.order_status]} ${dir === 'rtl' ? 'text-right' : ''}`}
                          >
                            {STATUS_ORDER.map((k) => (
-                             <option key={k} value={k}>{getOrderStatusLabel(k, language).toUpperCase()}</option>
+                             <option key={k} value={k}>{t(`admin.orders.status_${k}`).toUpperCase()}</option>
                            ))}
                          </select>
                       </td>

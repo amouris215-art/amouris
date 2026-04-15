@@ -28,7 +28,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   if (!isAuthenticated) return null
 
   return (
-    <div className="flex min-h-screen bg-gray-50" dir="ltr">
+    <div className="flex min-h-screen bg-gray-50" dir={dir}>
       <AdminSidebar />
       <main className={`flex-1 min-w-0 overflow-auto ${dir === 'rtl' ? 'lg:pr-72' : 'lg:pl-72'}`}>
         <AdminHeader />

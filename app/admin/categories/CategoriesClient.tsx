@@ -8,12 +8,14 @@ import { CategoryModal } from '@/components/admin/CategoryModal';
 import { deleteCategoryAction } from '@/lib/actions/categories';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { useI18n } from '@/i18n/i18n-context';
 
 interface CategoriesClientProps {
   initialCategories: (Category & { product_count: number })[];
 }
 
 export default function CategoriesClient({ initialCategories }: CategoriesClientProps) {
+  const { t, dir, language } = useI18n();
   const router = useRouter();
   const categories = initialCategories;
 
@@ -24,7 +26,7 @@ export default function CategoriesClient({ initialCategories }: CategoriesClient
   const filtered = useMemo(() => {
     return categories.filter(c => 
       c.name_fr.toLowerCase().includes(search.toLowerCase()) || 
-      c.name_ar.includes(search)
+      (c.name_ar && c.name_ar.includes(search))
     );
   }, [categories, search]);
 
@@ -40,33 +42,34 @@ export default function CategoriesClient({ initialCategories }: CategoriesClient
 
   const handleDelete = async (cat: Category & { product_count: number }) => {
     if (cat.product_count > 0) {
-      toast.error(`Impossible de supprimer : cette catégorie contient ${cat.product_count} références.`);
+      toast.error(t('admin.categories.delete_error_count', { count: cat.product_count }));
       return;
     }
-    if (confirm('Voulez-vous vraiment supprimer cette catégorie ?')) {
+    if (confirm(t('admin.categories.confirm_delete'))) {
       try {
         const result = await deleteCategoryAction(cat.id);
         if (result.success) {
           router.refresh();
-          toast.success('Catégorie supprimée');
+          toast.success(t('admin.categories.success_delete'));
         } else {
-          toast.error('Erreur: ' + result.error);
+          toast.error(t('admin.categories.toast_error') + ': ' + result.error);
         }
       } catch (err: any) {
-        toast.error('Erreur: ' + err.message);
+        toast.error(t('admin.categories.toast_error') + ': ' + err.message);
       }
     }
   };
 
   return (
-    <div className="space-y-12 pb-20 font-sans">
+    <div className="space-y-12 pb-20 font-sans" dir={dir}>
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-8">
         <motion.div 
-          initial={{ opacity: 0, x: -20 }}
+          initial={{ opacity: 0, x: dir === 'rtl' ? 20 : -20 }}
           animate={{ opacity: 1, x: 0 }}
+          className={dir === 'rtl' ? 'text-right' : ''}
         >
-           <h1 className="font-serif text-5xl text-emerald-950 mb-2 font-bold italic">Structure du Catalogue</h1>
-           <p className="text-[11px] font-black uppercase tracking-[0.5em] text-[#C9A84C]/80">Organisation des Collections</p>
+           <h1 className="font-serif text-5xl text-emerald-950 mb-2 font-bold italic">{t('admin.categories.title')}</h1>
+           <p className="text-[11px] font-black uppercase tracking-[0.5em] text-[#C9A84C]/80">{t('admin.categories.subtitle')}</p>
         </motion.div>
         <motion.button 
           whileHover={{ scale: 1.02 }}
@@ -74,19 +77,19 @@ export default function CategoriesClient({ initialCategories }: CategoriesClient
           onClick={handleAdd}
           className="bg-[#0a3d2e] text-white px-8 py-5 rounded-[1.5rem] text-[10px] font-black uppercase tracking-widest shadow-2xl shadow-emerald-900/30 hover:shadow-emerald-900/40 transition-all flex items-center gap-3"
         >
-          <Plus size={18} /> Nouvelle Catégorie
+          <Plus size={18} /> {t('admin.categories.add_button')}
         </motion.button>
       </header>
 
-      <section className="flex flex-col md:flex-row gap-6">
+      <section className={`flex flex-col md:flex-row gap-6 ${dir === 'rtl' ? 'flex-row-reverse' : ''}`}>
         <div className="relative flex-1 group">
-           <Search size={18} className="absolute left-6 top-1/2 -translate-y-1/2 text-emerald-950/20 group-focus-within:text-[#C9A84C] transition-colors" />
+           <Search size={18} className={`absolute ${dir === 'rtl' ? 'right-6' : 'left-6'} top-1/2 -translate-y-1/2 text-emerald-950/20 group-focus-within:text-[#C9A84C] transition-colors`} />
            <input 
              type="text"
-             placeholder="Rechercher une catégorie..."
+             placeholder={t('admin.categories.search_placeholder')}
              value={search}
              onChange={e => setSearch(e.target.value)}
-             className="w-full h-16 pl-16 pr-8 bg-white border border-emerald-950/5 rounded-2xl outline-none focus:border-[#C9A84C] shadow-sm font-medium text-emerald-950 transition-all font-sans"
+             className={`w-full h-16 ${dir === 'rtl' ? 'pr-16 pl-8 text-right' : 'pl-16 pr-8'} bg-white border border-emerald-950/5 rounded-2xl outline-none focus:border-[#C9A84C] shadow-sm font-medium text-emerald-950 transition-all font-sans`}
            />
         </div>
       </section>
@@ -96,10 +99,10 @@ export default function CategoriesClient({ initialCategories }: CategoriesClient
           <table className="w-full border-collapse">
             <thead>
               <tr className="border-b border-emerald-950/5 bg-neutral-50/50">
-                <th className="luxury-table-header">Désignation</th>
-                <th className="luxury-table-header">Lien URL (Slug)</th>
-                <th className="luxury-table-header text-center">Produits Liés</th>
-                <th className="luxury-table-header text-right">Actions</th>
+                <th className={`luxury-table-header ${dir === 'rtl' ? 'text-right' : 'text-left'}`}>{t('admin.categories.table.designation')}</th>
+                <th className={`luxury-table-header ${dir === 'rtl' ? 'text-right' : 'text-left'}`}>{t('admin.categories.table.slug')}</th>
+                <th className="luxury-table-header text-center">{t('admin.categories.table.products')}</th>
+                <th className={`luxury-table-header ${dir === 'rtl' ? 'text-left' : 'text-right'}`}>{t('admin.categories.table.actions')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-emerald-950/5">
@@ -115,7 +118,7 @@ export default function CategoriesClient({ initialCategories }: CategoriesClient
                       className="group hover:bg-neutral-50/50 transition-colors"
                     >
                       <td className="px-10 py-6">
-                        <div className="flex items-center gap-4">
+                        <div className={`flex items-center gap-4 ${dir === 'rtl' ? 'flex-row-reverse text-right' : ''}`}>
                           <div className="w-12 h-12 bg-neutral-50 rounded-xl flex items-center justify-center text-emerald-950/10 group-hover:text-[#C9A84C] transition-colors overflow-hidden">
                              {category.image_url ? (
                                <img src={category.image_url} alt="" className="w-full h-full object-cover" />
@@ -124,8 +127,8 @@ export default function CategoriesClient({ initialCategories }: CategoriesClient
                              )}
                           </div>
                           <div>
-                            <p className="font-serif text-xl text-emerald-950 font-bold">{category.name_fr}</p>
-                            <p className="text-sm font-arabic text-emerald-950/50 text-right" dir="rtl">{category.name_ar}</p>
+                            <p className="font-serif text-xl text-emerald-950 font-bold">{language === 'ar' ? (category.name_ar || category.name_fr) : category.name_fr}</p>
+                            {language !== 'ar' && category.name_ar && <p className="text-sm font-arabic text-emerald-950/50 text-right" dir="rtl">{category.name_ar}</p>}
                           </div>
                         </div>
                       </td>
@@ -135,13 +138,13 @@ export default function CategoriesClient({ initialCategories }: CategoriesClient
                         </code>
                       </td>
                       <td className="px-10 py-6">
-                         <div className="flex items-center gap-2 justify-center">
+                         <div className={`flex items-center gap-2 justify-center ${dir === 'rtl' ? 'flex-row-reverse' : ''}`}>
                            <FolderTree size={14} className="text-emerald-950/20" />
-                           <span className="text-sm font-bold text-emerald-950">{category.product_count} <span className="text-[10px] font-black opacity-30">RÉFÉRENCES</span></span>
+                           <span className="text-sm font-bold text-emerald-950">{category.product_count} <span className="text-[10px] font-black opacity-30">{t('admin.categories.table.refs_label')}</span></span>
                          </div>
                       </td>
                       <td className="px-10 py-6 text-right">
-                         <div className="flex justify-end gap-3 transition-opacity">
+                         <div className={`flex ${dir === 'rtl' ? 'justify-start' : 'justify-end'} gap-3 transition-opacity`}>
                             <button onClick={() => handleEdit(category)} className="w-10 h-10 rounded-xl bg-white border border-emerald-950/5 flex items-center justify-center text-emerald-950/40 hover:text-emerald-950 hover:border-emerald-950/20 transition-all shadow-sm">
                                <Edit2 size={14} />
                             </button>
@@ -163,7 +166,7 @@ export default function CategoriesClient({ initialCategories }: CategoriesClient
              <div className="w-20 h-20 bg-neutral-50 rounded-full flex items-center justify-center mx-auto mb-6 text-emerald-100">
                 <Tag size={32} />
              </div>
-             <p className="font-serif text-2xl text-emerald-950/20 italic">Aucune catégorie définie.</p>
+             <p className="font-serif text-2xl text-emerald-950/20 italic">{t('admin.categories.no_results')}</p>
           </div>
         )}
       </div>

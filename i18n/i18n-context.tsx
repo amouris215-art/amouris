@@ -9,7 +9,7 @@ type Translations = typeof ar;
 
 interface I18nContextType {
   language: Language;
-  t: (key: string) => string;
+  t: (key: string, variables?: Record<string, string | number>) => string;
   setLanguage: (lang: Language) => void;
   dir: 'rtl' | 'ltr';
 }
@@ -45,7 +45,7 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
     }
   }, [language, mounted]);
 
-  const t = (path: string) => {
+  const t = (path: string, variables?: Record<string, string | number>) => {
     const keys = path.split('.');
     const translations: any = language === 'ar' ? ar : fr;
     
@@ -57,7 +57,14 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
       }
       current = current[key];
     }
-    return current as string;
+    
+    let text = current as string;
+    if (variables) {
+      Object.entries(variables).forEach(([key, value]) => {
+        text = text.replace(`{${key}}`, String(value));
+      });
+    }
+    return text;
   };
 
   const currentDir = language === 'ar' ? 'rtl' : 'ltr';

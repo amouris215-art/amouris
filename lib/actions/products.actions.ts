@@ -157,11 +157,10 @@ export async function updateProductAction(id: string, formData: any) {
 
       // Upsertions
       for (const v of formData.variants) {
-        const { isNew, ...vData } = v;
+        const { isNew, id: vId, product_id: pid, created_at, ...vData } = v;
         if (!v.id || v.id.startsWith('new_') || v.id.startsWith('v_')) {
-          const { id: _, ...insertData } = vData;
           const { error: insError } = await supabase.from('flacon_variants').insert({
-            ...insertData,
+            ...vData,
             product_id: id
           });
           if (insError) return { success: false, error: 'Erreur lors de l\'ajout d\'une nouvelle variante' }

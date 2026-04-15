@@ -17,6 +17,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import { updateSettings as apiUpdateSettings } from '@/lib/api/settings'
 import { updatePasswordAction } from '@/lib/actions/auth.actions'
+import { useI18n } from '@/i18n/i18n-context'
 
 const WILAYAS = [
   "Adrar", "Chlef", "Laghouat", "Oum El Bouaghi", "Batna", "Béjaïa", "Biskra", "Béchar", "Blida", "Bouira",
@@ -33,6 +34,7 @@ interface AdminSettingsClientProps {
 }
 
 export default function AdminSettingsClient({ initialSettings, initialAnnouncements }: AdminSettingsClientProps) {
+  const { t, dir } = useI18n()
   const router = useRouter()
   const authStore = useAdminAuthStore()
   
@@ -50,9 +52,9 @@ export default function AdminSettingsClient({ initialSettings, initialAnnounceme
     try {
       await apiUpdateSettings(formData)
       router.refresh()
-      toast.success('Paramètres enregistrés avec succès')
+      toast.success(t('admin.settings.success_save'))
     } catch (err: any) {
-      toast.error('Erreur lors de la sauvegarde: ' + err.message)
+      toast.error(t('admin.common.error') + ': ' + err.message)
     } finally {
       setLoading(false)
     }
@@ -69,20 +71,20 @@ export default function AdminSettingsClient({ initialSettings, initialAnnounceme
   const handleLogout = () => {
     authStore.logout()
     router.push('/admin/login')
-    toast.info('Session terminée')
+    toast.info(t('admin.settings.session_ended'))
   }
 
   const handlePasswordChange = async () => {
     if (!passwords.new || !passwords.confirm) {
-        toast.error('Veuillez remplir tous les champs')
+        toast.error(t('admin.settings.error_empty_fields'))
         return
     }
     if (passwords.new !== passwords.confirm) {
-        toast.error('Les mots de passe ne correspondent pas')
+        toast.error(t('admin.settings.error_mismatch'))
         return
     }
     if (passwords.new.length < 6) {
-        toast.error('Le mot de passe doit contenir au moins 6 caractères')
+        toast.error(t('admin.settings.error_too_short'))
         return
     }
 
@@ -90,13 +92,13 @@ export default function AdminSettingsClient({ initialSettings, initialAnnounceme
     try {
         const res = await updatePasswordAction(passwords.new)
         if (res.success) {
-            toast.success('Mot de passe mis à jour avec succès')
+            toast.success(t('admin.settings.account_security') + ' ' + t('admin.common.success_update'))
             setPasswords({ new: '', confirm: '' })
         } else {
             throw new Error(res.error)
         }
     } catch (err: any) {
-        toast.error('Erreur: ' + err.message)
+        toast.error(t('admin.common.error') + ': ' + err.message)
     } finally {
         setIsUpdatingPassword(false)
     }
@@ -104,19 +106,18 @@ export default function AdminSettingsClient({ initialSettings, initialAnnounceme
 
 
   const tabs = [
-    { id: 'Boutique', label: 'Boutique', icon: Globe },
-    { id: 'Social', label: 'Réseaux Sociaux', icon: Camera },
-
-    { id: 'Annonces', label: 'Annonces', icon: Megaphone },
-    { id: 'Compte', label: 'Compte Admin', icon: User },
+    { id: 'Boutique', label: t('admin.settings.tabs.shop'), icon: Globe },
+    { id: 'Social', label: t('admin.settings.tabs.social'), icon: Camera },
+    { id: 'Annonces', label: t('admin.settings.tabs.announcements'), icon: Megaphone },
+    { id: 'Compte', label: t('admin.settings.tabs.account'), icon: User },
   ]
 
   return (
-    <div className="space-y-8 pb-20">
+    <div className="space-y-8 pb-20" dir={dir}>
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-           <h1 className="font-serif text-3xl text-emerald-950 mb-1 font-bold italic">Paramètres Système</h1>
-           <p className="text-[9px] font-black uppercase tracking-[0.3em] text-[#C9A84C]">Configuration fonctionnelle globale</p>
+           <h1 className="font-serif text-3xl text-emerald-950 mb-1 font-bold italic">{t('admin.settings.title')}</h1>
+           <p className="text-[9px] font-black uppercase tracking-[0.3em] text-[#C9A84C]">{t('admin.settings.subtitle')}</p>
         </div>
         {activeTab !== 'Compte' && activeTab !== 'Annonces' && (
           <button 
@@ -125,7 +126,7 @@ export default function AdminSettingsClient({ initialSettings, initialAnnounceme
             className="group bg-[#0a3d2e] text-white px-8 h-12 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] shadow-xl hover:scale-[1.02] active:scale-95 transition-all flex items-center gap-3 disabled:opacity-50"
           >
             {loading ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} className="group-hover:rotate-12 transition-transform" />}
-            {loading ? 'Enregistrement...' : 'Enregistrer'}
+            {loading ? t('admin.settings.saving') : t('admin.settings.save')}
           </button>
         )}
       </header>
@@ -158,23 +159,23 @@ export default function AdminSettingsClient({ initialSettings, initialAnnounceme
                   <section className="space-y-6">
                     <div className="flex items-center gap-4 border-b border-emerald-950/5 pb-4">
                        <Mail size={18} className="text-[#C9A84C]" />
-                       <h3 className="font-serif text-xl font-bold text-emerald-950">Contact & Adresse</h3>
+                       <h3 className="font-serif text-xl font-bold text-emerald-950">{t('admin.settings.contact_address')}</h3>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                        <div className="space-y-2">
-                         <label className="text-[9px] font-black uppercase tracking-widest text-emerald-950/30">Email de Contact</label>
+                         <label className="text-[9px] font-black uppercase tracking-widest text-emerald-950/30">{t('admin.settings.email')}</label>
                          <input type="email" name="email" value={formData.email} onChange={handleChange} className="w-full h-12 px-5 bg-neutral-50 border border-emerald-950/5 rounded-xl text-emerald-950 outline-none focus:border-emerald-600 transition-all" />
                        </div>
                        <div className="space-y-2">
-                         <label className="text-[9px] font-black uppercase tracking-widest text-emerald-950/30">Téléphone</label>
+                         <label className="text-[9px] font-black uppercase tracking-widest text-emerald-950/30">{t('admin.settings.phone')}</label>
                          <input type="text" name="phone" value={formData.phone} onChange={handleChange} className="w-full h-12 px-5 bg-neutral-50 border border-emerald-950/5 rounded-xl text-emerald-950 outline-none focus:border-emerald-600 transition-all" />
                        </div>
                        <div className="space-y-2">
-                         <label className="text-[9px] font-black uppercase tracking-widest text-emerald-950/30">Adresse</label>
+                         <label className="text-[9px] font-black uppercase tracking-widest text-emerald-950/30">{t('admin.settings.address')}</label>
                          <input type="text" name="address" value={formData.address} onChange={handleChange} className="w-full h-12 px-5 bg-neutral-50 border border-emerald-950/5 rounded-xl text-emerald-950 outline-none focus:border-emerald-600 transition-all" />
                        </div>
                        <div className="space-y-2">
-                         <label className="text-[9px] font-black uppercase tracking-widest text-emerald-950/30">Wilaya</label>
+                         <label className="text-[9px] font-black uppercase tracking-widest text-emerald-950/30">{t('admin.settings.wilaya')}</label>
                          <select name="wilaya" value={formData.wilaya} onChange={handleChange} className="w-full h-12 px-5 bg-neutral-50 border border-emerald-950/5 rounded-xl text-emerald-950 outline-none focus:border-emerald-600 transition-all">
                             {WILAYAS.map(w => <option key={w} value={w}>{w}</option>)}
                          </select>
@@ -185,13 +186,13 @@ export default function AdminSettingsClient({ initialSettings, initialAnnounceme
                   <section className="space-y-6">
                     <div className="flex items-center gap-4 border-b border-emerald-950/5 pb-4">
                        <Megaphone size={18} className="text-[#C9A84C]" />
-                       <h3 className="font-serif text-xl font-bold text-emerald-950">Affichage Storefront</h3>
+                       <h3 className="font-serif text-xl font-bold text-emerald-950">{t('admin.settings.storefront_display')}</h3>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                        <div className="bg-neutral-50/50 p-6 rounded-2xl border border-emerald-950/5 flex items-center justify-between">
                          <div className="space-y-1">
-                           <p className="text-sm font-bold text-emerald-950">Barre d'Annonce</p>
-                           <p className="text-[10px] text-emerald-950/40 uppercase tracking-widest">Activer la barre en haut du site</p>
+                           <p className="text-sm font-bold text-emerald-950">{t('admin.settings.announcement_bar')}</p>
+                           <p className="text-[10px] text-emerald-950/40 uppercase tracking-widest">{t('admin.settings.announcement_bar_desc')}</p>
                          </div>
                          <label className="relative inline-flex items-center cursor-pointer">
                            <input 
@@ -212,11 +213,11 @@ export default function AdminSettingsClient({ initialSettings, initialAnnounceme
                 <section className="space-y-8">
                    <div className="flex items-center gap-4 border-b border-emerald-950/5 pb-4">
                       <Camera size={18} className="text-rose-600" />
-                      <h3 className="font-serif text-xl font-bold text-emerald-950">Réseaux Sociaux</h3>
+                      <h3 className="font-serif text-xl font-bold text-emerald-950">{t('admin.settings.social_links')}</h3>
                    </div>
                    <div className="grid grid-cols-1 gap-6">
                       <div className="space-y-3">
-                         <label className="text-[9px] font-black uppercase tracking-widest text-emerald-950/30 px-1">Lien Instagram</label>
+                         <label className="text-[9px] font-black uppercase tracking-widest text-emerald-950/30 px-1">{t('admin.settings.instagram')}</label>
                          <div className="flex gap-4">
                             <div className="relative flex-1">
                                <Camera className="absolute left-4 top-1/2 -translate-y-1/2 text-rose-500" size={16} />
@@ -225,7 +226,7 @@ export default function AdminSettingsClient({ initialSettings, initialAnnounceme
                          </div>
                       </div>
                       <div className="space-y-3">
-                         <label className="text-[9px] font-black uppercase tracking-widest text-emerald-950/30 px-1">Lien Facebook</label>
+                         <label className="text-[9px] font-black uppercase tracking-widest text-emerald-950/30 px-1">{t('admin.settings.facebook')}</label>
                          <div className="flex gap-4">
                             <div className="relative flex-1">
                                <Globe className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-600" size={16} />
@@ -244,14 +245,14 @@ export default function AdminSettingsClient({ initialSettings, initialAnnounceme
                       <Megaphone size={40} />
                     </div>
                     <div>
-                      <h3 className="text-3xl font-bold font-serif text-emerald-950 mb-3 italic">Gestion des Annonces</h3>
+                      <h3 className="text-3xl font-bold font-serif text-emerald-950 mb-3 italic">{t('admin.settings.announcements_management_title')}</h3>
                       <p className="text-emerald-950/40 max-w-md mx-auto italic text-sm">
-                        La gestion des annonces a été déplacée vers un module dédié pour supporter les mises à jour en temps réel.
+                        {t('admin.settings.announcements_management_desc')}
                       </p>
                     </div>
                     <Link href="/admin/announcements">
                       <button className="h-16 px-12 bg-emerald-950 text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.3em] shadow-2xl hover:bg-[#C9A84C] transition-all flex items-center gap-4 mx-auto">
-                        Ouvrir le Module <ArrowUpRight size={18} />
+                        {t('admin.settings.open_module')} <ArrowUpRight size={18} />
                       </button>
                     </Link>
                   </div>
@@ -262,13 +263,13 @@ export default function AdminSettingsClient({ initialSettings, initialAnnounceme
                 <section className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
                   <div className="flex items-center gap-4 border-b border-emerald-950/5 pb-6">
                     <User size={24} className="text-[#C9A84C]" />
-                    <h3 className="font-serif text-2xl font-bold text-emerald-950 italic">Sécurité du Compte</h3>
+                    <h3 className="font-serif text-2xl font-bold text-emerald-950 italic">{t('admin.settings.account_security')}</h3>
                   </div>
 
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
                     <div className="space-y-8 bg-white p-10 rounded-[2.5rem] border border-emerald-950/5 shadow-xl shadow-emerald-900/5">
                       <div className="space-y-4">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-emerald-950/30 px-1">Nouveau mot de passe</label>
+                        <label className="text-[10px] font-black uppercase tracking-widest text-emerald-950/30 px-1">{t('admin.settings.new_password')}</label>
                         <input 
                           type="password"
                           value={passwords.new}
@@ -278,7 +279,7 @@ export default function AdminSettingsClient({ initialSettings, initialAnnounceme
                         />
                       </div>
                       <div className="space-y-4">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-emerald-950/30 px-1">Confirmer le mot de passe</label>
+                        <label className="text-[10px] font-black uppercase tracking-widest text-emerald-950/30 px-1">{t('admin.settings.confirm_password')}</label>
                         <input 
                           type="password"
                           value={passwords.confirm}
@@ -293,7 +294,7 @@ export default function AdminSettingsClient({ initialSettings, initialAnnounceme
                         className="w-full h-16 bg-emerald-950 text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.3em] shadow-2xl hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
                       >
                         {isUpdatingPassword ? <Loader2 size={16} className="animate-spin" /> : <ShieldCheck size={16} />}
-                        Mettre à jour la sécurité
+                        {t('admin.settings.update_button')}
                       </button>
                     </div>
 
@@ -301,13 +302,13 @@ export default function AdminSettingsClient({ initialSettings, initialAnnounceme
                       <div className="w-16 h-16 rounded-3xl bg-white shadow-lg flex items-center justify-center text-[#C9A84C]">
                         <AlertTriangle size={28} />
                       </div>
-                      <h4 className="font-bold font-serif text-xl text-emerald-950 italic">Politique de Sécurité</h4>
+                      <h4 className="font-bold font-serif text-xl text-emerald-950 italic">{t('admin.settings.security_policy')}</h4>
                       <div className="space-y-4 text-sm text-emerald-950/60 leading-relaxed italic">
-                        <p>Pour garantir l&apos;intégrité de votre plateforme Amouris, nous recommandons :</p>
+                        <p>{t('admin.settings.security_policy_intro')}</p>
                         <ul className="space-y-3 pl-4 border-l-2 border-amber-200">
-                          <li>• Un mot de passe de 12 caractères minimum</li>
-                          <li>• L&apos;utilisation de caractères spéciaux (!@#)</li>
-                          <li>• De ne jamais partager vos accès administrateur</li>
+                          <li>• {t('admin.settings.security_policy_rule1')}</li>
+                          <li>• {t('admin.settings.security_policy_rule2')}</li>
+                          <li>• {t('admin.settings.security_policy_rule3')}</li>
                         </ul>
                       </div>
                       <div className="pt-6 border-t border-amber-200/50">
@@ -315,7 +316,7 @@ export default function AdminSettingsClient({ initialSettings, initialAnnounceme
                           onClick={handleLogout}
                           className="flex items-center gap-3 text-rose-500 font-bold text-[10px] uppercase tracking-widest hover:text-rose-700 transition-colors"
                         >
-                          <LogOut size={16} /> Déconnexion sécurisée
+                          <LogOut size={16} /> {t('admin.settings.logout')}
                         </button>
                       </div>
                     </div>

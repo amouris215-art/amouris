@@ -8,12 +8,14 @@ import { CollectionModal } from '@/components/admin/CollectionModal'
 import { deleteCollectionAction } from '@/lib/actions/collections'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
+import { useI18n } from '@/i18n/i18n-context'
 
 interface CollectionsClientProps {
   initialCollections: (Collection & { product_count: number })[]
 }
 
 export default function CollectionsClient({ initialCollections }: CollectionsClientProps) {
+  const { t, dir, language } = useI18n();
   const router = useRouter()
   const collections = initialCollections
   const [search, setSearch] = useState('')
@@ -40,33 +42,34 @@ export default function CollectionsClient({ initialCollections }: CollectionsCli
 
   const handleDelete = async (col: Collection & { product_count: number }) => {
     if (col.product_count > 0) {
-      toast.error(`Impossible de supprimer : cette collection contient ${col.product_count} références.`)
+      toast.error(t('admin.collections.delete_error_count', { count: col.product_count }))
       return
     }
-    if (confirm('Voulez-vous vraiment supprimer cette collection ?')) {
+    if (confirm(t('admin.collections.confirm_delete'))) {
       try {
         const result = await deleteCollectionAction(col.id)
         if (result.success) {
           router.refresh()
-          toast.success('Collection supprimée')
+          toast.success(t('admin.collections.toast_success_delete'))
         } else {
-          toast.error('Erreur: ' + result.error)
+          toast.error(t('admin.collections.toast_error') + ': ' + result.error)
         }
       } catch (err: any) {
-        toast.error('Erreur: ' + err.message)
+        toast.error(t('admin.collections.toast_error') + ': ' + err.message)
       }
     }
   }
 
   return (
-    <div className="space-y-12 pb-20 font-sans">
+    <div className="space-y-12 pb-20 font-sans" dir={dir}>
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-8">
         <motion.div 
-          initial={{ opacity: 0, x: -20 }}
+          initial={{ opacity: 0, x: dir === 'rtl' ? 20 : -20 }}
           animate={{ opacity: 1, x: 0 }}
+          className={dir === 'rtl' ? 'text-right' : ''}
         >
-           <h1 className="font-serif text-5xl text-emerald-950 mb-2 font-bold italic">Editions Limitées</h1>
-           <p className="text-[11px] font-black uppercase tracking-[0.5em] text-[#C9A84C]/80">Gestion des collections thématiques</p>
+           <h1 className="font-serif text-5xl text-emerald-950 mb-2 font-bold italic">{t('admin.collections.title')}</h1>
+           <p className="text-[11px] font-black uppercase tracking-[0.5em] text-[#C9A84C]/80">{t('admin.collections.subtitle')}</p>
         </motion.div>
         <motion.button 
           whileHover={{ scale: 1.02 }}
@@ -74,18 +77,18 @@ export default function CollectionsClient({ initialCollections }: CollectionsCli
           onClick={handleAdd}
           className="bg-amber-950 text-white px-8 py-5 rounded-[1.5rem] text-[10px] font-black uppercase tracking-widest shadow-2xl shadow-amber-900/30 hover:shadow-amber-900/40 transition-all flex items-center gap-3 font-sans"
         >
-          <Plus size={18} /> Nouvelle Collection
+          <Plus size={18} /> {t('admin.collections.add_button')}
         </motion.button>
       </header>
 
       <section className="relative group">
-        <Search size={18} className="absolute left-6 top-1/2 -translate-y-1/2 text-emerald-950/20 group-focus-within:text-[#C9A84C] transition-colors" />
+        <Search size={18} className={`absolute ${dir === 'rtl' ? 'right-6' : 'left-6'} top-1/2 -translate-y-1/2 text-emerald-950/20 group-focus-within:text-[#C9A84C] transition-colors`} />
         <input 
           type="text"
-          placeholder="Rechercher une collection..."
+          placeholder={t('admin.collections.search_placeholder')}
           value={search}
           onChange={e => setSearch(e.target.value)}
-          className="w-full h-16 pl-16 pr-8 bg-white border border-emerald-950/5 rounded-2xl outline-none focus:border-[#C9A84C] shadow-sm font-medium text-emerald-950 transition-all font-sans"
+          className={`w-full h-16 ${dir === 'rtl' ? 'pr-16 pl-8 text-right' : 'pl-16 pr-8'} bg-white border border-emerald-950/5 rounded-2xl outline-none focus:border-[#C9A84C] shadow-sm font-medium text-emerald-950 transition-all font-sans`}
         />
       </section>
 
@@ -105,7 +108,7 @@ export default function CollectionsClient({ initialCollections }: CollectionsCli
                   {collection.cover_image && !imageErrors[collection.id] ? (
                     <img 
                       src={collection.cover_image} 
-                      alt={collection.name_fr} 
+                      alt={language === 'ar' ? (collection.name_ar || collection.name_fr) : collection.name_fr} 
                       className="w-full h-full object-cover" 
                       onError={() => setImageErrors(prev => ({ ...prev, [collection.id]: true }))}
                     />
@@ -114,25 +117,25 @@ export default function CollectionsClient({ initialCollections }: CollectionsCli
                       <Layers size={64} />
                     </div>
                   )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-emerald-950/80 via-transparent to-transparent opacity-60" />
-                  <div className="absolute bottom-6 left-8">
-                     <h3 className="text-white font-serif text-3xl font-bold italic">{collection.name_fr}</h3>
-                     <p className="text-white/60 text-xl font-arabic text-right" dir="rtl">{collection.name_ar}</p>
+                  <div className={`absolute inset-0 bg-gradient-to-t from-emerald-950/80 via-transparent to-transparent opacity-60`} />
+                  <div className={`absolute bottom-6 ${dir === 'rtl' ? 'right-8 text-right' : 'left-8'}`}>
+                     <h3 className="text-white font-serif text-3xl font-bold italic">{language === 'ar' ? (collection.name_ar || collection.name_fr) : collection.name_fr}</h3>
+                     {language !== 'ar' && collection.name_ar && <p className="text-white/60 text-xl font-arabic">{collection.name_ar}</p>}
                   </div>
                 </div>
 
                 <div className="p-8 space-y-6">
-                  <p className="text-sm text-emerald-950/70 leading-relaxed font-medium line-clamp-2">
-                     {collection.description_fr || "Découvrez une sélection exclusive de produits Amouris."}
+                  <p className={`text-sm text-emerald-950/70 leading-relaxed font-medium line-clamp-2 ${dir === 'rtl' ? 'text-right' : ''}`}>
+                     {(language === 'ar' ? (collection.description_ar || collection.description_fr) : collection.description_fr) || t('admin.collections.default_desc')}
                   </p>
                   
-                  <div className="flex items-center justify-between pt-6 border-t border-emerald-950/5">
-                     <div className="px-5 py-2.5 bg-amber-50 rounded-[1rem] flex items-center gap-2 border border-amber-100/50">
+                  <div className={`flex items-center justify-between pt-6 border-t border-emerald-950/5 ${dir === 'rtl' ? 'flex-row-reverse' : ''}`}>
+                     <div className={`px-5 py-2.5 bg-amber-50 rounded-[1rem] flex items-center gap-2 border border-amber-100/50 ${dir === 'rtl' ? 'flex-row-reverse' : ''}`}>
                         <Box size={14} className="text-amber-600" />
-                        <span className="text-[11px] font-black text-amber-900 uppercase tracking-widest">{collection.product_count} RÉFÉRENCES</span>
+                        <span className="text-[11px] font-black text-amber-900 uppercase tracking-widest">{collection.product_count} {t('admin.collections.refs_label')}</span>
                      </div>
 
-                    <div className="flex gap-2">
+                    <div className={`flex gap-2 ${dir === 'rtl' ? 'flex-row-reverse' : ''}`}>
                       <button onClick={() => handleEdit(collection)} className="w-12 h-12 rounded-2xl bg-white border border-emerald-950/5 flex items-center justify-center text-emerald-950/40 hover:text-emerald-950 hover:border-emerald-950/20 transition-all shadow-sm">
                         <Edit2 size={16} />
                       </button>
@@ -151,7 +154,7 @@ export default function CollectionsClient({ initialCollections }: CollectionsCli
       {filtered.length === 0 && (
         <div className="py-32 text-center text-emerald-950/20 font-sans">
           <Layers size={48} className="mx-auto mb-4 opacity-20" />
-          <p className="font-serif text-2xl italic">Aucune collection trouvée.</p>
+          <p className="font-serif text-2xl italic">{t('admin.collections.no_results')}</p>
         </div>
       )}
 

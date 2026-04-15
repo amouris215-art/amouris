@@ -23,7 +23,7 @@ export default async function AdminProductsPage() {
         categories ( id, name_fr, name_ar ),
         brands ( id, name, name_ar ),
         product_tags ( tag_id, tags ( id, name_fr, name_ar ) ),
-        flacon_variants ( id, size_ml, color_name, shape, price, stock_units )
+        flacon_variants ( id, size_ml, color_name, shape, price, stock_units, carton_quantity, carton_price )
       `)
       .order('created_at', { ascending: false }),
     supabase.from('categories').select('id, name_fr, name_ar'),

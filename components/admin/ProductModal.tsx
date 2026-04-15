@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
+import { useI18n } from '@/i18n/i18n-context';
 
 interface ProductModalProps {
   product?: any | null;
@@ -34,6 +35,7 @@ export function ProductModal({
   collections, 
   tags
 }: ProductModalProps) {
+  const { t, language, dir } = useI18n();
   const [activeTab, setActiveTab] = useState<'details' | 'taxonomy' | 'inventory' | 'media'>('details');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
@@ -71,7 +73,7 @@ export function ProductModal({
         category_id: product.category_id ?? '',
         brand_id: product.brand_id ?? '',
         collection_id: product.collection_id ?? '',
-        tag_ids: product.tags?.map((t: any) => t.tag?.id).filter(Boolean) || product.tag_ids || [],
+        tag_ids: product.product_tags?.map((pt: any) => pt.tag_id).filter(Boolean) || product.tag_ids || [],
         price_per_gram: product.price_per_gram ?? '',
         stock_grams: product.stock_grams ?? '',
         base_price: product.base_price ?? '',
@@ -165,7 +167,7 @@ export function ProductModal({
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name_fr.trim()) {
-      setError('Le nom français est requis');
+      setError(t('admin.products.error_name_fr'));
       setActiveTab('details');
       return;
     }
@@ -193,7 +195,7 @@ export function ProductModal({
     }
 
     if (result.success) {
-      toast.success(product ? 'Produit mis à jour avec succès' : 'Produit créé avec succès');
+      toast.success(product ? t('admin.products.success_update') : t('admin.products.success_create'));
       onSave();
       onClose();
     } else {
@@ -205,7 +207,7 @@ export function ProductModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] md:max-h-[85vh] p-0 overflow-hidden bg-white md:rounded-[2.5rem] border-none shadow-2xl font-sans flex flex-col max-sm:fixed max-sm:bottom-0 max-sm:top-auto max-sm:translate-y-0 max-sm:rounded-t-[2.5rem] max-sm:w-full max-sm:max-w-none animate-in slide-in-from-bottom duration-500">
+      <DialogContent className="sm:max-w-2xl max-h-[90vh] md:max-h-[85vh] p-0 overflow-hidden bg-white md:rounded-[2.5rem] border-none shadow-2xl font-sans flex flex-col max-sm:fixed max-sm:bottom-0 max-sm:top-auto max-sm:translate-y-0 max-sm:rounded-t-[2.5rem] max-sm:w-full max-sm:max-w-none animate-in slide-in-from-bottom duration-500" dir={dir}>
         {/* Header Vert Émeraude */}
         <div className="bg-[#0a3d2e] p-6 md:p-8 text-white relative overflow-hidden shrink-0">
           <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-400/10 rounded-full blur-3xl -mr-16 -mt-16" />
@@ -219,9 +221,9 @@ export function ProductModal({
               </div>
               <div>
                 <DialogTitle className="text-xl md:text-2xl font-serif font-bold italic">
-                  {product ? 'Modification' : 'Référence'}
+                  {product ? t('admin.products.edit_modal_title_edit') : t('admin.products.edit_modal_title_new')}
                 </DialogTitle>
-                <p className="text-emerald-100/40 text-[8px] md:text-[10px] uppercase tracking-widest font-black">Catalogue Maître</p>
+                <p className="text-emerald-100/40 text-[8px] md:text-[10px] uppercase tracking-widest font-black">{t('admin.products.title')}</p>
               </div>
             </div>
             <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors">
@@ -233,10 +235,10 @@ export function ProductModal({
         {/* Tab Navigation */}
         <div className="flex border-b border-gray-100 bg-gray-50/50 shrink-0 overflow-x-auto no-scrollbar scroll-smooth snap-x">
           {[
-            { id: 'details', label: 'Détails', icon: Info },
-            { id: 'taxonomy', label: 'Taxonomie', icon: TagIcon },
-            { id: 'inventory', label: 'Inventaire', icon: Ruler },
-            { id: 'media', label: 'Médias', icon: Layers }
+            { id: 'details', label: t('admin.products.tab_details'), icon: Info },
+            { id: 'taxonomy', label: t('admin.products.tab_taxonomy'), icon: TagIcon },
+            { id: 'inventory', label: t('admin.products.tab_inventory'), icon: Ruler },
+            { id: 'media', label: t('admin.products.tab_media'), icon: Layers }
           ].map(tab => (
             <button
               key={tab.id}
@@ -253,8 +255,8 @@ export function ProductModal({
         </div>
 
         {/* Form Content */}
-        <div className="flex-1 overflow-y-auto no-scrollbar">
-          <form id="product-modal-form" onSubmit={handleSave} className="p-8">
+        <div className="flex-1 overflow-y-auto min-h-0">
+          <form id="product-modal-form" onSubmit={handleSave} className="p-8 space-y-8">
             <AnimatePresence mode="wait">
               {activeTab === 'details' && (
                 <motion.div 
@@ -265,12 +267,12 @@ export function ProductModal({
                   {/* Type Switcher */}
                   {!product && (
                     <div className="space-y-3">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 px-1">Classification Catalogue</label>
+                      <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 px-1">{t('admin.products.classification_cat')}</label>
                       <div className="flex p-1.5 bg-gray-100 rounded-2xl w-full">
                         {[
-                          { id: 'perfume', label: 'Huile / Parfum' },
-                          { id: 'flacon', label: 'Flacon Vide' },
-                          { id: 'accessory', label: 'Accessoire' }
+                          { id: 'perfume', label: t('admin.products.label_huile_parfum') },
+                          { id: 'flacon', label: t('admin.products.label_flacon_vide') },
+                          { id: 'accessory', label: t('admin.products.label_accessory') }
                         ].map(t => (
                           <button
                             key={t.id} type="button" onClick={() => setFormData({...formData, product_type: t.id})}
@@ -285,14 +287,14 @@ export function ProductModal({
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <label className="text-xs font-bold text-gray-700">Nom FR <span className="text-rose-500">*</span></label>
+                      <label className="text-xs font-bold text-gray-700">{t('admin.products.field_name_fr')} <span className="text-rose-500">*</span></label>
                       <input 
                         required value={formData.name_fr} onChange={e => setFormData({...formData, name_fr: e.target.value})}
                         className="w-full h-12 px-4 rounded-xl border border-gray-100 bg-gray-50 focus:bg-white focus:border-emerald-500 outline-none transition-all font-medium"
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-xs font-bold text-gray-700 text-right block">الاسم بالعربية</label>
+                      <label className="text-xs font-bold text-gray-700 text-right block">{t('admin.products.field_name_ar')}</label>
                       <input 
                         dir="rtl" value={formData.name_ar} onChange={e => setFormData({...formData, name_ar: e.target.value})}
                         className="w-full h-12 px-4 rounded-xl border border-gray-100 bg-gray-50 focus:bg-white focus:border-emerald-500 outline-none transition-all font-arabic text-lg text-right"
@@ -301,7 +303,7 @@ export function ProductModal({
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-xs font-bold text-gray-700">Histoire Olfactive (FR)</label>
+                    <label className="text-xs font-bold text-gray-700">{t('admin.products.field_desc_fr')}</label>
                     <textarea 
                       rows={3} value={formData.description_fr} onChange={e => setFormData({...formData, description_fr: e.target.value})}
                       className="w-full p-4 rounded-xl border border-gray-100 bg-gray-50 focus:bg-white focus:border-emerald-500 outline-none transition-all resize-none text-sm leading-relaxed"
@@ -309,7 +311,7 @@ export function ProductModal({
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-xs font-bold text-gray-700 text-right block">الوصف بالتفصيل (AR)</label>
+                    <label className="text-xs font-bold text-gray-700 text-right block">{t('admin.products.field_desc_ar')}</label>
                     <textarea 
                       dir="rtl" rows={3} value={formData.description_ar} onChange={e => setFormData({...formData, description_ar: e.target.value})}
                       className="w-full p-4 rounded-xl border border-gray-100 bg-gray-50 focus:bg-white focus:border-emerald-500 outline-none transition-all resize-none font-arabic text-lg text-right leading-relaxed"
@@ -317,19 +319,19 @@ export function ProductModal({
                   </div>
 
                   <div className="space-y-3">
-                    <label className="text-xs font-bold text-gray-700">Statut de Publication</label>
+                    <label className="text-xs font-bold text-gray-700">{t('admin.products.field_status')}</label>
                     <div className="flex gap-4">
                       <button 
                         type="button" onClick={() => setFormData({...formData, status: 'active'})}
                         className={`flex-1 flex items-center justify-center gap-3 h-12 rounded-xl border-2 transition-all ${formData.status === 'active' ? 'border-emerald-600 bg-emerald-50 text-emerald-900' : 'border-gray-100 text-gray-400'}`}
                       >
-                         <Eye size={16} /> <span className="text-[10px] font-black uppercase tracking-widest">Actif</span>
+                         <Eye size={16} /> <span className="text-[10px] font-black uppercase tracking-widest">{t('admin.products.status_active')}</span>
                       </button>
                       <button 
                          type="button" onClick={() => setFormData({...formData, status: 'draft'})}
                          className={`flex-1 flex items-center justify-center gap-3 h-12 rounded-xl border-2 transition-all ${formData.status === 'draft' ? 'border-amber-500 bg-amber-50 text-amber-900' : 'border-gray-100 text-gray-400'}`}
                       >
-                         <EyeOff size={16} /> <span className="text-[10px] font-black uppercase tracking-widest">Brouillon</span>
+                         <EyeOff size={16} /> <span className="text-[10px] font-black uppercase tracking-widest">{t('admin.products.status_draft')}</span>
                       </button>
                     </div>
                   </div>
@@ -344,52 +346,52 @@ export function ProductModal({
                 >
                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2">
-                         <label className="text-xs font-bold text-gray-700">Catégorie</label>
+                         <label className="text-xs font-bold text-gray-700">{t('admin.categories.title')}</label>
                          <select 
                            value={formData.category_id} onChange={e => setFormData({...formData, category_id: e.target.value})}
                            className="w-full h-12 px-4 rounded-xl border border-gray-100 bg-gray-50 outline-none text-sm font-medium"
                          >
-                            <option value="">Sélectionner</option>
-                            {categories.map(c => <option key={c.id} value={c.id}>{c.name_fr}</option>)}
+                            <option value="">{t('admin.products.select_category')}</option>
+                            {categories.map(c => <option key={c.id} value={c.id}>{language === 'ar' ? (c.name_ar || c.name_fr) : c.name_fr}</option>)}
                          </select>
                       </div>
                       <div className="space-y-2">
-                         <label className="text-xs font-bold text-gray-700">Marque / Maison</label>
+                         <label className="text-xs font-bold text-gray-700">{t('admin.brands.title')}</label>
                          <select 
                            value={formData.brand_id} onChange={e => setFormData({...formData, brand_id: e.target.value})}
                            className="w-full h-12 px-4 rounded-xl border border-gray-100 bg-gray-50 outline-none text-sm font-medium"
                          >
-                            <option value="">Toutes marques</option>
-                            {brands.map(b => <option key={b.id} value={b.id}>{b.name || b.name_fr}</option>)}
+                            <option value="">{t('admin.products.select_brand')}</option>
+                            {brands.map(b => <option key={b.id} value={b.id}>{language === 'ar' ? (b.name_ar || b.name || b.name_fr) : (b.name || b.name_fr)}</option>)}
                          </select>
                       </div>
                       <div className="space-y-2 md:col-span-2">
-                         <label className="text-xs font-bold text-gray-700">Collection</label>
+                         <label className="text-xs font-bold text-gray-700">{t('admin.collections.title')}</label>
                          <select 
                            value={formData.collection_id} onChange={e => setFormData({...formData, collection_id: e.target.value})}
                            className="w-full h-12 px-4 rounded-xl border border-gray-100 bg-gray-50 outline-none text-sm font-medium"
                          >
-                            <option value="">Sans collection</option>
-                            {collections.map(col => <option key={col.id} value={col.id}>{col.name_fr}</option>)}
+                            <option value="">{t('admin.products.select_collection')}</option>
+                            {collections.map(col => <option key={col.id} value={col.id}>{language === 'ar' ? (col.name_ar || col.name_fr) : col.name_fr}</option>)}
                          </select>
                       </div>
                    </div>
 
                    <div className="space-y-4">
-                      <label className="text-xs font-bold text-gray-700">Tags de mise en avant</label>
+                      <label className="text-xs font-bold text-gray-700">{t('admin.products.tags_label')}</label>
                       <div className="flex flex-wrap gap-2">
-                         {tags.map(t => {
-                            const isSelected = formData.tag_ids.includes(t.id);
+                         {tags.map(t_tag => {
+                            const isSelected = formData.tag_ids.includes(t_tag.id);
                             return (
                                <button
-                                 key={t.id} type="button"
+                                 key={t_tag.id} type="button"
                                  onClick={() => setFormData({
                                     ...formData,
-                                    tag_ids: isSelected ? formData.tag_ids.filter((id: any) => id !== t.id) : [...formData.tag_ids, t.id]
+                                    tag_ids: isSelected ? formData.tag_ids.filter((id: any) => id !== t_tag.id) : [...formData.tag_ids, t_tag.id]
                                  })}
                                  className={`px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest border transition-all ${isSelected ? 'bg-emerald-900 border-emerald-900 text-white shadow-md' : 'bg-white border-gray-100 text-gray-400 hover:border-emerald-300'}`}
                                >
-                                  {t.name_fr}
+                                  {language === 'ar' ? (t_tag.name_ar || t_tag.name_fr) : t_tag.name_fr}
                                </button>
                             );
                          })}
@@ -408,14 +410,14 @@ export function ProductModal({
                       <div className="grid grid-cols-2 gap-6 p-8 bg-emerald-950 rounded-3xl text-white shadow-xl relative overflow-hidden">
                          <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-400/5 rounded-full blur-2xl" />
                          <div className="space-y-4">
-                            <label className="text-[10px] font-black uppercase tracking-widest text-emerald-400">Prix (DZD/g)</label>
+                            <label className="text-[10px] font-black uppercase tracking-widest text-emerald-400">{t('admin.products.price_label')}</label>
                             <input 
                               type="number" step="0.01" value={formData.price_per_gram} onChange={e => setFormData({...formData, price_per_gram: e.target.value})}
                               className="w-full bg-transparent border-b border-emerald-800 text-3xl font-serif text-[#C9A84C] outline-none py-2"
                             />
                          </div>
                          <div className="space-y-4">
-                            <label className="text-[10px] font-black uppercase tracking-widest text-emerald-400">Stock (g)</label>
+                            <label className="text-[10px] font-black uppercase tracking-widest text-emerald-400">{t('admin.products.stock_label')}</label>
                             <input 
                                type="number" step="0.01" value={formData.stock_grams} onChange={e => setFormData({...formData, stock_grams: e.target.value})}
                                className="w-full bg-transparent border-b border-emerald-800 text-3xl font-serif text-white outline-none py-2"
@@ -426,8 +428,8 @@ export function ProductModal({
                       <div className="space-y-6">
                          <div className="flex items-end justify-between px-2">
                             <div className="space-y-1">
-                               <h3 className="text-lg font-serif font-bold italic text-emerald-950">Options & Variantes</h3>
-                               <p className="text-[10px] uppercase font-black tracking-widest text-gray-400">Gérez les styles et contenances</p>
+                               <h3 className="text-lg font-serif font-bold italic text-emerald-950">{t('admin.products.options_variants')}</h3>
+                               <p className="text-[10px] uppercase font-black tracking-widest text-gray-400">{t('admin.products.manage_styles')}</p>
                             </div>
                             <button 
                                type="button"
@@ -437,7 +439,7 @@ export function ProductModal({
                                })}
                                className="flex items-center gap-2 px-4 py-2 bg-emerald-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-800 transition-all"
                             >
-                               <Plus size={14} /> Ajouter
+                               <Plus size={14} /> {t('admin.products.add_variant')}
                             </button>
                          </div>
 
@@ -445,7 +447,7 @@ export function ProductModal({
                             {formData.variants.length === 0 && (
                                <div className="py-12 border-2 border-dashed border-gray-100 rounded-2xl flex flex-col items-center justify-center text-gray-300">
                                   <Pipette size={32} className="mb-2 opacity-20" />
-                                  <p className="text-xs font-bold italic">Aucune variante enregistrée</p>
+                                  <p className="text-xs font-bold italic">{t('admin.products.no_variants')}</p>
                                </div>
                             )}
                             {formData.variants.map((v: any, idx: number) => (
@@ -463,7 +465,7 @@ export function ProductModal({
                                      )}
                                      
                                      <div className="space-y-1 lg:col-span-2">
-                                        <label className="text-[9px] font-black uppercase tracking-widest text-gray-400">Style / Coul.</label>
+                                        <label className="text-[9px] font-black uppercase tracking-widest text-gray-400">{t('admin.products.style_color')}</label>
                                         <div className="flex gap-2">
                                            <div className="relative w-10 h-10 shrink-0">
                                               <input 
@@ -509,7 +511,7 @@ export function ProductModal({
                                      </div>
 
                                      <div className="space-y-1">
-                                        <label className="text-[9px] font-black uppercase tracking-widest text-gray-400">Prix DZD</label>
+                                        <label className="text-[9px] font-black uppercase tracking-widest text-gray-400">{t('admin.products.table.price')} DZD</label>
                                         <input type="number" value={v.price} onChange={e => {
                                            const newV = [...formData.variants];
                                            newV[idx].price = +e.target.value;
@@ -517,7 +519,7 @@ export function ProductModal({
                                         }} className="w-full h-10 px-3 bg-white rounded-lg border border-transparent focus:border-emerald-500 outline-none text-xs font-bold text-emerald-700" />
                                      </div>
                                      <div className="space-y-1">
-                                        <label className="text-[9px] font-black uppercase tracking-widest text-gray-400">Stock</label>
+                                        <label className="text-[9px] font-black uppercase tracking-widest text-gray-400">{t('admin.products.table.inventory')}</label>
                                         <input type="number" value={v.stock_units} onChange={e => {
                                            const newV = [...formData.variants];
                                            newV[idx].stock_units = +e.target.value;
@@ -528,10 +530,10 @@ export function ProductModal({
                                      {/* Carton / Complete Box Integration */}
                                      <div className="col-span-2 md:col-span-4 lg:col-span-6 grid grid-cols-2 md:grid-cols-3 gap-4 p-4 bg-emerald-50/50 rounded-xl border border-emerald-100/50">
                                         <div className="col-span-full mb-1">
-                                           <p className="text-[9px] font-black uppercase tracking-widest text-emerald-900/40">Option Carton (كرطون)</p>
+                                           <p className="text-[9px] font-black uppercase tracking-widest text-emerald-900/40">{t('admin.products.carton_option')}</p>
                                         </div>
                                         <div className="space-y-1">
-                                           <label className="text-[9px] font-black uppercase tracking-widest text-emerald-700/60">Qté par Carton</label>
+                                           <label className="text-[9px] font-black uppercase tracking-widest text-emerald-700/60">{t('admin.products.qte_carton')}</label>
                                            <input type="number" placeholder="Ex: 12" value={v.carton_quantity || ''} onChange={e => {
                                               const newV = [...formData.variants];
                                               newV[idx].carton_quantity = e.target.value ? +e.target.value : 0;
@@ -539,7 +541,7 @@ export function ProductModal({
                                            }} className="w-full h-10 px-3 bg-white rounded-lg border border-emerald-100 focus:border-emerald-500 outline-none text-xs font-bold" />
                                         </div>
                                         <div className="space-y-1">
-                                           <label className="text-[9px] font-black uppercase tracking-widest text-emerald-700/60">Prix Carton DZD</label>
+                                           <label className="text-[9px] font-black uppercase tracking-widest text-emerald-700/60">{t('admin.products.price_carton')}</label>
                                            <input type="number" placeholder="Ex: 5000" value={v.carton_price || ''} onChange={e => {
                                               const newV = [...formData.variants];
                                               newV[idx].carton_price = e.target.value ? +e.target.value : 0;
@@ -549,7 +551,7 @@ export function ProductModal({
                                         <div className="hidden md:flex flex-col justify-center">
                                            {v.carton_quantity > 0 && v.carton_price > 0 && (
                                               <p className="text-[9px] text-emerald-900/40 italic">
-                                                 Soit {(v.carton_price / v.carton_quantity).toFixed(2)} DZD / unité
+                                                 {t('admin.products.soit_price')} {(v.carton_price / v.carton_quantity).toFixed(2)} DZD / {t('admin.products.table.id_date')}
                                               </p>
                                            )}
                                         </div>
@@ -561,7 +563,7 @@ export function ProductModal({
                                         ...formData,
                                         variants: formData.variants.filter((_:any, i:number) => i !== idx)
                                      })}
-                                     className="absolute top-4 right-4 text-gray-300 hover:text-rose-500 transition-colors"
+                                     className={`absolute top-4 ${dir === 'rtl' ? 'left-4' : 'right-4'} text-gray-300 hover:text-rose-500 transition-colors`}
                                   >
                                      <Trash2 size={14} />
                                   </button>
@@ -608,14 +610,14 @@ export function ProductModal({
                                   <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center text-gray-400 mb-2">
                                      <Upload size={20} />
                                   </div>
-                                  <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">Importer</span>
+                                  <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">{t('admin.products.import_image')}</span>
                                </>
                             )}
                             <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} disabled={isUploadingImage} />
                          </label>
                       )}
                    </div>
-                   <p className="text-[9px] text-gray-400 uppercase tracking-widest font-black text-center pt-2">Max 3 images — JPG/PNG/WEBP (2Mo max)</p>
+                   <p className="text-[9px] text-gray-400 uppercase tracking-widest font-black text-center pt-2">{t('admin.products.max_images')}</p>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -626,10 +628,10 @@ export function ProductModal({
         <div className="p-6 md:p-8 border-t border-gray-100 shrink-0 pb-safe">
            <div className="hidden md:block p-4 bg-amber-50 rounded-2xl border border-amber-100/50 mb-8">
               <p className="text-[10px] font-black uppercase tracking-widest text-amber-800 mb-1 flex items-center gap-2">
-                 <Sparkles size={12} className="text-amber-500" /> Conseil Amouris
+                 <Sparkles size={12} className="text-amber-500" /> {t('admin.products.conseil')}
               </p>
               <p className="text-xs text-amber-900/60 italic leading-relaxed">
-                 Privilégiez des photos haute résolution sur fond neutre pour magnifier vos produits.
+                 {t('admin.products.conseil_text')}
               </p>
            </div>
 
@@ -640,7 +642,7 @@ export function ProductModal({
                 type="button" onClick={onClose}
                 className="flex-1 h-12 md:h-14 rounded-xl border border-gray-200 text-gray-400 text-[9px] md:text-[10px] font-black uppercase tracking-widest hover:bg-gray-50 hover:text-gray-600 transition-all font-sans"
               >
-                Annuler
+                {t('admin.common.cancel')}
               </button>
               <button 
                 form="product-modal-form" type="submit" disabled={isSubmitting}
@@ -648,8 +650,8 @@ export function ProductModal({
               >
                 {isSubmitting ? <Loader2 className="animate-spin" size={16} /> : (
                   <>
-                    <span className="truncate">{product ? 'Valider' : 'Inscrire'}</span>
-                    <ChevronRight size={16} className="text-emerald-400 hidden sm:block" />
+                    <span className="truncate">{product ? t('admin.products.validation_button') : t('admin.products.inscription_button')}</span>
+                    <ChevronRight size={16} className={`text-emerald-400 hidden sm:block ${dir === 'rtl' ? 'rotate-180' : ''}`} />
                   </>
                 )}
               </button>

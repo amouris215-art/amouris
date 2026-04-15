@@ -308,7 +308,7 @@ export default function AdminOrderDetailClient({ initialOrder, settings }: Admin
           <section className="bg-white p-8 rounded-[2.5rem] border border-emerald-950/5 shadow-sm">
              <h2 className="text-xl font-bold font-serif text-emerald-950 mb-8 border-b border-emerald-950/5 pb-6 flex items-center gap-3">
                 <User size={20} className="text-[#C9A84C]" />
-                Profile Client
+                {t('admin.customers_profile.profile_title')}
              </h2>
              
              <div className="space-y-6">
@@ -318,7 +318,7 @@ export default function AdminOrderDetailClient({ initialOrder, settings }: Admin
                    </div>
                    <div>
                       <p className="text-[10px] font-black uppercase tracking-widest text-[#C9A84C] mb-1">
-                        Nom complet
+                        {t('admin.customers_profile.full_name')}
                       </p>
                        <p className="text-lg font-bold text-emerald-950">
                         {order.is_registered_customer && order.customer 
@@ -339,7 +339,7 @@ export default function AdminOrderDetailClient({ initialOrder, settings }: Admin
                    </div>
                    <div>
                       <div>
-                         <p className="text-[10px] font-black uppercase tracking-widest text-blue-500/80 mb-1">Contact</p>
+                          <p className="text-[10px] font-black uppercase tracking-widest text-blue-500/80 mb-1">{t('account.phone')}</p>
                          <p className="font-bold text-emerald-950 tracking-wide">
                             {order.is_registered_customer && order.customer 
                               ? order.customer.phone 
@@ -354,7 +354,7 @@ export default function AdminOrderDetailClient({ initialOrder, settings }: Admin
                       <MapPin size={18} />
                    </div>
                    <div>
-                      <p className="text-[10px] font-black uppercase tracking-widest text-amber-500/80 mb-1">Destination</p>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-amber-500/80 mb-1">{t('admin.orders.destination')}</p>
                       <p className="font-bold text-emerald-950 lowercase first-letter:uppercase tracking-wide">
                         {order.is_registered_customer && order.customer 
                           ? `${order.customer.wilaya} ${order.customer.commune ? `- ${order.customer.commune}` : ''}` 
@@ -367,7 +367,7 @@ export default function AdminOrderDetailClient({ initialOrder, settings }: Admin
              {order.is_registered_customer && (
                <Link href={`/admin/customers/${order.customer_id}`} className="block mt-8">
                   <button className="w-full py-3 bg-neutral-50 text-emerald-950/60 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-50 hover:text-emerald-950 transition-colors">
-                     Voir le profil complet
+                      {t('admin.customers_profile.view_full_profile')}
                   </button>
                </Link>
              )}

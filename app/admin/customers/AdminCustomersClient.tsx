@@ -42,7 +42,7 @@ const item = {
 }
 
 export default function AdminCustomersClient({ initialCustomers }: AdminCustomersClientProps) {
-  const { t, language } = useI18n()
+  const { t, language, dir } = useI18n()
   const router = useRouter()
   
   const [search, setSearch] = useState('')
@@ -82,9 +82,9 @@ export default function AdminCustomersClient({ initialCustomers }: AdminCustomer
     try {
       await toggleFreezeAction(id, !currentIsFrozen)
       router.refresh()
-      toast.success(currentIsFrozen ? 'Compte réactivé' : 'Compte suspendu')
+      toast.success(currentIsFrozen ? t('admin.customers.success_reactivated') : t('admin.customers.success_suspended'))
     } catch (err: any) {
-      toast.error('Erreur: ' + err.message)
+      toast.error(t('common.error') + ': ' + err.message)
     } finally {
       setIsUpdating(null)
     }
@@ -93,17 +93,13 @@ export default function AdminCustomersClient({ initialCustomers }: AdminCustomer
   const handleExportToExcel = () => {
     try {
       const exportData = filtered.map(c => ({
-        'Nom': c.last_name || '',
-        'Prénom': c.first_name || '',
+        [t('admin.customers.table.partners')]: `${c.first_name || ''} ${c.last_name || ''}`,
         'Email': c.email || '',
-        'Téléphone': c.phone || '',
-        'Wilaya': c.wilaya || '',
+        [t('settings.phone')]: c.phone || '',
+        [t('settings.wilaya')]: c.wilaya || '',
         'Commune': c.commune || '',
-        'Boutique': c.shop_name || '',
-        'Commandes': c.order_count || 0,
-        'Dépenses (DZD)': c.total_spent || 0,
-        'Statut': c.is_frozen ? 'Suspendu' : 'Actif',
-        "Date d'inscription": new Date(c.created_at).toLocaleDateString()
+        [t('admin.customers.table.volume')]: c.total_spent || 0,
+        [t('admin.customers.filter_status')]: c.is_frozen ? t('admin.customers.status_frozen') : t('admin.customers.status_active')
       }))
       
       const worksheet = XLSX.utils.json_to_sheet(exportData)
@@ -111,31 +107,31 @@ export default function AdminCustomersClient({ initialCustomers }: AdminCustomer
       XLSX.utils.book_append_sheet(workbook, worksheet, 'Clients')
       
       XLSX.writeFile(workbook, `Amouris_Clients_${new Date().toISOString().split('T')[0]}.xlsx`)
-      toast.success('Fichier Excel généré avec succès')
+      toast.success(t('admin.customers.excel_success'))
     } catch (err: any) {
-      toast.error("Erreur lors de l'export: " + err.message)
+      toast.error(t('common.error') + ": " + err.message)
     }
   }
 
   return (
-    <div className="space-y-16 pb-32">
+    <div className="space-y-16 pb-32" dir={dir}>
       {/* Premium Gradient Header */}
       <section className="relative p-12 lg:p-16 rounded-[4rem] bg-emerald-950 overflow-hidden shadow-2xl">
-        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-emerald-400/10 rounded-full blur-[120px] -mr-48 -mt-48" />
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-amber-400/5 rounded-full blur-[100px] -ml-24 -mb-24" />
+        <div className={`absolute top-0 ${dir === 'rtl' ? 'left-0' : 'right-0'} w-[600px] h-[600px] bg-emerald-400/10 rounded-full blur-[120px] ${dir === 'rtl' ? '-ml-48' : '-mr-48'} -mt-48`} />
+        <div className={`absolute bottom-0 ${dir === 'rtl' ? 'right-0' : 'left-0'} w-96 h-96 bg-amber-400/5 rounded-full blur-[100px] ${dir === 'rtl' ? '-mr-24' : '-ml-24'} -mb-24`} />
         
         <div className="relative z-10 flex flex-col xl:flex-row xl:items-center justify-between gap-12">
           <div className="space-y-6">
              <div className="inline-flex items-center gap-3 px-6 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-md">
                 <div className="w-2 h-2 bg-[#C9A84C] rounded-full animate-pulse" />
-                <span className="text-[10px] font-black tracking-[0.4em] text-white/60 uppercase">Espace Privilège</span>
+                <span className="text-[10px] font-black tracking-[0.4em] text-white/60 uppercase">{t('admin.customers.privilege_space')}</span>
              </div>
              <div>
-                <h1 className="font-serif text-6xl lg:text-7xl text-white font-bold italic tracking-tight mb-4">
+                <h1 className={`font-serif text-6xl lg:text-7xl text-white font-bold italic tracking-tight mb-4 ${dir === 'rtl' ? 'text-right' : ''}`}>
                   {t('admin.customers.title')}
                 </h1>
-                <p className="text-emerald-100/60 font-medium max-w-xl text-lg leading-relaxed">
-                  Gérez vos partenaires commerciaux et supervisez l&apos;activité de votre réseau de distribution.
+                <p className={`text-emerald-100/60 font-medium max-w-xl text-lg leading-relaxed ${dir === 'rtl' ? 'text-right' : ''}`}>
+                  {t('admin.customers.desc')}
                 </p>
              </div>
           </div>
@@ -146,12 +142,12 @@ export default function AdminCustomersClient({ initialCustomers }: AdminCustomer
                    <div className="w-12 h-12 rounded-2xl bg-[#C9A84C]/20 flex items-center justify-center text-[#C9A84C]">
                       <Users size={24} />
                    </div>
-                   <span className="text-[11px] font-black uppercase tracking-widest text-emerald-100/40">Total Partenaires</span>
+                   <span className="text-[11px] font-black uppercase tracking-widest text-emerald-100/40">{t('admin.customers.total_partners')}</span>
                 </div>
                 <div className="flex items-end gap-4">
                    <span className="font-serif text-5xl text-white font-bold">{customers.length}</span>
                    <div className="flex flex-col mb-1">
-                      <span className="text-emerald-400 text-xs font-bold flex items-center">+{stats.active} actifs</span>
+                      <span className="text-emerald-400 text-xs font-bold flex items-center">+{stats.active} {t('admin.customers.status_active').toLowerCase()}</span>
                    </div>
                 </div>
              </div>
@@ -161,11 +157,11 @@ export default function AdminCustomersClient({ initialCustomers }: AdminCustomer
                    <div className="w-12 h-12 rounded-2xl bg-emerald-400/10 flex items-center justify-center text-emerald-400">
                       <TrendingUp size={24} />
                    </div>
-                   <span className="text-[11px] font-black uppercase tracking-widest text-emerald-100/40">Volume Global</span>
+                   <span className="text-[11px] font-black uppercase tracking-widest text-emerald-100/40">{t('admin.customers.total_volume')}</span>
                 </div>
                 <div className="flex items-end gap-3">
                    <span className="font-serif text-5xl text-white font-bold">{(stats.totalSpent / 1000).toFixed(1)}k</span>
-                   <span className="text-emerald-100/40 text-sm font-medium mb-2 uppercase tracking-widest italic">DZD</span>
+                   <span className="text-emerald-100/40 text-sm font-medium mb-2 uppercase tracking-widest italic">{t('common.dzd')}</span>
                 </div>
              </div>
           </div>
@@ -176,13 +172,13 @@ export default function AdminCustomersClient({ initialCustomers }: AdminCustomer
       <section className="space-y-8">
         <div className="flex flex-col lg:flex-row gap-6 items-stretch">
           <div className="relative flex-1 group">
-             <Search size={24} className="absolute left-8 top-1/2 -translate-y-1/2 text-emerald-950/20 group-focus-within:text-[#C9A84C] transition-all duration-500" />
+             <Search size={24} className={`absolute ${dir === 'rtl' ? 'right-8' : 'left-8'} top-1/2 -translate-y-1/2 text-emerald-950/20 group-focus-within:text-[#C9A84C] transition-all duration-500`} />
              <input 
                type="text"
                placeholder={t('admin.customers.search_placeholder')}
                value={search}
                onChange={e => setSearch(e.target.value)}
-               className="w-full h-24 pl-20 pr-10 bg-white border-2 border-emerald-950/5 rounded-[2.5rem] outline-none focus:border-[#C9A84C] shadow-2xl shadow-emerald-900/5 font-medium text-emerald-950 placeholder:text-emerald-950/20 transition-all text-xl"
+               className={`w-full h-24 ${dir === 'rtl' ? 'pr-20 pl-10' : 'pl-20 pr-10'} bg-white border-2 border-emerald-950/5 rounded-[2.5rem] outline-none focus:border-[#C9A84C] shadow-2xl shadow-emerald-900/5 font-medium text-emerald-950 placeholder:text-emerald-950/20 transition-all text-xl ${dir === 'rtl' ? 'text-right' : ''}`}
              />
           </div>
           <button 
@@ -204,7 +200,7 @@ export default function AdminCustomersClient({ initialCustomers }: AdminCustomer
             >
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 p-12 bg-neutral-50 rounded-[3rem] border-2 border-emerald-950/[0.03]">
                 <div className="space-y-4">
-                  <label className="text-[10px] font-black uppercase tracking-[0.4em] text-emerald-950/40 px-2 block">Statut du Compte</label>
+                  <label className={`text-[10px] font-black uppercase tracking-[0.4em] text-emerald-950/40 px-2 block ${dir === 'rtl' ? 'text-right' : ''}`}>{t('admin.customers.filter_status')}</label>
                   <div className="flex gap-3">
                     {['all', 'active', 'frozen'].map((s) => (
                       <button
@@ -218,11 +214,11 @@ export default function AdminCustomersClient({ initialCustomers }: AdminCustomer
                   </div>
                 </div>
                 <div className="space-y-4">
-                  <label className="text-[10px] font-black uppercase tracking-[0.4em] text-emerald-950/40 px-2 block">Wilaya de Résidence</label>
+                  <label className={`text-[10px] font-black uppercase tracking-[0.4em] text-emerald-950/40 px-2 block ${dir === 'rtl' ? 'text-right' : ''}`}>{t('admin.customers.filter_wilaya')}</label>
                   <select 
                     value={wilayaFilter} 
                     onChange={e => setWilayaFilter(e.target.value)}
-                    className="w-full h-14 px-6 rounded-2xl bg-white border border-emerald-950/10 text-[11px] font-bold uppercase outline-none focus:border-[#C9A84C] cursor-pointer shadow-sm"
+                    className={`w-full h-14 px-6 rounded-2xl bg-white border border-emerald-950/10 text-[11px] font-bold uppercase outline-none focus:border-[#C9A84C] cursor-pointer shadow-sm ${dir === 'rtl' ? 'text-right' : ''}`}
                   >
                     <option value="all">{t('admin.orders.wilaya_all')}</option>
                     {Array.from(new Set(customers.map(c => c.wilaya).filter(Boolean))).map(w => <option key={w} value={w!}>{w}</option>)}
@@ -240,11 +236,11 @@ export default function AdminCustomersClient({ initialCustomers }: AdminCustomer
           <table className="w-full border-collapse">
             <thead>
               <tr className="bg-neutral-50">
-                <th className="px-12 py-10 text-left text-[10px] font-black uppercase tracking-[0.4em] text-emerald-950/30">Partenaire Principal</th>
-                <th className="px-12 py-10 text-left text-[10px] font-black uppercase tracking-[0.4em] text-emerald-950/30">Détails de Contact</th>
-                <th className="px-12 py-10 text-left text-[10px] font-black uppercase tracking-[0.4em] text-emerald-950/30">Localisation</th>
-                <th className="px-12 py-10 text-left text-[10px] font-black uppercase tracking-[0.4em] text-emerald-950/30">Volume d&apos;Affaires</th>
-                <th className="px-12 py-10 text-right text-[10px] font-black uppercase tracking-[0.4em] text-emerald-950/30">Action</th>
+                <th className={`px-12 py-10 ${dir === 'rtl' ? 'text-right' : 'text-left'} text-[10px] font-black uppercase tracking-[0.4em] text-emerald-950/30`}>{t('admin.customers.table.partners')}</th>
+                <th className={`px-12 py-10 ${dir === 'rtl' ? 'text-right' : 'text-left'} text-[10px] font-black uppercase tracking-[0.4em] text-emerald-950/30`}>{t('admin.customers.table.contact')}</th>
+                <th className={`px-12 py-10 ${dir === 'rtl' ? 'text-right' : 'text-left'} text-[10px] font-black uppercase tracking-[0.4em] text-emerald-950/30`}>{t('admin.customers.table.location')}</th>
+                <th className={`px-12 py-10 ${dir === 'rtl' ? 'text-right' : 'text-left'} text-[10px] font-black uppercase tracking-[0.4em] text-emerald-950/30`}>{t('admin.customers.table.volume')}</th>
+                <th className={`px-12 py-10 ${dir === 'rtl' ? 'text-left' : 'text-right'} text-[10px] font-black uppercase tracking-[0.4em] text-emerald-950/30`}>{t('admin.customers.table.action')}</th>
               </tr>
             </thead>
             <motion.tbody 
@@ -263,7 +259,7 @@ export default function AdminCustomersClient({ initialCustomers }: AdminCustomer
                     className="group hover:bg-neutral-50/50 transition-all duration-500"
                   >
                     <td className="px-12 py-12">
-                      <div className="flex items-center gap-10">
+                      <div className={`flex items-center gap-10 ${dir === 'rtl' ? 'flex-row-reverse text-right' : ''}`}>
                         <div className="relative">
                           <div className={`w-20 h-20 rounded-[2rem] flex items-center justify-center text-3xl font-serif shadow-2xl transition-all duration-700 overflow-hidden ${isFrozen ? 'bg-rose-50 text-rose-300' : 'bg-emerald-50 text-emerald-900 group-hover:scale-110 group-hover:rotate-3'}`}>
                              {customer.images?.[0] && !imageErrors[customer.id] ? (
@@ -278,16 +274,16 @@ export default function AdminCustomersClient({ initialCustomers }: AdminCustomer
                              )}
                           </div>
                           {!isFrozen && (
-                            <div className="absolute -bottom-2 -right-2 w-6 h-6 bg-emerald-500 border-4 border-white rounded-full shadow-lg" />
+                            <div className={`absolute -bottom-2 ${dir === 'rtl' ? '-left-2' : '-right-2'} w-6 h-6 bg-emerald-500 border-4 border-white rounded-full shadow-lg`} />
                           )}
                         </div>
                         <div className="space-y-1">
                           <p className="font-serif text-3xl font-bold text-emerald-950 group-hover:text-emerald-800 transition-colors tracking-tight">
                             {customer.first_name} {customer.last_name}
                           </p>
-                          <div className="flex items-center gap-2">
+                          <div className={`flex items-center gap-2 ${dir === 'rtl' ? 'justify-end' : ''}`}>
                              <div className={`text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full ${isFrozen ? 'bg-rose-100 text-rose-600' : 'bg-emerald-100 text-emerald-700'}`}>
-                                {isFrozen ? 'Partenaire Inactif' : 'Partenaire Actif'}
+                                {isFrozen ? t('admin.customers.status_inactive_label') : t('admin.customers.status_active_label')}
                              </div>
                           </div>
                         </div>
@@ -295,14 +291,14 @@ export default function AdminCustomersClient({ initialCustomers }: AdminCustomer
                     </td>
                     <td className="px-12 py-12">
                        <div className="space-y-3">
-                         <div className="flex items-center gap-3 text-emerald-950/60 font-medium">
+                         <div className={`flex items-center gap-3 text-emerald-950/60 font-medium ${dir === 'rtl' ? 'flex-row-reverse text-right' : ''}`}>
                             <div className="w-8 h-8 rounded-lg bg-neutral-100 flex items-center justify-center text-emerald-950/40">
                                <Phone size={14} />
                             </div>
                             <span className="text-sm">{customer.phone}</span>
                          </div>
                          {customer.email && (
-                            <div className="flex items-center gap-3 text-emerald-950/60 font-medium">
+                            <div className={`flex items-center gap-3 text-emerald-950/60 font-medium ${dir === 'rtl' ? 'flex-row-reverse text-right' : ''}`}>
                                <div className="w-8 h-8 rounded-lg bg-neutral-100 flex items-center justify-center text-emerald-950/40">
                                   <Mail size={14} />
                                </div>
@@ -312,33 +308,33 @@ export default function AdminCustomersClient({ initialCustomers }: AdminCustomer
                        </div>
                     </td>
                     <td className="px-12 py-12">
-                      <div className="space-y-1">
-                         <div className="flex items-center gap-2 text-emerald-950 font-bold">
+                      <div className={`space-y-1 ${dir === 'rtl' ? 'text-right' : ''}`}>
+                         <div className={`flex items-center gap-2 text-emerald-950 font-bold ${dir === 'rtl' ? 'flex-row-reverse' : ''}`}>
                             <MapPin size={14} className="text-[#C9A84C]" />
                             <span className="text-base">{customer.wilaya}</span>
                          </div>
-                         <p className="text-[10px] text-emerald-950/30 font-black uppercase tracking-widest pl-5">{customer.commune || 'Centre Ville'}</p>
+                         <p className={`text-[10px] text-emerald-950/30 font-black uppercase tracking-widest ${dir === 'rtl' ? 'pr-5' : 'pl-5'}`}>{customer.commune || t('admin.customers.city_center')}</p>
                       </div>
                     </td>
                     <td className="px-12 py-12">
-                       <div className="flex flex-col gap-1">
+                       <div className={`flex flex-col gap-1 ${dir === 'rtl' ? 'text-right' : ''}`}>
                           <div className="text-2xl font-serif font-bold text-emerald-950 tracking-tight">
                              {(customer.total_spent || 0).toLocaleString()} 
-                             <span className="text-xs font-sans font-normal opacity-30 ml-2 italic">DZD</span>
+                             <span className="text-xs font-sans font-normal opacity-30 ml-2 italic">{t('common.dzd')}</span>
                           </div>
-                          <div className="flex items-center gap-2">
-                             <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#C9A84C]">{customer.order_count || 0} Commandes</span>
+                          <div className={`flex items-center gap-2 ${dir === 'rtl' ? 'flex-row-reverse' : ''}`}>
+                             <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#C9A84C]">{t('admin.customers.orders_count', { count: customer.order_count || 0 })}</span>
                              <div className="h-px w-6 bg-emerald-950/10" />
                           </div>
                        </div>
                     </td>
                     <td className="px-12 py-12 text-right">
-                       <div className="flex justify-end gap-4 items-center">
+                       <div className={`flex ${dir === 'rtl' ? 'justify-start' : 'justify-end'} gap-4 items-center`}>
                           <button 
                             onClick={() => handleToggleFreeze(customer.id, !!isFrozen)}
                             disabled={isUpdating === customer.id}
                             className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-500 shadow-sm hover:shadow-xl group/freeze ${isFrozen ? 'bg-rose-50 text-rose-600 border border-rose-100' : 'bg-emerald-50 text-emerald-700 border border-emerald-100'}`}
-                            title={isFrozen ? 'Réactiver le compte' : 'Suspendre le compte'}
+                            title={isFrozen ? t('admin.customers.reactivate') : t('admin.customers.suspend')}
                           >
                              {isUpdating === customer.id ? (
                                <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
@@ -372,7 +368,7 @@ export default function AdminCustomersClient({ initialCustomers }: AdminCustomer
              </div>
              <p className="font-serif text-5xl text-emerald-950 font-bold italic tracking-tighter mb-4">{t('admin.customers.none_found')}</p>
              <p className="text-[12px] font-black uppercase tracking-[0.5em] text-emerald-950/20">
-               Ajustez vos critères de recherche
+               {t('admin.products.adjust_filters')}
              </p>
           </div>
         )}
@@ -381,32 +377,32 @@ export default function AdminCustomersClient({ initialCustomers }: AdminCustomer
       {/* Modern Dashboard Footnotes */}
       <section className="grid grid-cols-1 md:grid-cols-3 gap-10">
          <div className="luxury-card p-12 bg-[#063327] text-white relative overflow-hidden group">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-3xl -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-1000" />
+            <div className={`absolute top-0 ${dir === 'rtl' ? 'left-0' : 'right-0'} w-32 h-32 bg-white/5 rounded-full blur-3xl ${dir === 'rtl' ? '-ml-16' : '-mr-16'} -mt-16 group-hover:scale-150 transition-transform duration-1000`} />
             <Calendar size={32} className="text-[#C9A84C] mb-8" />
-            <h3 className="font-serif text-2xl font-bold mb-4">Système de Gel</h3>
-            <p className="text-emerald-100/40 text-sm leading-relaxed mb-6 italic">Un compte gelé ne peut plus passer de commande sur la plateforme B2B.</p>
-            <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-widest text-[#C9A84C]">
-               Sécurité & Gouvernance <ArrowUpRight size={14} />
+            <h3 className={`font-serif text-2xl font-bold mb-4 ${dir === 'rtl' ? 'text-right' : ''}`}>{t('admin.customers.freeze_system_title')}</h3>
+            <p className={`text-emerald-100/40 text-sm leading-relaxed mb-6 italic ${dir === 'rtl' ? 'text-right' : ''}`}>{t('admin.customers.freeze_system_desc')}</p>
+            <div className={`flex items-center gap-3 text-[10px] font-black uppercase tracking-widest text-[#C9A84C] ${dir === 'rtl' ? 'flex-row-reverse' : ''}`}>
+               {t('admin.customers.security_gov')} <ArrowUpRight size={14} className={dir === 'rtl' ? 'rotate-180' : ''} />
             </div>
          </div>
 
          <div className="luxury-card p-12 bg-white group hover:shadow-[#C9A84C]/10 transition-all duration-700">
-            <div className="w-16 h-16 rounded-3xl bg-amber-50 flex items-center justify-center text-[#C9A84C] mb-8 group-hover:scale-110 transition-transform">
+            <div className={`w-16 h-16 rounded-3xl bg-amber-50 flex items-center justify-center text-[#C9A84C] mb-8 group-hover:scale-110 transition-transform ${dir === 'rtl' ? 'mr-0' : ''}`}>
                <ShieldCheck size={32} />
             </div>
-            <h3 className="font-serif text-2xl font-bold mb-4 text-emerald-950">Statut Certifié</h3>
-            <p className="text-emerald-950/40 text-sm leading-relaxed mb-6 italic">Les indicateurs de volume sont basés sur les commandes livrées uniquement.</p>
-            <div className="h-1 w-12 bg-emerald-950/10 group-hover:w-24 transition-all duration-500" />
+            <h3 className={`font-serif text-2xl font-bold mb-4 text-emerald-950 ${dir === 'rtl' ? 'text-right' : ''}`}>{t('admin.customers.certified_status_title')}</h3>
+            <p className={`text-emerald-950/40 text-sm leading-relaxed mb-6 italic ${dir === 'rtl' ? 'text-right' : ''}`}>{t('admin.customers.certified_status_desc')}</p>
+            <div className={`h-1 w-12 bg-emerald-950/10 group-hover:w-24 transition-all duration-500 ${dir === 'rtl' ? 'ml-auto mr-0' : ''}`} />
          </div>
 
          <div className="luxury-card p-12 bg-white border-emerald-950/10 relative overflow-hidden">
-            <div className="absolute top-4 right-4 text-emerald-950/5">
+            <div className={`absolute top-4 ${dir === 'rtl' ? 'left-4' : 'right-4'} text-emerald-950/5`}>
                <Globe size={120} />
             </div>
-            <h3 className="font-serif text-2xl font-bold mb-4 text-emerald-950">Réseau Amouris</h3>
-            <p className="text-emerald-950/40 text-sm leading-relaxed mb-8 italic">Votre réseau couvre actuellement 58 wilayas avec une croissance constante.</p>
-            <button onClick={handleExportToExcel} className="text-[10px] font-black uppercase tracking-[0.3em] text-[#C9A84C] hover:text-emerald-900 transition-colors">
-               Exporter la Liste <ArrowUpRight size={14} className="inline ml-2" />
+            <h3 className={`font-serif text-2xl font-bold mb-4 text-emerald-950 ${dir === 'rtl' ? 'text-right' : ''}`}>{t('admin.customers.amouris_network_title')}</h3>
+            <p className={`text-emerald-950/40 text-sm leading-relaxed mb-8 italic ${dir === 'rtl' ? 'text-right' : ''}`}>{t('admin.customers.amouris_network_desc')}</p>
+            <button onClick={handleExportToExcel} className={`text-[10px] font-black uppercase tracking-[0.3em] text-[#C9A84C] hover:text-emerald-900 transition-colors w-full ${dir === 'rtl' ? 'text-right' : 'text-left'}`}>
+               {t('admin.customers.export_list')} <ArrowUpRight size={14} className={`inline ${dir === 'rtl' ? 'mr-2 rotate-180' : 'ml-2'}`} />
             </button>
          </div>
       </section>

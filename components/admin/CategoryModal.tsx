@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
+import { useI18n } from '@/i18n/i18n-context';
 
 interface CategoryModalProps {
   category?: any | null;
@@ -18,6 +19,7 @@ interface CategoryModalProps {
 }
 
 export function CategoryModal({ category, isOpen, onClose, onSave }: CategoryModalProps) {
+  const { t, dir } = useI18n();
   const [activeTab, setActiveTab] = useState<'details' | 'media'>('details');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -69,23 +71,23 @@ export function CategoryModal({ category, isOpen, onClose, onSave }: CategoryMod
     if (!file) return;
 
     if (file.size > 2 * 1024 * 1024) {
-      toast.error('Image trop lourde. Maximum 2Mo.');
+      toast.error(t('admin.categories.image_too_heavy'));
       return;
     }
 
     setIsUploading(true);
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('bucket', 'categories');
+      const formDataUpload = new FormData();
+      formDataUpload.append('file', file);
+      formDataUpload.append('bucket', 'categories');
 
-      const publicUrl = await uploadImage(formData);
+      const publicUrl = await uploadImage(formDataUpload);
 
       setFormData(prev => ({ ...prev, image_url: publicUrl }));
-      toast.success('Image de la catégorie chargée');
+      toast.success(t('admin.categories.upload_success'));
     } catch (err: any) {
       console.error('Upload error:', err);
-      toast.error("Échec du transfert: " + (err.message || 'Erreur inconnue'));
+      toast.error(t('admin.categories.upload_error') + ": " + (err.message || 'Erreur inconnue'));
     } finally {
       setIsUploading(false);
       e.target.value = '';
@@ -114,7 +116,7 @@ export function CategoryModal({ category, isOpen, onClose, onSave }: CategoryMod
     }
     
     if (result.success) {
-      toast.success(category?.id ? 'Catégorie mise à jour' : 'Nouvelle Catégorie créée');
+      toast.success(category?.id ? t('admin.categories.success_update') : t('admin.categories.success_create'));
       onSave();
       onClose();
     } else {
@@ -125,7 +127,7 @@ export function CategoryModal({ category, isOpen, onClose, onSave }: CategoryMod
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-xl max-h-[90vh] p-0 overflow-hidden bg-white rounded-3xl border-none shadow-2xl font-sans flex flex-col">
+      <DialogContent className="sm:max-w-xl max-h-[90vh] p-0 overflow-hidden bg-white rounded-3xl border-none shadow-2xl font-sans flex flex-col" dir={dir}>
         {/* Header Vert Émeraude */}
         <div className="bg-[#0a3d2e] p-8 text-white relative overflow-hidden shrink-0">
           <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-400/10 rounded-full blur-3xl -mr-16 -mt-16" />
@@ -136,9 +138,9 @@ export function CategoryModal({ category, isOpen, onClose, onSave }: CategoryMod
               </div>
               <div>
                 <DialogTitle className="text-2xl font-serif font-bold italic">
-                  {category ? 'Éditer l\'Açnaf' : 'Nouvelle Catégorie'}
+                  {category ? t('admin.categories.edit_modal_title') : t('admin.categories.add_modal_title')}
                 </DialogTitle>
-                <p className="text-emerald-100/40 text-[10px] uppercase tracking-widest font-black">Structure Catalogue Amouris</p>
+                <p className="text-emerald-100/40 text-[10px] uppercase tracking-widest font-black">{t('admin.categories.subtitle')}</p>
               </div>
             </div>
             <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors">
@@ -150,8 +152,8 @@ export function CategoryModal({ category, isOpen, onClose, onSave }: CategoryMod
         {/* Tab Navigation */}
         <div className="flex border-b border-gray-100 px-6 bg-gray-50/50 shrink-0">
           {[
-            { id: 'details', label: 'Détails', icon: Info },
-            { id: 'media', label: 'Visuel', icon: ImageIcon }
+            { id: 'details', label: t('admin.categories.tab_details'), icon: Info },
+            { id: 'media', label: t('admin.categories.tab_media'), icon: ImageIcon }
           ].map(tab => (
             <button
               key={tab.id}
@@ -177,7 +179,7 @@ export function CategoryModal({ category, isOpen, onClose, onSave }: CategoryMod
                 >
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <label className="text-xs font-bold text-gray-700 flex items-center gap-2"><Type size={12} /> Nom FR</label>
+                      <label className="text-xs font-bold text-gray-700 flex items-center gap-2"><Type size={12} /> {t('admin.categories.field_name_fr')}</label>
                       <input 
                         required value={formData.name_fr} onChange={e => setFormData({...formData, name_fr: e.target.value})}
                         placeholder="Ex: Parfums de Niche"
@@ -185,7 +187,7 @@ export function CategoryModal({ category, isOpen, onClose, onSave }: CategoryMod
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-xs font-bold text-gray-700 text-right flex items-center justify-end gap-2">اسم الصنف (بالعربية) <Globe size={12} /></label>
+                      <label className={`text-xs font-bold text-gray-700 flex items-center gap-2 ${dir === 'rtl' ? 'justify-end' : ''}`}>{dir === 'rtl' && <Globe size={12} />} {t('admin.categories.field_name_ar')} {dir !== 'rtl' && <Globe size={12} />}</label>
                       <input 
                         dir="rtl" value={formData.name_ar} onChange={e => setFormData({...formData, name_ar: e.target.value})}
                         placeholder="الصنف"
@@ -195,7 +197,7 @@ export function CategoryModal({ category, isOpen, onClose, onSave }: CategoryMod
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-xs font-bold text-gray-700 flex items-center gap-2"><Hash size={12} /> Identifiant URL (Slug)</label>
+                    <label className="text-xs font-bold text-gray-700 flex items-center gap-2"><Hash size={12} /> {t('admin.categories.field_slug')}</label>
                     <input 
                       required value={formData.slug} onChange={e => setFormData({...formData, slug: e.target.value.toLowerCase().replace(/\s+/g, '-')})}
                       className="w-full h-12 px-4 rounded-xl border border-gray-100 bg-gray-50 focus:bg-white focus:border-emerald-500 outline-none font-mono text-xs transition-all" 
@@ -203,7 +205,7 @@ export function CategoryModal({ category, isOpen, onClose, onSave }: CategoryMod
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-xs font-bold text-gray-700 flex items-center gap-2"><Info size={12} /> Description (FR)</label>
+                    <label className="text-xs font-bold text-gray-700 flex items-center gap-2"><Info size={12} /> {t('admin.categories.field_desc_fr')}</label>
                     <textarea 
                       value={formData.description_fr} onChange={e => setFormData({...formData, description_fr: e.target.value})}
                       rows={3}
@@ -212,7 +214,7 @@ export function CategoryModal({ category, isOpen, onClose, onSave }: CategoryMod
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-xs font-bold text-gray-700 text-right flex items-center justify-end gap-2">الوصف (بالعربية) <Globe size={12} /></label>
+                    <label className={`text-xs font-bold text-gray-700 flex items-center gap-2 ${dir === 'rtl' ? 'justify-end' : ''}`}>{dir === 'rtl' && <Globe size={12} />} {t('admin.categories.field_desc_ar')} {dir !== 'rtl' && <Globe size={12} />}</label>
                     <textarea 
                       dir="rtl" value={formData.description_ar} onChange={e => setFormData({...formData, description_ar: e.target.value})}
                       rows={3}
@@ -241,7 +243,7 @@ export function CategoryModal({ category, isOpen, onClose, onSave }: CategoryMod
                             <div className="w-16 h-16 rounded-2xl bg-white shadow-xl flex items-center justify-center text-emerald-900 mb-4">
                               {isUploading ? <Loader2 size={32} className="animate-spin text-emerald-600" /> : <Upload size={32} />}
                             </div>
-                            <p className="font-serif text-lg italic text-emerald-950">Charger une image</p>
+                            <p className="font-serif text-lg italic text-emerald-950">{t('admin.categories.upload_image')}</p>
                             <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
                           </motion.label>
                         )}
@@ -257,10 +259,10 @@ export function CategoryModal({ category, isOpen, onClose, onSave }: CategoryMod
         <div className="p-8 border-t border-gray-100 shrink-0">
            <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100/50 mb-8">
               <p className="text-[10px] font-black uppercase tracking-widest text-amber-800 mb-1 flex items-center gap-2">
-                 <Sparkles size={12} className="text-amber-500" /> Conseil Amouris
+                 <Sparkles size={12} className="text-amber-500" /> {t('admin.categories.conseil')}
               </p>
               <p className="text-xs text-amber-900/60 italic leading-relaxed">
-                 Définissez les piliers de votre navigation pour une expérience client fluide.
+                 {t('admin.categories.conseil_text')}
               </p>
            </div>
 
@@ -269,7 +271,7 @@ export function CategoryModal({ category, isOpen, onClose, onSave }: CategoryMod
                 type="button" onClick={onClose}
                 className="flex-1 h-14 rounded-xl border border-gray-200 text-gray-400 text-[10px] font-black uppercase tracking-widest hover:bg-gray-50 hover:text-gray-600 transition-all font-sans"
               >
-                Annuler
+                {t('admin.common.cancel')}
               </button>
               <button 
                 form="category-modal-form" type="submit" disabled={isSubmitting || isUploading}
@@ -277,8 +279,8 @@ export function CategoryModal({ category, isOpen, onClose, onSave }: CategoryMod
               >
                 {isSubmitting ? <Loader2 className="animate-spin" size={16} /> : (
                   <>
-                    <span>{category ? 'Enregistrer les modifications' : 'Créer l\'Açnaf'}</span>
-                    <ChevronRight size={16} className="text-emerald-400" />
+                    <span>{category ? t('admin.categories.save_button') : t('admin.categories.create_button')}</span>
+                    <ChevronRight size={16} className={`text-emerald-400 ${dir === 'rtl' ? 'rotate-180' : ''}`} />
                   </>
                 )}
               </button>

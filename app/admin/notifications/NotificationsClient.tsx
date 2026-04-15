@@ -14,7 +14,7 @@ interface NotificationsClientProps {
 }
 
 export default function NotificationsClient({ initialOrders, lowStockPerfumes, lowStockVariants }: NotificationsClientProps) {
-  const { t, language } = useI18n();
+  const { t, dir, language } = useI18n();
   const [notifications, setNotifications] = useState<any[]>([]);
   const supabase = createClient();
 
@@ -24,7 +24,7 @@ export default function NotificationsClient({ initialOrders, lowStockPerfumes, l
     orders.forEach(o => list.push({
       type: 'order',
       id: o.id,
-      title: o.guest_first_name ? `${o.guest_first_name} ${o.guest_last_name}` : `Commande ${o.order_number}`,
+      title: o.guest_first_name ? `${o.guest_first_name} ${o.guest_last_name}` : t('admin.notifications.order_label', { number: o.order_number }),
       subtitle: `${o.order_number} • ${o.total_amount.toLocaleString()} DZD`,
       date: o.created_at,
       status: o.order_status,
@@ -34,8 +34,8 @@ export default function NotificationsClient({ initialOrders, lowStockPerfumes, l
     perfumes.forEach(p => list.push({
       type: 'stock',
       id: p.id,
-      title: `Stock Bas: ${p.name_fr}`,
-      subtitle: `${p.stock_grams}g restant`,
+      title: t('admin.notifications.stock_low_label', { name: p.name_fr }),
+      subtitle: t('admin.notifications.grams_remaining', { count: p.stock_grams }),
       date: new Date().toISOString(),
       link: `/admin/products`
     }));
@@ -43,8 +43,8 @@ export default function NotificationsClient({ initialOrders, lowStockPerfumes, l
     variants.forEach(v => list.push({
       type: 'stock',
       id: v.id,
-      title: `Stock Bas: ${v.products?.name_fr}`,
-      subtitle: `${v.size_ml}ml - ${v.color_name} (${v.stock_units} unités)`,
+      title: t('admin.notifications.stock_low_label', { name: v.products?.name_fr }),
+      subtitle: t('admin.notifications.variant_stock_info', { size: v.size_ml, color: v.color_name, count: v.stock_units }),
       date: new Date().toISOString(),
       link: `/admin/products`
     }));
@@ -83,13 +83,13 @@ export default function NotificationsClient({ initialOrders, lowStockPerfumes, l
   }, [initialOrders, lowStockPerfumes, lowStockVariants]);
 
   return (
-    <div className="space-y-8">
-      <div>
+    <div className="space-y-8" dir={dir}>
+      <div className={dir === 'rtl' ? 'text-right' : ''}>
         <h1 className="text-3xl font-black text-emerald-950 font-serif mb-2">
-          {language === 'ar' ? 'الإشعارات' : 'Notifications'}
+          {t('admin.notifications.title')}
         </h1>
         <p className="text-[10px] font-black uppercase tracking-[0.3em] text-amber-600">
-          {language === 'ar' ? 'مركز التنبيهات' : 'Alert Center'}
+          {t('admin.notifications.subtitle')}
         </p>
       </div>
 
@@ -99,14 +99,14 @@ export default function NotificationsClient({ initialOrders, lowStockPerfumes, l
             <Link 
               key={`${notif.id}-${idx}`} 
               href={notif.link}
-              className="bg-white p-6 rounded-[2rem] border border-emerald-950/5 shadow-sm hover:shadow-xl hover:shadow-emerald-900/5 transition-all flex items-center justify-between group"
+              className={`bg-white p-6 rounded-[2rem] border border-emerald-950/5 shadow-sm hover:shadow-xl hover:shadow-emerald-900/5 transition-all flex items-center justify-between group ${dir === 'rtl' ? 'flex-row-reverse' : ''}`}
             >
-              <div className="flex items-center gap-6">
+              <div className={`flex items-center gap-6 ${dir === 'rtl' ? 'flex-row-reverse text-right' : ''}`}>
                 <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-110 ${notif.type === 'order' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>
                   {notif.type === 'order' ? <ShoppingBag size={24} /> : <AlertTriangle size={24} />}
                 </div>
                 <div className="space-y-1">
-                  <div className="flex items-center gap-3">
+                  <div className={`flex items-center gap-3 ${dir === 'rtl' ? 'flex-row-reverse' : ''}`}>
                     <h3 className="font-bold text-emerald-950">{notif.title}</h3>
                     {notif.status && (
                       <Badge variant="outline" className="text-[9px] uppercase tracking-widest font-black">
@@ -118,9 +118,9 @@ export default function NotificationsClient({ initialOrders, lowStockPerfumes, l
                 </div>
               </div>
               
-              <div className="flex items-center gap-8">
-                <div className="text-right">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-emerald-950/20 flex items-center gap-1 justify-end">
+              <div className={`flex items-center gap-8 ${dir === 'rtl' ? 'flex-row-reverse' : ''}`}>
+                <div className={dir === 'rtl' ? 'text-left' : 'text-right'}>
+                  <p className={`text-[10px] font-black uppercase tracking-widest text-emerald-950/20 flex items-center gap-1 ${dir === 'rtl' ? 'justify-start' : 'justify-end'}`}>
                     <Clock size={12} /> {new Date(notif.date).toLocaleDateString(language === 'ar' ? 'ar-DZ' : 'fr-FR')}
                   </p>
                   <p className="text-[10px] font-black uppercase tracking-widest text-emerald-950/20 italic">
@@ -128,7 +128,7 @@ export default function NotificationsClient({ initialOrders, lowStockPerfumes, l
                   </p>
                 </div>
                 <div className="w-10 h-10 rounded-full border border-emerald-950/5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                  <ArrowRight size={18} className="text-emerald-950" />
+                  <ArrowRight size={18} className={`text-emerald-950 ${dir === 'rtl' ? 'rotate-180' : ''}`} />
                 </div>
               </div>
             </Link>
@@ -137,7 +137,7 @@ export default function NotificationsClient({ initialOrders, lowStockPerfumes, l
           <div className="py-20 text-center bg-white rounded-[2rem] border border-emerald-950/5">
             <Bell size={48} className="mx-auto text-emerald-100 mb-4" />
             <p className="text-lg font-serif text-emerald-950/20 italic">
-              {language === 'ar' ? 'لا توجد إشعارات حاليا' : 'Aucune notification pour le moment.'}
+              {t('admin.notifications.no_notifications')}
             </p>
           </div>
         )}
